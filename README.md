@@ -20,3 +20,6 @@
    table entry, the MLHFM table which comprises of (typically) 512 entries, each 2
    bytes (1024 bytes total) of linearization data for the type of Air Flow 
    Meters fitted.
+
+   Built using CodeLite.
+   See https://codelite.org/
