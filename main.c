@@ -154,14 +154,14 @@ int search_rom(char *filename)
 					if(crc_hfm == 0x4200bc1)			// crc32 checksum of MLHFM 1024byte table
 					{
 						printf("MLHFM Table Identified: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
-						snprintf(MAX_FILENAME, ml_filename, "MLHFM_Modena_%x.bin", crc_hfm);
+						snprintf(ml_filename, MAX_FILENAME, "MLHFM_Modena_%x.bin", crc_hfm);
 					} else if(crc_hfm == 0x87b3489a)	// crc32 checksum of MLHFM 1024byte table
 					{
 						printf("MLHFM Table Identified: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
-						snprintf(MAX_FILENAME, ml_filename, "MLHFM_Stradale_%x.bin", crc_hfm);
+						snprintf(ml_filename, MAX_FILENAME, "MLHFM_Stradale_%x.bin", crc_hfm);
 					} else {
 						printf("Unknown or customized MLHFM table!\n");
-						snprintf(MAX_FILENAME, ml_filename, "MLHFM_Custom_%x.bin", crc_hfm);
+						snprintf(ml_filename, MAX_FILENAME, "MLHFM_Custom_%x.bin", crc_hfm);
 					}
 									
 					printf("Saving raw MLHFM table (dumped with no endian conversion) to file: '%s'\n\n", ml_filename);
