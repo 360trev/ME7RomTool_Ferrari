@@ -31,7 +31,7 @@
    e.g.      me7romtool.exe -whfm 360modena.bin hfm_stradale.bin
 
    -ihfm : Try to identify mlhfm table in specified romfile.
-   e.g.      me7romtool.exe -whfm 360modena.bin
+   e.g.      me7romtool.exe -ihfm 360modena.bin
    
    Using this program you can upgrade your Ferrari 360 Modena firmware (after dumping)
    to use Challenge Stradale MLHFM tables. You just need a dump of both rom images.
