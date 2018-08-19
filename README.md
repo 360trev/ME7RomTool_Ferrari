@@ -28,6 +28,10 @@
    bytes (1024 bytes total) of linearization data for the type of Air Flow 
    Meters fitted.
 
+   NOTE: This version DOES NOT YET update checksums for the firmware after updating
+   the MLHFM table. If you use this tool you'll need to update them separately after
+   using it before flashing the output file to your ecu's.
+   
    Built using CodeLite.
    See https://codelite.org/
 
