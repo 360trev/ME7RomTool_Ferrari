@@ -20,14 +20,22 @@
    (typically) 512 entries, each 2 bytes (1024 bytes total) of linearization 
    data for the type of Bosch Air Flow Meters fitted to the Ferrari 360.
 
-   It can ofcourse be adapted and used to search for all or any types of map tables. 
-   The advantage of doing this vs simple byte signatures is that you can extract 
-   offsets and information directly out of the code. This simple example doesn't use 
-   any configration files as its meant to be learned from. Here I only identify a single 
-   table entry, the MLHFM table which comprises of (typically) 512 entries, each 2
-   bytes (1024 bytes total) of linearization data for the type of Air Flow 
-   Meters fitted.
+   The current 'modes' supported are below (cut from usage of program)
+  
+   me7romtool <mode> <rom_filename> <extra options> ...
 
+   -rhfm :  <hfm_dump_filename> : Read and extract hfm from romfile, optional dump filename to override default write name.
+    e.g.     me7romtool.exe -rhfm 360cs.bin hfm_stradale.bin
+
+   -whfm :  <hfm_load_filename> : Write hfm into specified romfile, mandatory load filename must be specified.
+   e.g.      me7romtool.exe -whfm 360modena.bin hfm_stradale.bin
+
+   -ihfm : Try to identify mlhfm table in specified romfile.
+   e.g.      me7romtool.exe -whfm 360modena.bin
+   
+   Using this program you can upgrade your Ferrari 360 Modena firmware (after dumping)
+   to use Challenge Stradale MLHFM tables. You just need a dump of both rom images.
+ 
    NOTE: This version DOES NOT YET update checksums for the firmware after updating
    the MLHFM table. If you use this tool you'll need to update them separately after
    using it before flashing the output file to your ecu's.
