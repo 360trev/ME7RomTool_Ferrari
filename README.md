@@ -11,7 +11,11 @@
    This version illustrates how to identify code segments, variables and data 
    table areas directly within a firmware image that 'move around' due to 
    conditional compilation and absolute addressing modes of the resultant
-   machine code between different firmware versions and builds. 
+   machine code between different firmware versions and builds. The code explicitly
+   supports both 512kbyte and 1Mb rom images despite Ferrari roms only being
+   512kbytes. I note it works with Alfa and Volvo roms for the checksumming
+   in the tests I've done so far (again down to the unique way I identify the
+   variables and tables.)...
    
    The basic approach is to identify the code block sequences (which are common) 
    and then extract from the machine code itself the offsets to either a variable,
