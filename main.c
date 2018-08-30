@@ -483,7 +483,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			/*
 			 * search: *** Seed/Key Check Patch #1 ***
 			 */
-            if(seedkey_patch == 1) {
+            		if(seedkey_patch == 1) {
 				printf(">>> Scanning for SecurityAccessBypass Variant #1 Checking sub-routine [allow any login seed to pass] ");
 				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
 				if(addr == NULL) {
@@ -640,7 +640,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			}
 
 		} else {
-			printf("File size isn't 512kbytes. This isn't a supported firmware file");
+			printf("File size isn't a supported firmware size. Only 512kbyte and 1Mb images supported. ");
 		}
 /*------------------------------------------------------------------------------------------------------------------*/
 	} else {
