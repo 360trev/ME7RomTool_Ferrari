@@ -1,24 +1,8 @@
 /* me7romtool [ Firmware analysis tool for Bosch ME7.3H4 Ferrari firmware's]
    By 360trev. Needle lookup function borrowed from nyet (Thanks man!) from
    the ME7sum tool development (see github).
-     
-   This tool is for analyzing Ferrari Firmwares, however it does a pretty
-   decent job at other ME7.x firmwares for other marques too including
-   both 512kbyte and 1mb files.
-
-   This version illustrates how to identify MAP table areas directly within a 
-   firmware image that 'move around' due to conditional compilation between
-   different firmware versions. The basic approach is to identify the code
-   block sequences (which are common) and then extract from the machine
-   code itself the offsets to the map area where they are stored. This means
-   that this approach works across ALL Ferrari 360 firmware dumps. It can
-   ofcourse be used to search for ALL map tables. The advantage of doing this
-   vs simple byte signatures is that you can extract offsets and information
-   directly out of the code. 
-	
-   This tool supports identification of the MLHFM table which comprises of 
-   (typically) 512 entries, each 2 bytes (1024 bytes total) of linearization 
-   data for the type of Bosch Air Flow Meters fitted to the Ferrari 360.
+   
+   See Readme for notes about current status and features.
  
    Permission is hereby granted, free of charge, to any person obtaining
    a copy of this software and associated documentation files (the
