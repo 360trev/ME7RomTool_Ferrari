@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="me7romtool" InternalType="Console">
+<CodeLite_Project Name="me7romtool" InternalType="Console" Version="10.0.0">
   <Description/>
   <Dependencies/>
   <Settings Type="Executable">
@@ -93,6 +93,7 @@
     </Configuration>
   </Settings>
   <VirtualDirectory Name="src">
+    <File Name="needles.h"/>
     <File Name="main.c"/>
     <File Name="crc32.c"/>
     <File Name="crc32.h"/>
