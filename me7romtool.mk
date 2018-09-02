@@ -5,7 +5,7 @@
 ## Release
 ProjectName            :=me7romtool
 ConfigurationName      :=Release
-WorkspacePath          :=C:/Users/hp/Documents/me7romtool_ferrari
+WorkspacePath          :=C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari
 ProjectPath            :=C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari
 IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)

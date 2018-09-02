@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="me7romtool_ferrari" Database="" Version="10.0.0">
+  <Project Name="me7romtool" Path="me7romtool.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="no">
+      <Environment/>
+      <Project Name="me7romtool" ConfigName="Debug"/>
+      <Project Name="me7sum_shared" ConfigName="Debug"/>
+      <Project Name="me7romtool" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="me7romtool" ConfigName="Release"/>
+      <Project Name="me7sum_shared" ConfigName="Release"/>
+      <Project Name="me7romtool" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>
