@@ -93,11 +93,11 @@
     </Configuration>
   </Settings>
   <VirtualDirectory Name="src">
-    <File Name="needles.h"/>
     <File Name="main.c"/>
+    <File Name="utils.h"/>
+    <File Name="needles.h"/>
     <File Name="crc32.c"/>
     <File Name="crc32.h"/>
     <File Name="utils.c"/>
-    <File Name="utils.h"/>
   </VirtualDirectory>
 </CodeLite_Project>

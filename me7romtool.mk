@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=hp
-Date                   :=29/08/2018
+Date                   :=02/09/2018
 CodeLitePath           :="C:/Program Files/CodeLite"
 LinkerName             :=C:/MinGW/bin/g++.exe
 SharedObjectLinkerName :=C:/MinGW/bin/g++.exe -shared -fPIC
@@ -62,7 +62,7 @@ AS       := C:/MinGW/bin/as.exe
 ## User defined environment variables
 ##
 CodeLiteDir:=C:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/utils.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) 
 
 
 
@@ -93,6 +93,14 @@ PreBuild:
 ##
 ## Objects
 ##
+$(IntermediateDirectory)/utils.c$(ObjectSuffix): utils.c $(IntermediateDirectory)/utils.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/utils.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/utils.c$(DependSuffix): utils.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/utils.c$(ObjectSuffix) -MF$(IntermediateDirectory)/utils.c$(DependSuffix) -MM utils.c
+
+$(IntermediateDirectory)/utils.c$(PreprocessSuffix): utils.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/utils.c$(PreprocessSuffix) utils.c
+
 $(IntermediateDirectory)/crc32.c$(ObjectSuffix): crc32.c $(IntermediateDirectory)/crc32.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/crc32.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/crc32.c$(DependSuffix): crc32.c
@@ -108,14 +116,6 @@ $(IntermediateDirectory)/main.c$(DependSuffix): main.c
 
 $(IntermediateDirectory)/main.c$(PreprocessSuffix): main.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.c$(PreprocessSuffix) main.c
-
-$(IntermediateDirectory)/utils.c$(ObjectSuffix): utils.c $(IntermediateDirectory)/utils.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/utils.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/utils.c$(DependSuffix): utils.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/utils.c$(ObjectSuffix) -MF$(IntermediateDirectory)/utils.c$(DependSuffix) -MM utils.c
-
-$(IntermediateDirectory)/utils.c$(PreprocessSuffix): utils.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/utils.c$(PreprocessSuffix) utils.c
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)

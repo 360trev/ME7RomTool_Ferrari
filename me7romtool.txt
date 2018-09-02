@@ -1,1 +1,1 @@
-./Release/crc32.c.o ./Release/main.c.o ./Release/utils.c.o   
+./Release/utils.c.o ./Release/crc32.c.o ./Release/main.c.o   
