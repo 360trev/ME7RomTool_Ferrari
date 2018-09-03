@@ -294,6 +294,8 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 	unsigned char *addr;
 	unsigned char *offset_addr;
 	unsigned short offset,entries;
+	unsigned long masked_start_addr=0;
+	unsigned long masked_end_addr=0;
 	unsigned long start_addr=0;
 	unsigned long end_addr=0;
 	unsigned long last_end_addr=0;
@@ -303,6 +305,8 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 	uint32_t i, sum, final_sum=0;
 	int num_entries = 0;
 	int num_multipoint_entries_byte;
+	int hiword, loword;
+	unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 	
 	/* load file from storage */
 	load_result = iload_file(fh, filename_rom, 0);
@@ -323,6 +327,37 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			}
 			printf("\n");
 
+//-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** Main Rom Checksum bytecode sequence #1 ***
+			 */
+			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
+
+			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
+			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, sizeof(needle_dpp), 0 );
+			if(addr == NULL) {
+				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!");
+			} else {
+				printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+
+				dpp0_value = (get16((unsigned char *)addr + 2 + 0));
+				dpp1_value = (get16((unsigned char *)addr + 2 + 4));
+				dpp2_value = (get16((unsigned char *)addr + 2 + 8));
+				dpp3_value = (get16((unsigned char *)addr + 2 + 12));
+
+				printf("\ndpp0: 0x%-4.4x",(int)(dpp0_value) );
+				printf("\ndpp1: 0x%-4.4x",(int)(dpp1_value) );
+				printf("\ndpp2: 0x%-4.4x",(int)(dpp2_value) );
+				printf("\ndpp3: 0x%-4.4x (DPP3 is always 3, otherwise accessing CPU register area not possible)",(int)(dpp3_value) );
+				printf("\n");
+					
+			}
+			printf("\n");
+
+//-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+			printf("\n\n-[ Main-Rom Checksum Analysis ]----------------------------------------------------------\n\n");
+			
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
 			 */
@@ -346,16 +381,55 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					printf("Unable to determine number of entries. Please contact developers.\n");
 				}	
 			}
+
+//-[ MAINROM <Start/End Array> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
 			 */
-			printf(">>> Scanning for Main ROM Checksum sub-routine #2 [to extract Start/End regions] ");
+#if 0
+			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2c [to extract Start/End regions] ");
+			addr = search( fh, (unsigned char *)&needle_2v2, (unsigned char *)&mask_2v2, sizeof(needle_2v2), 0 );
+			if(addr == NULL) {
+				printf("\nmain checksum byte sequence not found\nGiving up.\n");
+			} else {
+				printf("\nmain checksum byte sequence #2c found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				final_sum = 0;
+				for(i=0;i < num_entries;i++) 
+				{
+					// address of rom_table [8 bytes] -- Region [i]: start,end
+					printf("\nMain Region Block #%d: ",i+1);		
+					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, (int)addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
+					start_addr &= ~(ROM_1MB_MASK);
+					printf("0x%lx",(long int)start_addr );		
+					
+					last_end_addr = end_addr;
+					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, i*8);		// extract 'end address' directly from identified checksum machine code
+					end_addr &= ~(ROM_1MB_MASK);
+					printf("0x%lx",(long int)end_addr );
+
+					// calculate checksum for this block
+					sum = CalcChecksumBlk(fh,start_addr,end_addr);
+					printf(" sum=%lx ~sum=%lx : acc_sum=%lx", (unsigned long)sum, (unsigned long)~sum, (unsigned long)final_sum);
+
+					// add this regions sum to final accumulative checksum
+					final_sum += sum;
+				}
+				printf("\n\nFinal Main ROM Checksum calculation:  0x%-8.8lx (after %d rounds)", (unsigned long)final_sum,i);
+				printf("\nFinal Main ROM Checksum calculation: ~0x%-8.8lx\n",(unsigned long)~final_sum);
+				printf("\n");
+
+			}
+#endif
+//-[ MAINROM <Start/End Array> Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2 [to extract Start/End regions] ");
 			addr = search( fh, (unsigned char *)&needle_2, (unsigned char *)&mask_2, sizeof(needle_2), 0 );
 			if(addr == NULL) {
 				printf("\nmain checksum byte sequence not found\nGiving up.\n");
 			} else {
-				printf("\nmain checksum byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				printf("\nmain checksum byte sequence #2 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				final_sum = 0;
 				for(i=0;i < num_entries;i++) 
 				{
 					// address of rom_table [8 bytes] -- Region [i]: start,end
@@ -379,166 +453,256 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n\nFinal Main ROM Checksum calculation:  0x%-8.8lx (after %d rounds)", (unsigned long)final_sum,i);
 				printf("\nFinal Main ROM Checksum calculation: ~0x%-8.8lx\n",(unsigned long)~final_sum);
 				printf("\n");
-				/*
-				 * search: *** Main Rom Checksum bytecode sequence #3 : MAIN ROM stored HI/LO checksums ***
-				 */
-				printf("\n>>> Scanning for Main ROM Checksum sub-routine #3 variant #A [to extract stored checksums and locations in ROM] ");
-				addr = search( fh, (unsigned char *)&needle_3, (unsigned char *)&mask_3, sizeof(needle_3), 0 );
+			}
+
+//-[ MAINROM <Stored Checksums> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+			/*
+			 * search: *** Main Rom Checksum bytecode sequence #3 : MAIN ROM stored HI/LO checksums ***
+			 */
+			printf("\n>>> Scanning for Main ROM Checksum sub-routine #3 variant #A [to extract stored checksums and locations in ROM] ");
+			addr = search( fh, (unsigned char *)&needle_3, (unsigned char *)&mask_3, sizeof(needle_3), 0 );
+			if(addr == NULL) {
+				printf("\nmain checksum byte sequence #3 variant #A not found\nTrying different variant.\n");
+
+				printf("\n>>> Scanning for (!) Main ROM Checksum sub-routine #3 variant #B [to extract stored checksums and locations in ROM] ");
+				addr = search( fh, (unsigned char *)&needle_3b, (unsigned char *)&mask_3b, sizeof(needle_3b), 0 );
 				if(addr == NULL) {
-					printf("\nmain checksum byte sequence #3 variant #A not found\nTrying different variant.\n");
-
-					printf("\n>>> Scanning for Main ROM Checksum sub-routine #3 variant #B [to extract stored checksums and locations in ROM] ");
-					addr = search( fh, (unsigned char *)&needle_3b, (unsigned char *)&mask_3b, sizeof(needle_3b), 0 );
-					if(addr == NULL) {
-						printf("\nmain checksum byte sequence #3 variant #B not found\nTrying different variant.\n");
-					} else {
-
-						printf("\nmain checksum byte sequence #3 variant #B block found at offset=0x%x.\n",(int)(addr-offset_addr) );
-						printf("\nStored Main ROM Block Checksum: ");		
-						checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 0);		// start
-						printf("0x%lx",(long unsigned int)checksum_norm );		
-						
-						printf("\nStored Main ROM Block ~Checksum: ");		
-						checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 4);		// start
-						printf("0x%lx",(long unsigned int)checksum_comp );		
-						printf("\n\n");
-							
-						printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)final_sum, (long)checksum_norm);
-						if(final_sum == checksum_norm)  { printf("OK!\t"); } else {printf("BAD!\t"); }
-						printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
-						if(~final_sum == checksum_comp) { printf("OK!\n"); } else {printf("BAD!\n"); }
-					}
-				
-					printf("\n");
-
+					printf("\nmain checksum byte sequence #3 variant #B not found\nTrying different variant.\n");
 				} else {
-					printf("\nmain checksum byte sequence #3 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					printf("\nmain checksum byte sequence #3 variant #B block found at offset=0x%x.\n",(int)(addr-offset_addr) );
 					printf("\nStored Main ROM Block Checksum: ");		
-					checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 0);		// start
+					checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 0);		// start
 					printf("0x%lx",(long unsigned int)checksum_norm );		
-					
+						
 					printf("\nStored Main ROM Block ~Checksum: ");		
-					checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 4);		// start
+					checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 4);		// start
 					printf("0x%lx",(long unsigned int)checksum_comp );		
 					printf("\n\n");
-						
+							
 					printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)final_sum, (long)checksum_norm);
 					if(final_sum == checksum_norm)  { printf("OK!\t"); } else {printf("BAD!\t"); }
 					printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
 					if(~final_sum == checksum_comp) { printf("OK!\n"); } else {printf("BAD!\n"); }
-				}
+				}				
+				printf("\n");
+			
+			} else {
+				printf("\nmain checksum byte sequence #3 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				printf("\nStored Main ROM Block Checksum: ");		
+				checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 0);		// start
+				printf("0x%lx",(long unsigned int)checksum_norm );		
+					
+				printf("\nStored Main ROM Block ~Checksum: ");		
+				checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 4);		// start
+				printf("0x%lx",(long unsigned int)checksum_comp );		
+				printf("\n\n");
+						
+				printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)final_sum, (long)checksum_norm);
+				if(final_sum == checksum_norm)  { printf("OK!\t"); } else {printf("BAD!\t"); }
+				printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
+				if(~final_sum == checksum_comp) { printf("OK!\n"); } else {printf("BAD!\n"); }
+			}
+
+//-[ Multipoint <Number of Table Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+				printf("\n\n-[ Multipoint Checksum Analysis ]--------------------------------------------------------\n");
 
 				/*
-				 * search: *** Multipoint Checksum bytecode sequence #2 : Multipoint  stored HI/LO checksum list ***
+				 * search: *** Multipoint Checksum bytecode sequence #1 variant #A : Multipoint number of entries ***
 				 */
-				printf("\n\n>>> Scanning for Multipoint Checksum sub-routine #1 [to extract number entries in stored checksum list in ROM] ");
+				unsigned char *get_offset_addr = 0;
+				
+				printf("\n>>> Scanning for Multipoint Checksum sub-routine #1 Variant A [to extract number entries in stored checksum list in ROM] \n");
 				addr = search( fh, (unsigned char *)&needle_4b, (unsigned char *)&mask_4b, sizeof(needle_4b), 0 );
-				if(addr == NULL) {
-					printf("\nMultipoint checksum byte sequence #1 not found\nGiving up.\n");
+				if(addr != NULL) {
+					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					get_offset_addr = ((unsigned char *)addr + 42);
 				} else {
-					printf("\nMultipoint byte sequence #1 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					// extract number of multipoint entries from needle_4b, byte offset 42
-					num_multipoint_entries_byte = (get16((unsigned char *)addr + 42));
-					if(num_multipoint_entries_byte > 0) {
-						printf("Found #%d Multipoint Entries in table\n\n", num_multipoint_entries_byte);
-					} else {
-						printf("Unable to determine number of entries\n");
+
+					// if not found try alternative variant
+					printf("\n>>> Scanning for Multipoint Checksum sub-routine #1 Variant B [to extract number entries in stored checksum list in ROM] \n");
+					addr = search( fh, (unsigned char *)&needle_4c, (unsigned char *)&mask_4c, sizeof(needle_4c), 0 );
+					if(addr != NULL) {
+						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+						get_offset_addr = ((unsigned char *)addr + 44);
 					}
 				}
 
+				if(get_offset_addr != 0) {
+					// extract number of multipoint entries from needle_4bb, byte offset 44
+					num_multipoint_entries_byte = get16(get_offset_addr);
+					if(num_multipoint_entries_byte > 0) {
+						printf("Found #%d Multipoint Entries in table\n", num_multipoint_entries_byte);
+					} else {
+						printf("Unable to determine number of entries. Please Contact Developer!\n");
+					}				
+				}
+
+
+//-[ Multipoint <Stored Checksums> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
 				/*
-				 * search: *** Multipoint Checksum bytecode sequence #2 : Multipoint  stored HI/LO checksum list ***
-				 */
-				printf("\n\n>>> Scanning for Multipoint Checksum sub-routine #2 [to extract address of stored checksum list location in ROM] ");
+				 * search: *** Multipoint Checksum bytecode sequence #2b : Multipoint  stored HI/LO checksum list ***
+				*/
+				int lo_num_bits, hi_num_bits, skip_factor;
+				unsigned char *seg_addr, *lo_addr, *hi_addr;
+				int do_multipoint = 0;
+
+				printf("\n>>> Scanning for Multipoint Checksum sub-routine #2 Variant A [to extract address of stored checksum list location in ROM] \n");
 				addr = search( fh, (unsigned char *)&needle_4, (unsigned char *)&mask_4, sizeof(needle_4), 0 );
-				if(addr == NULL) {
-					printf("\nMultipoint checksum byte sequence #2 not found\nGiving up.\n");
+				if(addr != NULL) {
+					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					lo_num_bits = 32;
+					hi_num_bits = 0;
+					seg_addr    = addr+58;
+					lo_addr     = addr+54;
+					hi_addr     = 0;
+					skip_factor = 0;
+					do_multipoint = 1;
 				} else {
-					printf("\nMultipoint byte sequence #2 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
+
+					// if not found try alternative variant
+					printf("\n>>> Scanning for Multipoint Checksum sub-routine #2 Variant B [to extract address of stored checksum list location in ROM] \n");
+					addr = search( fh, (unsigned char *)&needle_4aa, (unsigned char *)&mask_4aa, sizeof(needle_4aa), 0 );
+					if(addr != NULL) {
+						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+						
+						lo_num_bits = 16;
+						hi_num_bits = 16;
+						seg_addr    = addr+24;
+						lo_addr     = addr+28;
+						hi_addr     = addr+32;
+						skip_factor = 32;				// skip past 1st 2 entries which are actually CRC32's in table
+						do_multipoint = 1;
+
+						num_multipoint_entries_byte -= 2;						
+						printf("***Experimental***: Note Variant #B has 2 crc32's in the table before the multipoints. Skipping the CRC's and just doing the multipoints..\n");
+					}				
+				}
+				
+				if(do_multipoint == 1)
+				{
 					int j, good=0, bad=0;
-					int nCalcCRC;
+//					int nCalcCRC;
 					for(i=0,j=1; j<= num_multipoint_entries_byte; i=i+16) 
 					{
-						// address of rom_table [8 bytes] -- Region [i]: start,end
-						printf("\nBlk #%-2.2d: ",j++);		
-						long int range;
+							// address of rom_table [8 bytes] -- Region [i]: start,end
+							printf("\nBlk #%-2.2d: ",j++);		
+							long int range;
+							start_addr           = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+0+skip_factor);		// extract 'start address' directly from identified multippoint table
+							masked_start_addr    = start_addr;
+							masked_start_addr   &= ~(ROM_1MB_MASK);
+							printf("Start:   0x%-8.8lx (offset: 0x%-8.8lx)",(long int)start_addr,(long int)masked_start_addr );
+							
+							end_addr             = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+4+skip_factor);		// extract 'end address  ' directly from identified multippoint table
+							masked_end_addr      = end_addr;
+							masked_end_addr     &= ~(ROM_1MB_MASK);
 
-						start_addr    = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+54+00, 32, 0, 0,(int)addr+58,  i+0);		// extract 'start address' directly from identified multippoint table
-						start_addr   &= ~(ROM_1MB_MASK);
-						printf("Start:   0x%-8.8lx ",(long int)start_addr );		
-						end_addr      = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+54+00, 32, 0, 0, (int)addr+58, i+4);		// extract 'end address  ' directly from identified multippoint table
-						end_addr     &= ~(ROM_1MB_MASK);
+							// perform calculation sum for the given multipoint range
+							if(masked_start_addr < masked_end_addr) {
+								sum       = CalcChecksumBlk(fh, masked_start_addr, masked_end_addr);
+							} else if(masked_start_addr == masked_end_addr) {
+								sum       = 0;
+							}
+							// extract from rom original stored checksums
+							printf(" End:    0x%-8.8lx (offset: 0x%-8.8lx)",(long int)end_addr, (long int)masked_end_addr );
+							
+							checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+8+skip_factor);		// extract 'checksum'      directly from identified multippoint table
+							printf(" Chksum: 0x%-8.8lx :  Calc: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
 
-						// perform calculation sum for the given multipoint range
-						if(start_addr < end_addr) {
-							sum       = CalcChecksumBlk(fh,start_addr,end_addr);
-						} else if(start_addr == end_addr) {
-							sum       = 0;
-						}
+							// did the stored match the one we just calculated? (for normal version)
+							if(checksum_norm == sum) { printf("OK"); } else { printf("BAD! "); } 
+							checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+12+skip_factor);		// extract '~checksum'     directly from identified multippoint table
+							printf("~Chksum: 0x%-8.8lx : ~Calc: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
 
-						// extract from rom original stored checksums
-						printf(" End:    0x%-8.8lx",(long int)end_addr );		
-						checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+54+00, 32, 0, 0, (int)addr+58, i+8);		// extract 'checksum'      directly from identified multippoint table
-						printf(" Chksum: 0x%-8.8lx :  Calc: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
-
-						// did the stored match the one we just calculated? (for normal version)
-						if(checksum_norm == sum) { printf("OK"); } else { printf("BAD! "); } 
-						checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+54+00, 32, 0, 0, (int)addr+58, i+12);		// extract '~checksum'     directly from identified multippoint table
-						printf("~Chksum: 0x%-8.8lx : ~Calc: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
-
-						// did the stored match the one we just calculated? (for one's complement version)
-						if(checksum_comp == ~sum) { printf("OK"); good++; } else { printf("BAD! "); bad++; } 
+							// did the stored match the one we just calculated? (for one's complement version)
+							if(checksum_comp == ~sum) { printf("OK"); good++; } else { printf("BAD! "); bad++; } 
 					}
-					printf("\n\n");			
+
 					if(good == num_multipoint_entries_byte) {
-						printf("All Multipoint checksums are correct.\n");
+						printf("\n\nAll Multipoint checksums are correct.\n");
 					} else {
 						// only show percentages if not all multipoints passed
-						printf("Total Multipoint Checksums Passed: %d (%d%%)\n", good, (good*100)/(((num_multipoint_entries_byte*100)/100)) );
+						printf("\n\nTotal Multipoint Checksums Passed: %d (%d%%)\n", good, (good*100)/(((num_multipoint_entries_byte*100)/100)) );
 						printf("Total Multipoint Checksums Failed: %d (%d%%)\n", bad,  (bad*100)/(((num_multipoint_entries_byte*100)/100)) );
 						printf("\n");
 					}
-				}			
-				printf("\n");
-			} // end checksum searches..
 
+				}
+		
+//-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** Seed/Key Check Patch #1 ***
 			 */
-            		if(seedkey_patch == 1) {
-				printf(">>> Scanning for SecurityAccessBypass Variant #1 Checking sub-routine [allow any login seed to pass] ");
+			printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
+			 
+			if(seedkey_patch == 1) {
+				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
-				if(addr == NULL) {
-					printf("\nSeedcheck Variant #1 byte sequence not found\n");
-				} else {
+				if(addr != NULL) {
 					seedkey_patch = 2;
-					printf("\nSeedcheck Variant #1 byte sequence found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					printf("\nApplying patch so any login seed is successful... ");
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					printf("Applying patch so any login seed is successful... ");
 					addr[0x5d] = 0x14; 
 					printf("Patched!\n");
 				}
-				printf("\n\n");
+				printf("\n");
 			} 
 			
+//-[ Seedkey Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** Seed/Key Check Patch #2 ***
+			 */
+
 			if(seedkey_patch == 1) {
-				printf(">>> Scanning for SecurityAccessBypass Variant #2 Checking sub-routine [allow any login seed to pass] ");
+				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, sizeof(needle_6), 0 );
-				if(addr == NULL) {
-					printf("\nSeedcheck Variant #2 byte sequence not found\n");
-				} else {
-					printf("\nSeedcheck Variant #2 byte sequence found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					printf("\nApplying patch so any login seed is successful... ");
+				if(addr != NULL) {
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					printf("Applying patch so any login seed is successful... ");
 					addr[0x64] = 0x14; 
 					printf("Patched!\n");
 				}
 				printf("\n\n");
 			}
 
+//-[ XorChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** XorChecksumCalc #1 ***
+			 */
 
+			printf("-[ XorChecksumCalc ]---------------------------------------------------------------------\n\n");
+			{
+				int xor_table_hi;
+				int xor_table_lo;
+				unsigned long xor_table_addr;
+				
+				printf(">>> Scanning for XorChecksumCalc() Variant #1 Checking sub-routine [calculates xor from table] \n");
+				addr = search( fh, (unsigned char *)&xor_needle, (unsigned char *)&xor_mask, sizeof(xor_needle), 0 );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					xor_table_lo   = (get16((unsigned char *)addr + 38));	
+					xor_table_hi    = (get16((unsigned char *)addr + 42));	
+					xor_table_addr  = (unsigned long)(xor_table_hi << 16 | xor_table_lo);
+					xor_table_addr &= ~(ROM_1MB_MASK);
+					
+					printf("xor-table_located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)xor_table_hi,(int)xor_table_lo, xor_table_addr );
+
+					printf("\nunsigned short XorTable_%x[%d] = {\n", xor_table_addr, 256);
+					hexdump_le32_table(offset_addr + xor_table_addr, 1024, "};\n");					
+				}
+				printf("\n\n");
+			}
+
+//-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** HFM Linearization code sequence ***
 			 */
-			printf(">>> Scanning for HFM Linearization Table Lookup code sequence...");
+
+			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
+
+			printf(">>> Scanning for HFM Linearization Table Lookup code sequence... \n");
 			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, sizeof(needle_1), 0 );
 			if(addr == NULL) {
 				printf("\nhfm sequence not found\n\n");

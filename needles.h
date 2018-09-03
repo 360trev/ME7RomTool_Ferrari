@@ -115,10 +115,8 @@ const unsigned char needle_2[] = {
  0xF6, YYYY, XXXX, XXXX,     // mov  var_x, rY
  0xF6, YYYY, XXXX, XXXX,     // mov  var_x, rY
 
- 0xDB, 0x00                  // rets
- 
+ 0xDB, 0x00                  // rets 
 };
-
 
 const unsigned char mask_2[] = {
  MASK, MASK, SKIP, SKIP,     // mov  var_x, zeros
@@ -142,6 +140,46 @@ const unsigned char mask_2[] = {
  
  MASK, MASK                  // rets
 };
+
+#if 0
+const unsigned char needle_2v2[] = {
+ 0xE1, 0x28,                 // movb    rl4, #2
+ 0x05, 0xF8, XXXX, XXXX,     // addb    byte_380103, rl4
+ 0xC2, 0xF6, XXXX, XXXX,     // movbz   r6, byte_380103
+ 0x5C, 0x26,                 // shl     r6, #2
+ 0xD7, 0x60, XXXX, XXXX,     // extp    #206h, #3          +14
+ 0xD4, 0x46, XXXX, XXXX,     // mov     r4, [r6+start_hi]  +18
+ 0xD4, 0x56, XXXX, XXXX,     // mov     r5, [r6+start_lo]  +22
+ 0xCC, 0x00,                 // nop                        
+ 0xF6, 0xF4, XXXX, XXXX,     // mov     word_3800FE, r4    
+ 0xF6, 0xF5, XXXX, XXXX,     // mov     word_380100, r5    
+ 0xD7, 0x60, XXXX, XXXX,     // extp    #206h, #3          +36
+ 0xD4, 0x46, XXXX, XXXX,     // mov     r4, [r6+end_hi]    +40
+ 0xD4, 0x56, XXXX, XXXX,     // mov     r5, [r6+end_lo]    +44
+ 0xCC, 0x00,                 // nop
+ 0xF6, 0xF4, XXXX, XXXX,     // mov     word_380104, r4
+ 0xF6, 0xF5, XXXX, XXXX      // mov     word_380106, r5
+};
+ 
+const unsigned char mask_2v2[] = {
+ MASK, MASK,                 // movb    rl4, #2
+ MASK, MASK, SKIP, SKIP,     // addb    byte_380103, rl4
+ MASK, MASK, SKIP, SKIP,     // movbz   r6, byte_380103
+ MASK, MASK,                 // shl     r6, #2
+ MASK, MASK, SKIP, SKIP,     // extp    #206h, #3
+ MASK, MASK, SKIP, SKIP,     // mov     r4, [r6+start_hi]
+ MASK, MASK, SKIP, SKIP,     // mov     r5, [r6+start_lo]
+ MASK, MASK,                 // nop
+ MASK, MASK, SKIP, SKIP,     // mov     word_3800FE, r4
+ MASK, MASK, SKIP, SKIP,     // mov     word_380100, r5
+ MASK, MASK, SKIP, SKIP,     // extp    #206h, #3
+ MASK, MASK, SKIP, SKIP,     // mov     r4, [r6+end_hi]
+ MASK, MASK, SKIP, SKIP,     // mov     r5, [r6+end_lo]
+ MASK, MASK,                 // nop
+ MASK, MASK, SKIP, SKIP,     // mov     word_380104, r4
+ MASK, MASK, SKIP, SKIP      // mov     word_380106, r5
+};
+#endif
 
 //
 // this is the needle for the Main Checksum function to extract the "Number of entries in the table"
@@ -190,8 +228,8 @@ const unsigned char mask_2b[] = {
  MASK, MASK,                 // mov     r7, #0
  MASK, MASK                  // jmpr    cc_UC, loc_E30BA
 };
-
-
+ 
+ 
 //
 // this is the needle (masked) for the Main Checksum function to extract the stored checksum Hi & Lo Words
 //
@@ -248,18 +286,18 @@ const unsigned char needle_3b[] = {
  0xF0, 0x59,                 // mov     r5, r9
  0x22, 0xF4, XXXX, XXXX,     // sub     r4, var_Y
  0x32, 0xF5, XXXX, XXXX,     // subc    r5, var_Y
- 0xEA, 0x80, 0x5C, 0x31,     // jmpa    cc_C, loc_YYYY
- 0x0D, 0x1E,                 // jmpr    cc_UC, loc_YYYY [26]
+ 0xEA, 0x80, XXXX, XXXX,     // jmpa    cc_C, loc_YYYY
+ 0x0D, SKIP,                 // jmpr    cc_UC, loc_YYYY [26]
  
  0xF2, 0xF4, XXXX, XXXX,     // mov     r4, var_Y
  0xF2, 0xF5, XXXX, XXXX,     // mov     r5, var_Y
  0xD7, 0x50, XXXX, XXXX,     // extp    #XXXXh, #2 ; '?'         <--- * this is the segment offset [+36]
  0x22, 0xF4, XXXX, XXXX,     // sub     r4, checksum_stored_hi   <--- * this is offset to the word (stored checksum) [+40]
  0x32, 0xF5, XXXX, XXXX,     // subc    r5, checksum_stored_lo   <--- * this is offset to the word (stored checksum) [+44]
- 0x3D, 0x04,                 // jmpr    cc_NZ, loc_YYYY
- 0xE1, 0x88,                 // movb    rl4, #8
- 0x75, 0xF8, XXXX, XXXX,     // orb     var_X, rl4
- 0x0D, 0x04                  // jmpr    cc_UC, loc_YYYY
+ 0x3D, XXXX,                 // jmpr    cc_NZ, loc_YYYY
+// 0xE1, 0x88,                 // movb    rl4, #8
+// 0x75, 0xF8, XXXX, XXXX,     // orb     var_X, rl4
+// 0x0D, 0x04                  // jmpr    cc_UC, loc_YYYY
 };
 
 const unsigned char mask_3b[] = {
@@ -269,18 +307,18 @@ const unsigned char mask_3b[] = {
  MASK, MASK,                 // mov     r5, r9
  MASK, MASK, SKIP, SKIP,     // sub     r4, var_Y
  MASK, MASK, SKIP, SKIP,     // subc    r5, var_Y
- MASK, MASK, MASK, MASK,     // jmpa    cc_C, loc_YYYY
- MASK, MASK,                 // jmpr    cc_UC, loc_YYYY
+ MASK, MASK, SKIP, SKIP,     // jmpa    cc_C, loc_YYYY
+ MASK, SKIP,                 // jmpr    cc_UC, loc_YYYY
  
  MASK, MASK, SKIP, SKIP,     // mov     r4, var_Y
  MASK, MASK, SKIP, SKIP,     // mov     r5, var_Y
  MASK, MASK, SKIP, SKIP,     // extp    #XXXXh, #2 ; '?'         <--- * this is the segment offset
  MASK, MASK, SKIP, SKIP,     // sub     r4, checksum_stored_hi   <--- * this is offset to the word (stored checksum)
  MASK, MASK, SKIP, SKIP,     // subc    r5, checksum_stored_lo   <--- * this is offset to the word (stored checksum)
- MASK, MASK,                 // jmpr    cc_NZ, loc_YYYY
- MASK, MASK,                 // movb    rl4, #8
- MASK, MASK, SKIP, SKIP,     // orb     var_X, rl4
- MASK, MASK                  // jmpr    cc_UC, loc_YYYY
+ MASK, SKIP,                 // jmpr    cc_NZ, loc_YYYY
+// MASK, MASK,                 // movb    rl4, #8
+// MASK, MASK, SKIP, SKIP,     // orb     var_X, rl4
+// MASK, MASK                  // jmpr    cc_UC, loc_YYYY
 };
 
 //
@@ -343,6 +381,56 @@ const unsigned char mask_4[] = {
  MASK, MASK                // rets         
 };
 
+
+const unsigned char needle_4aa[] = {
+ 0x9A, 0x89, XXXX, XXXX,   // jnb     ROMEN, loc_XXXX
+ 0xF6, 0x8E, XXXX, XXXX,   // mov     word_XXXX, ZEROS
+ 0x0D, XXXX,               // jmpr    cc_UC, loc_XXXX
+ 0xE0, 0x84,               // mov     r4, #8
+ 0xF6, 0xF4, XXXX, XXXX,   // mov     word_XXXX, r4
+ 0xF2, 0xF4, XXXX, XXXX,   // mov     r4, word_XXXX
+ 0x5C, 0x24,               // shl     r4, #2
+ 0xD7, 0x60, XXXX, XXXX,   // extp    #207h, #3             [+24] <--- * this is the segment offset
+ 0xD4, 0xA4, XXXX, XXXX,   // mov     r10, [r4+word_81FC00] [+28] <--- *** This is the multipoint hi table ****************
+ 0xD4, 0xB4, XXXX, XXXX,   // mov     r11, [r4+word_81FC02] [+32] <--- *** This is the multipoint lo table ****************
+ 0xCC, 0x00,               // nop
+ 0xF6, 0xFA, XXXX, XXXX,   // mov     XXXX, r10
+ 0xF6, 0xFB, XXXX, XXXX    // mov     XXXX, r11
+};
+
+const unsigned char mask_4aa[] = {
+ MASK, MASK, SKIP, SKIP,   // jnb     ROMEN, loc_XXXX
+ MASK, MASK, SKIP, SKIP,   // mov     word_XXXX, ZEROS
+ MASK, SKIP,               // jmpr    cc_UC, loc_XXXX
+ MASK, MASK,               // mov     r4, #8
+ MASK, MASK, SKIP, SKIP,   // mov     word_XXXX, r4
+ MASK, MASK, SKIP, SKIP,   // mov     r4, word_XXXX
+ MASK, MASK,               // shl     r4, #2
+ MASK, MASK, SKIP, SKIP,   // extp    #207h, #3
+ MASK, MASK, SKIP, SKIP,   // mov     r10, [r4+word_81FC00]
+ MASK, MASK, SKIP, SKIP,   // mov     r11, [r4+word_81FC02]
+ MASK, MASK,               // nop
+ MASK, MASK, SKIP, SKIP,   // mov     XXXX, r10
+ MASK, MASK, SKIP, SKIP    // mov     XXXX, r11
+};
+
+//
+// Easily Identify the dpp0 - dpp3 register rom settings
+//
+const unsigned char needle_dpp[] = {
+ 0xE6, 0x00, XXXX, XXXX,   // mov     DPP0, #XXXXh
+ 0xE6, 0x01, XXXX, XXXX,   // mov     DPP1, #XXXXh
+ 0xE6, 0x02, XXXX, XXXX,   // mov     DPP2, #XXXXh 
+ 0xE6, 0x03, XXXX, XXXX,   // mov     DPP3, #XXXX
+};
+
+const unsigned char mask_dpp[] = {
+ MASK, MASK, SKIP, SKIP,   // mov     DPP0, #XXXXh
+ MASK, MASK, SKIP, SKIP,   // mov     DPP1, #XXXXh
+ MASK, MASK, SKIP, SKIP,   // mov     DPP2, #XXXXh 
+ MASK, MASK, SKIP, SKIP,   // mov     DPP3, #XXXX
+};
+
 //
 // this needle is to extract the number of entries contained in the multipoint checksum table
 //
@@ -375,8 +463,50 @@ const unsigned char mask_4b[] = {
  MASK, MASK, MASK, MASK,   // or      r2, #40FFh
  MASK, MASK, SKIP, SKIP,   // mov     word_XXXX, r2
  MASK, MASK, SKIP, SKIP,   // mov     r4, word_XXXX
- MASK, MASK, SKIP, SKIP,   // cmp     r4, #XX					<--- * this is the number of entries in the multipoint checksum oop
+ MASK, MASK, SKIP, SKIP,   // cmp     r4, #XX			[+42]		<--- * this is the number of entries in the multipoint checksum table [16 bit]
  MASK, MASK, SKIP, SKIP    // jmpa    cc_NC, loc_XXXX
+};
+
+const unsigned char needle_4c[] = {
+ 0xF3, 0xF8, XXXX, XXXX,      // movb    rl4, byte_XXXX
+ 0x43, 0xF8, XXXX, XXXX,      // cmpb    rl4, byte_XXXX
+ 0xEA, 0x30, XXXX, XXXX,      // jmpa    cc_NZ, multipoint_range_checks_11
+
+ 0xF3, 0xFA, XXXX, XXXX,      // movb    rl5, byte_XXXX
+ 0x49, 0xA1,                  // cmpb    rl5, #1 
+ 0xEA, 0x20, XXXX, XXXX,      // jmpa    cc_Z, multipoint_range_checks_11
+
+ 0xF7, 0x8F, XXXX, XXXX,      // movb    byte_XXXX, ONES
+ 0x46, 0xF6, 0x00, 0x10,      // cmp     r6, #1000h
+ 0xEA, 0x30, XXXX, XXXX,      // jmpa    cc_NZ, multipoint_range_checks_4
+
+ 0xF2, 0xF6, XXXX, XXXX,      // mov     r6, word_XXXX
+ 0x66, 0xF6, 0xFF, 0x00,      // and     r6, #0FFh
+ 0x46, 0xF6, 0x22, 0x00,      // cmp     r6, #22h ; '"'  [+44]         <--- * number of entries in the multipoint checksum table (16-bit hex value)
+ 0xEA, 0xE0, XXXX, XXXX,      // jmpa    cc_UGT, multipoint_range_checks_4
+
+ 0xF0, 0x46,                  // mov     r4, r6
+};
+
+const unsigned char mask_4c[] = {
+ MASK, MASK, SKIP, SKIP,      // movb    rl4, byte_XXXX
+ MASK, MASK, SKIP, SKIP,      // cmpb    rl4, byte_XXXX
+ MASK, MASK, SKIP, SKIP,      // jmpa    cc_NZ, multipoint_range_checks_11
+
+ MASK, MASK, SKIP, SKIP,      // movb    rl5, byte_XXXX
+ MASK, MASK,                  // cmpb    rl5, #1 
+ MASK, MASK, SKIP, SKIP,      // jmpa    cc_Z, multipoint_range_checks_11
+
+ MASK, MASK, SKIP, SKIP,      // movb    byte_XXXX, ONES
+ MASK, MASK, MASK, MASK,      // cmp     r6, #1000h
+ MASK, MASK, SKIP, SKIP,      // jmpa    cc_NZ, multipoint_range_checks_4
+
+ MASK, MASK, SKIP, SKIP,      // mov     r6, word_XXXX
+ MASK, MASK, MASK, MASK,      // and     r6, #0FFh                             masked ensures no more than 256 entries ...
+ MASK, MASK, SKIP, SKIP,      // cmp     r6, #22h ; '"'              [+44]     <-------- * number of entries in table (16-bit hex value) 
+ MASK, MASK, SKIP, SKIP,      // jmpa    cc_UGT, multipoint_range_checks_4
+
+ MASK, MASK,                  // mov     r4, r6
 };
 
 
@@ -578,5 +708,111 @@ const unsigned char mask_6[] = {
  MASK, MASK,               // mov     r6, [r0+]
  MASK, MASK                // rets
 };
+
+const unsigned char xor_needle[] = {
+ 0x88, 0x90,              // mov     [-r0], r9
+ 0x88, 0x80,              // mov     [-r0], r8
+ 0x88, 0x70,              // mov     [-r0], r7
+ 0x88, 0x60,              // mov     [-r0], r6
+ 0x28, 0x02,              // sub     r0, #2
+ 0xE0, 0x0F,              // mov     r15, #0
+ 0xF2, 0xF6, XXXX, XXXX,  // mov     r6, word_XXXX
+ 0xF2, 0xF7, XXXX, XXXX,  // mov     r7, word_XXXX
+ 0xF0, 0x8C,              // mov     r8, r12
+ 0xF0, 0x9D,              // mov     r9, r13
+ 0x0D, 0x1E,              // jmpr    cc_UC, enterloop
+ 0xDC, 0x09,              // sumloop: exts    r9, #1
+ 0xA9, 0x88,              // movb    rl4, [r8]
+ 0xF0, 0x56,              // mov     r5, r6
+ 0x51, 0xA8,              // xorb    rl5, rl4
+ 0xB9, 0xA0,              // movb    [r0], rl5
+ 0xE6, 0xF4, XXXX, XXXX,  // mov     r4, #CAB0 ; lo word 
+ 0xE6, 0xF5, XXXX, XXXX,  // mov     r5, #0081 ; hi word   <---- XorTable 
+ 0xA9, 0x60,              // movb    rl3, [r0]
+ 0xC0, 0x62,              // movbz   r2, rl3
+ 0x5C, 0x22,              // shl     r2, #2
+ 0xE0, 0x03,              // mov     r3, #0
+ 0x00, 0x42,              // add     r4, r2
+ 0x10, 0x53,              // addc    r5, r3
+ 0xDA, 0x00, XXXX, XXXX,   // calls   0, word_XXXX
+ 0xE6, 0x00, XXXX, XXXX,   // mov     DPP0, #XXXXh
+ 0xF0, 0x46,              // mov     r4, r6
+ 0xF0, 0x57,              // mov     r5, r7
+ 0xF1, 0x89,              // movb    rl4, rh4
+ 0xF1, 0x9A,              // movb    rh4, rl5
+ 0x7C, 0x85,              // shr     r5, #8
+ 0x50, 0x4A,              // xor     r4, r10
+ 0x50, 0x5B,              // xor     r5, r11
+ 0xF0, 0x64,              // mov     r6, r4
+ 0xF0, 0x75,              // mov     r7, r5
+ 0x08, 0x81,              // add     r8, #1
+ 0x18, 0x90,              // addc    r9, #0
+ 0xF0, 0x4F,              // enterloop: mov     r4, r15
+ 0x08, 0xF1,              // add     r15, #1
+ 0x40, 0x4E,              // cmp     r4, r14
+ 0x8D, 0xDE,              // jmpr    cc_C, sumloop
+ 0xF0, 0x46,              // mov     r4, r6
+ 0xF0, 0x57,              // mov     r5, r7
+ 0x08, 0x02,              // add     r0, #2
+ 0x98, 0x60,              // mov     r6, [r0+]
+ 0x98, 0x70,              // mov     r7, [r0+]
+ 0x98, 0x80,              // mov     r8, [r0+]
+ 0x98, 0x90,              // mov     r9, [r0+]
+ 0xDB, 0x00               // rets
+};
+
+const unsigned char xor_mask[] = {
+ MASK, MASK,              // mov     [-r0], r9
+ MASK, MASK,              // mov     [-r0], r8
+ MASK, MASK,              // mov     [-r0], r7
+ MASK, MASK,              // mov     [-r0], r6
+ MASK, MASK,              // sub     r0, #2
+ MASK, MASK,              // mov     r15, #0
+ MASK, MASK, SKIP, SKIP,  // mov     r6, word_XXXX
+ MASK, MASK, SKIP, SKIP,  // mov     r7, word_XXXX
+ MASK, MASK,              // mov     r8, r12
+ MASK, MASK,              // mov     r9, r13
+ MASK, MASK,              // jmpr    cc_UC, enterloop
+ MASK, MASK,              // sumloop: exts    r9, #1
+ MASK, MASK,              // movb    rl4, [r8]
+ MASK, MASK,              // mov     r5, r6
+ MASK, MASK,              // xorb    rl5, rl4
+ MASK, MASK,              // movb    [r0], rl5
+ MASK, MASK, SKIP, SKIP,  // mov     r4, #CAB0 ; lo word [+38]
+ MASK, MASK, SKIP, SKIP,  // mov     r5, #0081 ; hi word [+40]  <---- XorTable 
+ MASK, MASK,              // movb    rl3, [r0]
+ MASK, MASK,              // movbz   r2, rl3
+ MASK, MASK,              // shl     r2, #2
+ MASK, MASK,              // mov     r3, #0
+ MASK, MASK,              // add     r4, r2
+ MASK, MASK,              // addc    r5, r3
+ MASK, MASK, SKIP, SKIP,  // calls   0, word_XXXX
+ MASK, MASK, SKIP, SKIP,  // mov     DPP0, #XXXXh
+ MASK, MASK,              // mov     r4, r6
+ MASK, MASK,              // mov     r5, r7
+ MASK, MASK,              // movb    rl4, rh4
+ MASK, MASK,              // movb    rh4, rl5
+ MASK, MASK,              // shr     r5, #8
+ MASK, MASK,              // xor     r4, r10
+ MASK, MASK,              // xor     r5, r11
+ MASK, MASK,              // mov     r6, r4
+ MASK, MASK,              // mov     r7, r5
+ MASK, MASK,              // add     r8, #1
+ MASK, MASK,              // addc    r9, #0
+ MASK, MASK,              // enterloop: mov     r4, r15
+ MASK, MASK,              // add     r15, #1
+ MASK, MASK,              // cmp     r4, r14
+ MASK, MASK,              // jmpr    cc_C, sumloop
+ MASK, MASK,              // mov     r4, r6
+ MASK, MASK,              // mov     r5, r7
+ MASK, MASK,              // add     r0, #2
+ MASK, MASK,              // mov     r6, [r0+]
+ MASK, MASK,              // mov     r7, [r0+]
+ MASK, MASK,              // mov     r8, [r0+]
+ MASK, MASK,              // mov     r9, [r0+]
+ MASK, MASK               // rets
+};
+
+
 
 #endif

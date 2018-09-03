@@ -263,6 +263,49 @@ void hexdump_le_table(uint8_t *buf, int len, const char *end)
     printf("%s", end);
 }
 
+void hexdump_le32_table(uint8_t *buf, int len, const char *end)
+{
+	int i,j=0,k=0;
+	int val;
+
+	printf(" ");
+	for(i=0;i<len;i += 4)
+	{
+//		val = *(buf++);
+		
+		val = get32(buf);
+		buf++;
+		buf++;
+		buf++;
+		buf++;
+		
+		printf("0x%-8.8x",val);
+		k++;
+
+		if(k==1)
+		{
+			if(i < len-4)
+			{
+				printf(", ");
+			}
+			
+			k=0;
+		}
+
+		if(j==7)
+		{
+			printf("\n ");
+			j=0;
+		}
+		else
+		{
+			j++;
+		}
+
+	}
+    printf("%s", end);
+}
+
 //This function compares text strings, one of which can have wildcards ('*').
 //
 char matchString(char * test, char * pWildText, char bCaseSensitive)  // By default, match on 'X' vs 'x'
