@@ -667,30 +667,30 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
-//-[ XorChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
-			 * search: *** XorChecksumCalc #1 ***
+			 * search: *** CRC32_ChecksumCalc Routine #1 ***
 			 */
 
-			printf("-[ XorChecksumCalc ]---------------------------------------------------------------------\n\n");
+			printf("-[ CRC32_ChecksumCalc ]---------------------------------------------------------------------\n\n");
 			{
-				int xor_table_hi;
-				int xor_table_lo;
-				unsigned long xor_table_addr;
+				int crc32_table_hi;
+				int crc32_table_lo;
+				unsigned long crc32_table_addr;
 				
-				printf(">>> Scanning for XorChecksumCalc() Variant #1 Checking sub-routine [calculates xor from table] \n");
-				addr = search( fh, (unsigned char *)&xor_needle, (unsigned char *)&xor_mask, sizeof(xor_needle), 0 );
+				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 Checking sub-routine [calculates crc32 from polynomial table] \n");
+				addr = search( fh, (unsigned char *)&crc32_needle, (unsigned char *)&crc32_mask, sizeof(crc32_needle), 0 );
 				if(addr != NULL) {
 					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
-					xor_table_lo   = (get16((unsigned char *)addr + 38));	
-					xor_table_hi    = (get16((unsigned char *)addr + 42));	
-					xor_table_addr  = (unsigned long)(xor_table_hi << 16 | xor_table_lo);
-					xor_table_addr &= ~(ROM_1MB_MASK);
+					crc32_table_lo   = (get16((unsigned char *)addr + 38));	
+					crc32_table_hi    = (get16((unsigned char *)addr + 42));	
+					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
+					crc32_table_addr &= ~(ROM_1MB_MASK);
 					
-					printf("xor-table_located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)xor_table_hi,(int)xor_table_lo, xor_table_addr );
+					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, crc32_table_addr );
 
-					printf("\nunsigned short XorTable_%x[%d] = {\n", xor_table_addr, 256);
-					hexdump_le32_table(offset_addr + xor_table_addr, 1024, "};\n");					
+					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", crc32_table_addr, 256);
+					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
 				}
 				printf("\n\n");
 			}

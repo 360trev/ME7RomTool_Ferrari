@@ -709,7 +709,7 @@ const unsigned char mask_6[] = {
  MASK, MASK                // rets
 };
 
-const unsigned char xor_needle[] = {
+const unsigned char crc32_needle[] = {
  0x88, 0x90,              // mov     [-r0], r9
  0x88, 0x80,              // mov     [-r0], r8
  0x88, 0x70,              // mov     [-r0], r7
@@ -727,7 +727,7 @@ const unsigned char xor_needle[] = {
  0x51, 0xA8,              // xorb    rl5, rl4
  0xB9, 0xA0,              // movb    [r0], rl5
  0xE6, 0xF4, XXXX, XXXX,  // mov     r4, #CAB0 ; lo word 
- 0xE6, 0xF5, XXXX, XXXX,  // mov     r5, #0081 ; hi word   <---- XorTable 
+ 0xE6, 0xF5, XXXX, XXXX,  // mov     r5, #0081 ; hi word   <---- CRC32 Polynomial Table Reference 
  0xA9, 0x60,              // movb    rl3, [r0]
  0xC0, 0x62,              // movbz   r2, rl3
  0x5C, 0x22,              // shl     r2, #2
@@ -761,7 +761,7 @@ const unsigned char xor_needle[] = {
  0xDB, 0x00               // rets
 };
 
-const unsigned char xor_mask[] = {
+const unsigned char crc32_mask[] = {
  MASK, MASK,              // mov     [-r0], r9
  MASK, MASK,              // mov     [-r0], r8
  MASK, MASK,              // mov     [-r0], r7
