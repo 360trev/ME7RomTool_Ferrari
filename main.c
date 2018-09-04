@@ -265,13 +265,13 @@ unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_
 
 	if(hi_addr ==0)
 	{
-		printf("\n\tlo:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 	} else {
 		if(lo_addr ==0) 
 		{
 //			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
 		} else {
-		printf("\n\tlo:0x%x hi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 		// re-create 32-bit unsigned long from hi and low words
 		var_final_address = (unsigned long )(((var_hi_value <<  16)) | var_lo_value );
 		}
@@ -336,7 +336,8 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
 			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, sizeof(needle_dpp), 0 );
 			if(addr == NULL) {
-				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!");
+				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
+				return 0;
 			} else {
 				printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
 
@@ -589,12 +590,12 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					for(i=0,j=1; j<= num_multipoint_entries_byte; i=i+16) 
 					{
 							// address of rom_table [8 bytes] -- Region [i]: start,end
-							printf("\nBlk #%-2.2d: ",j++);		
+							printf("\nMultipoint Block #%-2.2d of #%-2.2d: ",j++, num_multipoint_entries_byte);		
 							long int range;
 							start_addr           = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+0+skip_factor);		// extract 'start address' directly from identified multippoint table
 							masked_start_addr    = start_addr;
 							masked_start_addr   &= ~(ROM_1MB_MASK);
-							printf("Start:   0x%-8.8lx (offset: 0x%-8.8lx)",(long int)start_addr,(long int)masked_start_addr );
+							printf("Start:   seg:0x%x phy:0x%-8.8lx (offset: 0x%-8.8lx)",(long int)start_addr/SEGMENT_SIZE,(long int)start_addr,(long int)masked_start_addr );
 							
 							end_addr             = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+4+skip_factor);		// extract 'end address  ' directly from identified multippoint table
 							masked_end_addr      = end_addr;
@@ -607,15 +608,15 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 								sum       = 0;
 							}
 							// extract from rom original stored checksums
-							printf(" End:    0x%-8.8lx (offset: 0x%-8.8lx)",(long int)end_addr, (long int)masked_end_addr );
+							printf(" End:    seg:0x%x phy:0x%-8.8lx (offset: 0x%-8.8lx)",(long int)end_addr/SEGMENT_SIZE,(long int)end_addr, (long int)masked_end_addr );
 							
 							checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+8+skip_factor);		// extract 'checksum'      directly from identified multippoint table
-							printf(" Chksum: 0x%-8.8lx :  Calc: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
+							printf(" Block Checksum: 0x%-8.8lx :  Calculated: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
 
 							// did the stored match the one we just calculated? (for normal version)
 							if(checksum_norm == sum) { printf("OK"); } else { printf("BAD! "); } 
 							checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+12+skip_factor);		// extract '~checksum'     directly from identified multippoint table
-							printf("~Chksum: 0x%-8.8lx : ~Calc: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
+							printf("~Block Checksum: 0x%-8.8lx : ~Calculated: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
 
 							// did the stored match the one we just calculated? (for one's complement version)
 							if(checksum_comp == ~sum) { printf("OK"); good++; } else { printf("BAD! "); bad++; } 
