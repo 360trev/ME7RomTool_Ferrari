@@ -345,10 +345,11 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				dpp2_value = (get16((unsigned char *)addr + 2 + 8));
 				dpp3_value = (get16((unsigned char *)addr + 2 + 12));
 
-				printf("\ndpp0: 0x%-4.4x",(int)(dpp0_value) );
-				printf("\ndpp1: 0x%-4.4x",(int)(dpp1_value) );
-				printf("\ndpp2: 0x%-4.4x",(int)(dpp2_value) );
-				printf("\ndpp3: 0x%-4.4x (DPP3 is always 3, otherwise accessing CPU register area not possible)",(int)(dpp3_value) );
+				printf("\ndpp0: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp0_value),(dpp0_value*SEGMENT_SIZE) );
+				printf("\ndpp1: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp1_value),(dpp1_value*SEGMENT_SIZE) );
+				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",(int)(dpp2_value),(dpp2_value*SEGMENT_SIZE) );
+				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",(int)(dpp3_value),(dpp3_value*SEGMENT_SIZE) );
+				printf("\n\nNote: dpp3 is always 3, otherwise accessing CPU register area not possible",(int)(dpp3_value) );
 				printf("\n");
 					
 			}
