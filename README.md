@@ -42,8 +42,6 @@
    since production. Without working main checksum the ecu won't boot the firmware.
    Since we know exactly where to store the re-calculated checksum we can put this
    directly back into the rom and save it out (step 3 discovered its location).
-   At this point I haven't stored the recalculated checksum (thats easy 1 liner and
-   will be added later after all checksum work is completed).
    
    The tool also can walk through the Multipoint Checksum areas too;
    1. Again we search for the code which tells us how many multipoints exist in
@@ -88,11 +86,11 @@
    Using this program you can upgrade your Ferrari 360 Modena firmware (after dumping)
    to use Challenge Stradale MLHFM tables. You just need a dump of both rom images.
  
-   NOTE: This version DOES NOT YET update checksums for the firmware even though it
-   calculates main rom and pulls multipoints. This is a work in progress and all functionality
-   will be working soon. The swapping of HFM air flow meter tables on Ferrari roms fully works
-   and can save out a replaced rom, you just (for now) need to update the checksums seperately
-   with an external tool (such as  the original ME7Sum tool I wrote, also on my github).
+   NOTE: This is the first version that can update MAIN ROM and Multipoint checksums for the firmware files. It supports
+   both 1mb and 512kbyte ME7.x firmwares. 
+   
+   The swapping of HFM air flow meter tables on Ferrari roms fully works
+   and can save out a replaced rom and will automatically fix the checksums so its ready to reflash!
    
    So, if you use this tool you'll need to update them separately after
    using it before flashing the output file to your ecu's.
