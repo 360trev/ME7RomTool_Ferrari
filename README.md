@@ -70,19 +70,26 @@
    The current 'modes' supported are below (cut from usage of program)
   
    Usage: me7romtool <mode> <rom_filename> <extra options> ...
+   
    -romfile : Try to identify map in the firmware. You *must* specify a romfile!
 
    -dppx    : Try to identify DPPx register settings to help with disassembly.
+   
    -rhfm    : Read and extract hfm from romfile, optional dump filename to override default write name.
+   
    -whfm    : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
+   
    -ihfm    : Try to identify mlhfm table in specified romfile.
 
    -seedkey : Try to identify seedkey function and patch login so any login password works.
+   
    -maps    : Try to identify map in the firmware.
+   
    -valves  : Try to identify exhaust valve opening table in the firmware.
 
    -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'. 
    
+
    The swapping of HFM air flow meter tables on Ferrari roms fully works
    and can save out a replaced rom and will automatically fix the checksums so its ready to reflash!
    
