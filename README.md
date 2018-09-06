@@ -1,5 +1,5 @@
 # ME7RomTool_Ferrari
-   Bosch ME7.3H4 RomTool for Ferrari 360's 
+   Bosch ME7.3H4 RomTool for Ferrari 360's  ** BETA TESTING **
 
    By 360trev. Needle lookup function borrowed from nyet (Thanks man!) from
    the ME7sum tool development (see github).
@@ -69,26 +69,27 @@
 
    The current 'modes' supported are below (cut from usage of program)
   
-   me7romtool <mode> <rom_filename> <extra options> ...
-
-   -rhfm :  <hfm_dump_filename> : Read and extract hfm from romfile, optional dump filename to override default write name.
-    e.g.     me7romtool.exe -rhfm 360cs.bin hfm_stradale.bin
-
-   -whfm :  <hfm_load_filename> : Write hfm into specified romfile, mandatory load filename must be specified.
-   e.g.      me7romtool.exe -whfm 360modena.bin hfm_stradale.bin
-
-   -ihfm : Try to identify mlhfm table in specified romfile.
-   e.g.      me7romtool.exe -ihfm 360modena.bin
-
-   -skey : Try to patch the SecurityKeyAccess to always work with any password
-   e.g.      me7romtool.exe -skey -ihfm 360modena.bin
-
-   Using this program you can upgrade your Ferrari 360 Modena firmware (after dumping)
-   to use Challenge Stradale MLHFM tables. You just need a dump of both rom images.
- 
-   NOTE: This is the first version that can update MAIN ROM and Multipoint checksums for the firmware files. It supports
-   both 1mb and 512kbyte ME7.x firmwares. 
+   Usage: me7romtool <mode> <rom_filename> <extra options> ...
    
+   -romfile : Try to identify map in the firmware. You *must* specify a romfile!
+
+   -dppx    : Try to identify DPPx register settings to help with disassembly.
+   
+   -rhfm    : Read and extract hfm from romfile, optional dump filename to override default write name.
+   
+   -whfm    : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
+   
+   -ihfm    : Try to identify mlhfm table in specified romfile.
+
+   -seedkey : Try to identify seedkey function and patch login so any login password works.
+   
+   -maps    : Try to identify map in the firmware.
+   
+   -valves  : Try to identify exhaust valve opening table in the firmware.
+
+   -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'. 
+   
+
    The swapping of HFM air flow meter tables on Ferrari roms fully works
    and can save out a replaced rom and will automatically fix the checksums so its ready to reflash!
    
@@ -97,6 +98,6 @@
    
    Have fun!
    
-   Built using CodeLite.
+   Built using CodeLite. 
    See https://codelite.org/
 
