@@ -327,6 +327,8 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			}
 			printf("\n");
 
+//			show_hex_dump(offset_addr+0x10000, 0x200, 0x100000);
+
 //-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
@@ -637,9 +639,10 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			/*
 			 * search: *** Seed/Key Check Patch #1 ***
 			 */
-			printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
 			 
 			if(seedkey_patch == 1) {
+				printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
+
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
 				if(addr != NULL) {
@@ -669,6 +672,153 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
+//-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+			/*
+			 * search: *** KFAGK Routine #1 ***
+		 	 *
+			 * KFAGK defines the characteristics map for exhaust flap changeover. This changes if the car has a loud or 
+			 * quiet exhaust sound depending on the Throttle % and Engine RPM speed.
+			 * 
+			 * A "typical" raw KFAGK table from a rom file looks like below;
+			 * 
+			 *  ROM:81852D 0A                        KFAGK_Y_NUM:        db 10                   ; number of rows down
+			 *	ROM:81852E 06                        KFAGK_X_NUM:        db 6                    ; number of colums across        
+             *
+		     *	ROM:81852F 14 19 3F 44 49 5D 62 7D+  KFAGK_TABL_Y_RANGE: db 14h, 19h, 3Fh, 44h, 49h, 5Dh 62h, 7Dh, 96h, 0E1h  ; RPM (Scaled by / 40)
+			 *	ROM:818539 00 1B 55 5C 6C 85         KFAGK_TABL_X_RANGE: db 0, 1Bh, 55h, 5Ch, 6Ch, 85h                        ; Percentage of Throttle (% val * 1.33333)
+             *
+			 *	ROM:81853F 00 00 00 00 00 00 00 00+  KFAGK_TABL_DATA:    db 0, 0, 0, 0, 0, 0     ;  800 rpm
+			 *	           00 00 00 00 00 00 00 00+                      db 0, 0, 0, 0, 0, 0     ; 1520 rpm
+			 *	           00 00 00 00 01 01 01 01+                      db 0, 0, 0, 0, 0, 0     ; 2520 rpm
+			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 1, 1, 1     ; 2720 rpm
+			 *	           01 02 02 02 00 00 01 02+                      db 0, 0, 1, 2, 2, 2     ; 2920 rpm
+			 *             02 02 00 00 01 02 02 02+                      db 0, 0, 1, 2, 2, 2     ; 3720 rpm
+			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 2, 2, 2     ; 4120 rpm
+			 *	           01 02 02 02                                   db 0, 0, 1, 2, 2, 2     ; 5000 rpm
+			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 6000 rpm
+			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
+			 */
+
+			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
+			{		
+				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine [manages exhaust valve/flap opening] \n");
+				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, sizeof(KFAGK_needle), 0 );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x ",(int)(addr-offset_addr) );
+
+					unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+					unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+					unsigned long kfagk_adr    = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+					kfagk_adr                 &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					unsigned char *table_start = offset_addr+kfagk_adr+2;			// 2 bytes to skip x and y bytes
+					double throttle_percent;
+					int y;
+					unsigned char y_axis = *(offset_addr+kfagk_adr+0);		// get number of rows
+					unsigned char x_axis = *(offset_addr+kfagk_adr+1);		// get number of colums
+					
+					printf("(seg:0x%x phy:0x%x val:0x%x)\n\n",seg, seg*SEGMENT_SIZE, val);
+					
+					printf("KFAGK table: Characteristic map for exhaust flap changeover\n",x_axis  );
+					printf("KFAGK table: 0x%-8.8x (file-offset)\n",(char *)kfagk_adr  );
+					printf("KFAGK table: X-Axis: %2d Rows : %% of Throttle Applied.\n",x_axis  );
+					printf("KFAGK table: Y-Axis: %2d Rows : RPM before Opening occurs.\n\n",y_axis  );
+
+					// lets draw a simple column/row table ;)
+
+					// show table header
+					printf("\t");					
+					// conversion of x-axis column data to human readable
+					for(i=0;i<x_axis;i++) {
+						printf("%-2.2f%%\t", (double)(*(table_start+y_axis+i))/1.33333 );		// convert stored table value to percentage
+					}
+					printf("\n\t");
+					for(i=0;i<x_axis;i++) {
+						printf("[%d]----\t", i+1);
+					}
+
+					// show y-axis data
+					printf("\n\t");
+					for(i=0;i<y_axis;i++) 
+					{
+						for(y=0;y<x_axis;y++) 
+						{
+							printf(" %-2d\t", (int)(*(table_start+x_axis+y_axis+i*x_axis+y)) );	// show values directly out of the table
+						}
+						// conversion of y-axis row data to human readable
+						printf("[%2d] : %-5d rpm\n\t",i+1, (*(table_start+i))*40); 				// values stored need to be *40 to get back to RPM
+					}					
+					
+				}
+				printf("\n\n");
+			}
+
+//-[ Map Table Finder :) ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+/*  Things get quite interesting here on in...
+ * 
+ *  What I am about to show is how to identify 'generic' map tables directly from the rom function signatures ;)
+ *  The idea is we directly find signatures for all 'known' maps, then find ALL maps and remove the known ones from the
+ *  list. This yields a good 'catch all' ...
+ * 
+ *  The approach of masking all segment and relocation information out of the signatures means it works on any ME7x rom file 
+ *  compiled for C167x cpu and works right across a huge number of rom variants.
+ *
+ *  This is just showing X-Axis tables (entire set of rom tables will come shortly and then we can easily match them too!)... 
+ *  But ofcourse its quite simple to make this work for ALL the ROM resident tables. 
+ * 
+ *  This is a far better way than 'guessing' the maps knowing they reside (as some even commercial tools do) within a certain range 
+ *  in the rom. This guarentee's your actually looking at real tables. The next step is to push the table start addresses into a hash 
+ *  table to make it easy to de-duplicate them so you don't find calls to the lookups to the same tables (happens occasionally since 
+ *  we are walking through the rom code and literaly picking up ALL of the accesses to the tables.
+ * 
+ *  Have fun ;)
+ */
+			{
+			printf("-[ Generic X-Axis MAP Table Scanner! ]---------------------------------------------------------------------\n\n");
+				printf(">>> Scanning for Map Tables #1 Checking sub-routine [map finder!] \n");
+				
+				int current_offset=0;
+				int x;
+				i=0;
+				while(1)
+				{
+					// search for signature for X-Axis (1 row) table..
+					addr = search( fh, (unsigned char *)&mapfinder_needle, (unsigned char *)&mapfinder_mask, sizeof(mapfinder_needle), current_offset);
+
+					// exit the searching loop when we reach end of rom region
+					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+
+					// if we find a match lets dump it!
+					if(addr != NULL) {
+						printf("\n[Map #%d] X-Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
+						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+						unsigned char *table_start = offset_addr+map_adr+1;			// 2 bytes to skip x and y bytes
+						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
+//						unsigned char x_axis       = *(offset_addr+map_adr+1);		// get number of colums
+						
+//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
+						printf("phy:0x%x, file-offset=0x%x x-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis);
+
+						printf("\n\t");
+						for(x=0;x<x_axis;x++) 
+						{
+							printf("%-2.2x ", (int)(*(table_start+x)) );	// show values directly out of the table
+						}
+					}
+					printf("\n");
+					
+					// continue search from next location after this match...
+					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
+
+					//printf("\nCurrent Offset : %x\n",current_offset);
+				}
+				printf("\n\n");
+				
+			}				
 //-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** CRC32_ChecksumCalc Routine #1 ***

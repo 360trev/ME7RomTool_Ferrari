@@ -98,6 +98,7 @@ void hexdump(uint8_t *buf, int len, const char *end);
 void hexdump_le_table(uint8_t *buf, int len, const char *end);
 unsigned short get16(unsigned char *s);
 unsigned long get32(unsigned char *s);
+extern void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset);
 
 
 #endif

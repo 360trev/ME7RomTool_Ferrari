@@ -419,3 +419,36 @@ char matchString(char * test, char * pWildText, char bCaseSensitive)  // By defa
 
 unsigned short get16(unsigned char *s) { return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); }
 unsigned long  get32(unsigned char *s) { return (unsigned long )( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) ); }
+
+
+void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset)
+{
+    unsigned long t, end;
+    int   i;
+    end = (nbytes + 15) & -16;
+    //if(offset == 0) 
+	printf("Hex Dump: 0 1  2 3  4 5  6 7  8 9  A B  C D  E F  0123456789abcdef \n");    
+    for(t=0; t<end; t++)
+    {
+	       if((t&15) == 0) printf("%08lx:", (long)offset+t);
+	       if((t& 1) == 0) printf(" ");
+	       if(t < nbytes) {
+            printf("%02x", ((unsigned char *)adrs)[t]);
+	       } else {
+	          printf("  ");
+         }
+         if((t&15) == 15) {
+	           printf(" ");
+	           for(i=15; i>=0; i--)
+	           {
+		            if(isprint(((unsigned char *)adrs)[t-i])) {
+                  printf("%c", ((unsigned char *)adrs)[t-i]);
+		            } else {
+		              printf(".");
+		            }
+             }
+             printf("\n");
+          }
+    }
+    printf("\n");
+}
