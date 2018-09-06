@@ -418,7 +418,25 @@ char matchString(char * test, char * pWildText, char bCaseSensitive)  // By defa
 }
 
 unsigned short get16(unsigned char *s) { return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); }
+
 unsigned long  get32(unsigned char *s) { return (unsigned long )( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) ); }
+
+void put32le(unsigned long val, unsigned char *adr) 
+{ 
+	unsigned char *s = (unsigned long)val;
+	unsigned long v=0x44445555;
+
+	if(s != 0) {
+		if(adr != 0)
+		{
+			v = val;
+//			v  = (unsigned long)( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) );
+			printf("addr = %p, val: %-8.8x\n", adr, (unsigned long)v);
+			*adr = v;
+		}
+	}
+
+}
 
 
 void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset)
