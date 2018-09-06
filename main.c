@@ -325,6 +325,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 	int hiword, loword;
 	unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 	int corrected=0;
+	int fixed=0;
 	
 	/* load file from storage */
 	load_result = iload_file(fh, filename_rom, 0);
@@ -980,7 +981,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				
 				if(do_multipoint == 1)
 				{
-					int j, good=0, bad=0, fixed=0;
+					int j, good=0, bad=0;
 //					int nCalcCRC;
 					for(i=0,j=1; j<= num_multipoint_entries_byte; i=i+16) 
 					{
@@ -1061,7 +1062,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 
 				}
 
-				if(corrected > 0) {
+				if(corrected >0 || fixed > 0) {
 					snprintf(newrom_filename, MAX_FILENAME, "%s_corrected.bin", filename_rom);
 					printf("\nSaving corrected rom to '%s'...\n", newrom_filename);
 					save_result = save_file(newrom_filename, fh->d.p, fh->len );
