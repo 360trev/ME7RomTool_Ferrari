@@ -1,5 +1,5 @@
 # ME7RomTool_Ferrari
-   Bosch ME7.3H4 RomTool for Ferrari 360's 
+   Bosch ME7.3H4 RomTool for Ferrari 360's  ** BETA TESTING **
 
    By 360trev. Needle lookup function borrowed from nyet (Thanks man!) from
    the ME7sum tool development (see github).
