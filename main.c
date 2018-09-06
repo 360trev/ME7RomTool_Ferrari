@@ -37,7 +37,6 @@
 #define HFM_READING  1
 #define HFM_WRITING  2
 #define HFM_IDENTIFY 3
-#define SKEY_PATCH   4
 
 int search_rom(int mode, char *filename_rom, char *filename_hfm);
 	
@@ -45,25 +44,34 @@ int show_usage(char *argv[])
 {
 	printf("Usage: %s <mode> <rom_filename> <extra options> ...\n\n",argv[0]);
 
-	printf(" -rhfm :  <hfm_dump_filename> : Read and extract hfm from romfile, optional dump filename to override default write name.");
-	printf("e.g. %s -rhfm 360cs.bin hfm_stradale.bin\n\n", argv[0]);
+	printf(" -romfile : Try to identify map in the firmware. You *must* specify a romfile!\n\n");
+
+	printf(" -dppx    : Try to identify DPPx register settings to help with disassembly.\n");
 	
-	printf(" -whfm :  <hfm_load_filename> : Write hfm into specified romfile, mandatory load filename must be specified.");
-	printf("e.g. %s -whfm 360modena.bin hfm_stradale.bin\n\n", argv[0]);
+	printf(" -rhfm    : Read and extract hfm from romfile, optional dump filename to override default write name.\n");
+	printf(" -whfm    : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n");
+	printf(" -ihfm    : Try to identify mlhfm table in specified romfile.\n\n");
 
-	printf(" -ihfm : Try to identify mlhfm table in specified romfile.");
-	printf("e.g. %s -whfm 360modena.bin\n\n", argv[0]);
+	printf(" -seedkey : Try to identify seedkey function and patch login so any login password works.\n");
+	printf(" -maps    : Try to identify map in the firmware.\n");
+	printf(" -valves  : Try to identify exhaust valve opening table in the firmware.\n\n");
 
-	printf(" -skey : Try to identify seedkey function and patch login so any seedkey works.");
-	printf("e.g. %s -skey\n\n", argv[0]);
+	printf(" -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'.\n");
 
 	return 0;
 }
 
 // shared library externs
 typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);
+
+// this will be done better later (fixme)
+int got_romfile=0;
 int seedkey_patch=0;
 int find_x_axis_maps=0;
+int correct_checksums=0;
+int valves=0;
+int find_dpp=0;
+int options=0;
 
 int main(int argc, char *argv[])
 {
@@ -71,60 +79,96 @@ int main(int argc, char *argv[])
 	char *hfm_name=NULL;
 	char *rom_name=NULL;
     int i,mode=HFM_NOTSET;
-	printf("Ferrari 360 ME7.3H4 Rom Tool. Last Built: %s %s v1.01\n",__DATE__,__TIME__);
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.02\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
 
+	options       = 0;
 	seedkey_patch = 0;
+	got_romfile   = 0;
 	
 	/*
 	 * check which mode to operate in depending on console options specified
 	 */
 	
     for (i = 0; i < argc; i++) {
-		/* IDENTIFY a SEEDKEY in a Firmware Rom */
-        if (strcmp(argv[i],"-skey")==0) {
-            mode = SKEY_PATCH;
-//			printf("Seedkey Bypass - This will try to identify the Seedkey login check routine and implement a bypass so any seed/key combinations work.\n\n");
-            seedkey_patch = 1;
-        }
-
-		/* READ MHFM from a Firmware Rom */
-		if (strcmp(argv[i],"-rhfm")==0) {
-            mode = HFM_READING;
-			printf("MLHFM Table Extraction Mode - This will dump and try to identify the MLHFM table from the loaded rom file.\n");
-            if (i+1 <= argc) {
+		/* READ ROMFILE in.. */
+        if (strcmp(argv[i],"-romfile")==0) {
+       if (i+1 <= argc) {
                 rom_name = argv[++i];
             }
+			got_romfile = 1;
+        }
+		/* IDENTIFY a SEEDKEY in a Firmware Rom */
+        if (strcmp(argv[i],"-seedkey")==0) {
+//			printf("Seedkey Bypass - This will try to identify the Seedkey login check routine and implement a bypass so any seed/key combinations work.\n\n");
+            seedkey_patch = 1;
+			options++;
+        }
+
+		/* IDENTIFY a MAPS in a Firmware Rom */
+        if (strcmp(argv[i],"-dppx")==0) {
+            find_dpp = 1;
+			options++;
+        }
+
+		/* IDENTIFY a MAPS in a Firmware Rom */
+        if (strcmp(argv[i],"-valves")==0) {
+            valves = 1;
+			options++;
+        }
+
+		/* IDENTIFY a MAPS in a Firmware Rom */
+        if (strcmp(argv[i],"-maps")==0) {
+            find_x_axis_maps = 1;
+			options++;
+        }
+
+		/* CHECK the checksums and rewrite? */
+        if (strcmp(argv[i],"-fixsums")==0) {
+            correct_checksums = 1;
+			options++;
+        }
+
+		/* READ MHFM file in previously extracted */
+		if (strcmp(argv[i],"-rhfm")==0) {
+			options++;
+            mode = HFM_READING;
+			printf("MLHFM Table Extraction Mode - This will dump and try to identify the MLHFM table from the loaded rom file.\n");
             if (i+1 <= argc) {
                 hfm_name = argv[++i];
             } 
         }
-		/* WRITE MLHFM into a Firmware Rom */
+		/* WRITE MLHFM into using a given filename */
         else if (strcmp(argv[i],"-whfm")==0) {
+			options++;
 			printf("MLHFM Table Update Mode - This will try to replace the MLHFM table in the specified rom file with a new one.\n");
             mode = HFM_WRITING;
-            if (i+1 <= argc) {
-                rom_name = argv[++i];
-            }
             if (i+1 <= argc) {
                 hfm_name = argv[++i];
             } 
         }
 		/* IDENTIFY a MLHFM in a Firmware Rom */
         else if (strcmp(argv[i],"-ihfm")==0) {
+			options++;
 			printf("MLHFM Table Identification Mode - This will try to identify the MLHFM table in the specified rom file.\nIt wont write anything\n\n");
             mode = HFM_IDENTIFY;
-            if (i+1 <= argc) {
-                rom_name = argv[++i];
-            }
-            if (i+1 <= argc) {
-                hfm_name = argv[++i];
-            } 
         }
 
     }
 
-	/*
+	if(got_romfile == 0)
+	{
+		show_usage(argv);
+		return 0;		
+	}
+
+	if(options == 0) {
+		printf("No options specified. Please choose at least one!\n\n");
+		
+		show_usage(argv);
+		return 0;		
+	}
+ 	/*
 	 * sanity check any options for the given operational mode 
 	 */
 	switch(mode)
@@ -156,8 +200,8 @@ int main(int argc, char *argv[])
 
 		default:
 		{
-			show_usage(argv);
-			return 0;
+//			show_usage(argv);
+//			return 0;
 		}
 		break;
 	}
@@ -167,10 +211,10 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	if(mode == HFM_NOTSET) {
-		printf("No options set. Please choose what you want to do first!\n");
-		return 0;
-	}
+//	if(mode == HFM_NOTSET) {
+//		printf("No options set. Please choose what you want to do first!\n");
+//		return 0;
+//	}
 	
 	/*
 	 * now lets search rom for mode selected..
@@ -327,6 +371,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 	int corrected=0;
 	int fixed=0;
 	
+	
 	/* load file from storage */
 	load_result = iload_file(fh, filename_rom, 0);
 	if(load_result == 0) 
@@ -352,6 +397,9 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
 			 */
+			 
+		if(find_dpp == 1)
+		{
 			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
 
 			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
@@ -376,7 +424,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					
 			}
 			printf("\n");
-
+		}
 
 //-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
@@ -442,6 +490,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
 			 */
 
+		if(valves == 1) {
 			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
 			{		
 				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine [manages exhaust valve/flap opening] \n");
@@ -494,6 +543,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				}
 				printf("\n\n");
 			}
+		}
 
 //-[ Map Table Finder :) ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
@@ -563,39 +613,13 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 				
 			}				
-//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** CRC32_ChecksumCalc Routine #1 ***
-			 */
-
-			printf("-[ CRC32_ChecksumCalc ]---------------------------------------------------------------------\n\n");
-			{
-				int crc32_table_hi;
-				int crc32_table_lo;
-				unsigned long crc32_table_addr;
-				
-				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 Checking sub-routine [calculates crc32 from polynomial table] \n");
-				addr = search( fh, (unsigned char *)&crc32_needle, (unsigned char *)&crc32_mask, sizeof(crc32_needle), 0 );
-				if(addr != NULL) {
-					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
-					crc32_table_lo   = (get16((unsigned char *)addr + 38));	
-					crc32_table_hi    = (get16((unsigned char *)addr + 42));	
-					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
-					crc32_table_addr &= ~(ROM_1MB_MASK);
-					
-					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, crc32_table_addr );
-
-					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", crc32_table_addr, 256);
-					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
-				}
-				printf("\n\n");
-			}
 
 //-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** HFM Linearization code sequence ***
 			 */
-
+	if (mode != HFM_NOTSET)
+	{
 			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
 
 			printf(">>> Scanning for HFM Linearization Table Lookup code sequence... \n");
@@ -720,9 +744,39 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					printf("MLHFM not found. Probaby a matching byte sequence but not in a firmware image");
 				}
 			}
-
+		}
 
 //-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+		if(correct_checksums == 1)
+		{
+//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** CRC32_ChecksumCalc Routine #1 ***
+			 */
+
+			printf("-[ CRC32_ChecksumCalc ]---------------------------------------------------------------------\n\n");
+			{
+				int crc32_table_hi;
+				int crc32_table_lo;
+				unsigned long crc32_table_addr;
+				
+				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 Checking sub-routine [calculates crc32 from polynomial table] \n");
+				addr = search( fh, (unsigned char *)&crc32_needle, (unsigned char *)&crc32_mask, sizeof(crc32_needle), 0 );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					crc32_table_lo   = (get16((unsigned char *)addr + 38));	
+					crc32_table_hi    = (get16((unsigned char *)addr + 42));	
+					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
+					crc32_table_addr &= ~(ROM_1MB_MASK);
+					
+					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, crc32_table_addr );
+
+					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", crc32_table_addr, 256);
+					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
+				}
+				printf("\n\n");
+			}
 
 			printf("\n\n-[ Main-Rom Checksum Analysis ]----------------------------------------------------------\n\n");
 			
@@ -1067,6 +1121,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					printf("\nSaving corrected rom to '%s'...\n", newrom_filename);
 					save_result = save_file(newrom_filename, fh->d.p, fh->len );
 				}
+			}
 		} else {
 			printf("File size isn't a supported firmware size. Only 512kbyte and 1Mb images supported. ");
 		}
