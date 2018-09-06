@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <io.h>
+//#include <io.h>
 
 typedef struct ImageHandle {
 	union {
