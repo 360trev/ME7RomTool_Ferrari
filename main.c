@@ -1010,15 +1010,10 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 							printf("\nMerging MLHFM table into rom...\n");
 							memcpy(fh->d.p + MAP_FILE_OFFSET + offset, fh_hfm->d.p, fh_hfm->len);
 
-							// now that we've merged MLHFM force checksum re-correction
+							// now that we've merged MLHFM, force a checksum re-correction (note: his will automatically re-save!)
 							correct_checksums == OPTION_SET;
-							// do checksum correction
+							// do checksum correction and autosave it.
 							fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
-
-							/* save it.. */
-							snprintf(newrom_filename, MAX_FILENAME, "%s_patched.bin", filename_rom);
-							printf("\nSaving modified rom to '%s'...\n", newrom_filename);
-							save_result = save_file(newrom_filename, fh->d.p, fh->len );
  
 							printf("\nAll done.\n");
 						}
