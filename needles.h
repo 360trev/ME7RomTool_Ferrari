@@ -787,6 +787,42 @@ const unsigned char mapfinder_mask[] = {
  MASK, SKIP, SKIP, SKIP,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
 };
 
+const unsigned char mapfinder_xy2_needle[] = {
+ 0xE6, 0xF4, XXXX, XXXX,                      // mov     r4, #XXXX_DATA_TBL 	; Table Data                  [+2]
+ 0xE6, 0xF5, XXXX, XXXX,                      // mov     r5, #XXXXh				; Segment                     [+6]
+ 0x88, 0x50,                                  // mov     [-r0], r5
+ 0x88, 0x40,                                  // mov     [-r0], r4
+ 0xE6, 0xF4, XXXX, XXXX,                      // mov     r4, #XXXX_Y_AXIS 		; Table Y Axis Data           [+14]
+ 0xE6, 0xF5, XXXX, XXXX,                      // mov     r5, #XXXXh				; Segment                     [+18]
+ 0x88, 0x50,                                  // mov     [-r0], r5
+ 0x88, 0x40,                                  // mov     [-r0], r4
+ 0xD7, 0x40, XXXX, XXXX,                      // extp    #XXXXh, #1				; Segment                     [+26]
+ 0xC2, 0xFC, XXXX, XXXX,                      // movbz   r12, XXXX_X_NUM			; Table X Number of Items [+30]
+ 0xE6, 0xFD, XXXX, XXXX,                      // mov     r13, #XXXX_X_AXIS 		; Table X Axis Data           [+34]
+ 0xE6, 0xFE, XXXX, XXXX,                      // mov     r14, #XXXXh				; Segment                 [+38]
+ 0xD7, 0x40, XXXX, XXXX,                      // extp    #XXXXh, #1				; Segment                     [+42]
+ 0xC2, 0xFF, XXXX, XXXX,                      // movbz   r15, XXXX_Y_NUM			; Table Y Number of Items [+46]
+ 0xDA, XXXX, XXXX, XXXX,                      // calls   XXXXh, XXXX_Lookup_func	; do the lookup
+};
+
+const unsigned char mapfinder_xy2_mask[] = {
+ MASK, MASK, SKIP, SKIP,                      // mov     r4, #XXXX_DATA_TBL 		; Table Data
+ MASK, MASK, SKIP, SKIP,                      // mov     r5, #XXXXh				; Segment
+ MASK, MASK,                                  // mov     [-r0], r5
+ MASK, MASK,                                  // mov     [-r0], r4
+ MASK, MASK, SKIP, SKIP,                      // mov     r4, #XXXX_Y_AXIS 		; Table Y Axis Data
+ MASK, MASK, SKIP, SKIP,                      // mov     r5, #XXXXh				; Segment
+ MASK, MASK,                                  // mov     [-r0], r5
+ MASK, MASK,                                  // mov     [-r0], r4
+ MASK, MASK, SKIP, SKIP,                      // extp    #XXXXh, #1				; Segment
+ MASK, MASK, SKIP, SKIP,                      // movbz   r12, XXXX_X_NUM			; Table X Number of Items
+ MASK, MASK, SKIP, SKIP,                      // mov     r13, #XXXX_X_AXIS 		; Table X Axis Data
+ MASK, MASK, SKIP, SKIP,                      // mov     r14, #XXXXh				; Segment
+ MASK, MASK, SKIP, SKIP,                      // extp    #XXXXh, #1				; Segment
+ MASK, MASK, SKIP, SKIP,                      // movbz   r15, XXXX_Y_NUM			; Table Y Number of Items
+ MASK, SKIP, SKIP, SKIP,                      // calls   XXXXh, XXXX_Lookup_func	; do the lookup
+};
+
 
 const unsigned char mapfinder_xy_needle[] = {
  0xE6, 0xFC, XXXX, XXXX,  // mov     r12, #(MAP_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the MAP XXX

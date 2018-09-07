@@ -104,7 +104,7 @@ int save_file(const char *filename, const uint8_t *filebuf, size_t filelen)
 	return(0);
 }
 
-static int memcmp_mask(const void *ptr1, const void *ptr2, const void *mask, size_t len)
+int memcmp_mask(const void *ptr1, const void *ptr2, const void *mask, size_t len)
 {
     const uint8_t *p1 = (const uint8_t*)ptr1;
     const uint8_t *p2 = (const uint8_t*)ptr2;
@@ -116,6 +116,28 @@ static int memcmp_mask(const void *ptr1, const void *ptr2, const void *mask, siz
 	if (diff) return diff>0?1:-1;
 	p1++;
 	p2++;
+	if (m) m++;
+    }
+    return 0;
+}
+
+
+int memcmp_mask2(const void *ptr1, const void *ptr2, const void *mask, size_t len)
+{
+    const uint8_t *p1 = (const uint8_t*)ptr1;
+    const uint8_t *p2 = (const uint8_t*)ptr2;
+    const uint8_t *m = (const uint8_t*)mask;
+
+    while(len--)
+    {
+	int diff = m?(*p2 & *m)-(*p1 & *m):*p2-*p1;
+	
+	if (diff) { 
+		return diff>0?1:-1;
+	}
+	p1++;
+	p2++;
+//	printf(".");
 	if (m) m++;
     }
     return 0;
@@ -148,6 +170,53 @@ unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pM
 	printf("No match found");	
 	return 0;
 }
+
+unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset)
+{
+	int i,j;
+	int search_result;
+	unsigned char *start_adr;
+	unsigned int start_len;
+			
+	/* lets now find patterns.. */
+	for(i=0; i+needle_len < buflen; )
+	{
+		// find a match within the file start/end boundaries from given offset i ..
+		if((search_result = search_image2(buf, buflen, offset, pNeedle, pMask, needle_len, 1)) == -1) break; 
+
+		// found a match.. lets return it to caller
+		if ( i+needle_len < buflen)
+		{
+//			printf("\nFound match bytes : 0x%lx len=%d ", (long)search_result, (int)needle_len);
+			if(search_result != 0) {
+				return(start_adr = search_result);
+			}
+		}
+		// skip past the last searched point and carry on trying to find matches in entire buffer..
+		i += search_result + needle_len;
+	}
+	printf("No match found");	
+	return 0;
+}
+
+int search_image2(unsigned char *buf, int buflen, int start, const void *needle, const void *mask, int len, int align)
+{
+    if (start<0) return -1;
+
+    while(1)
+    {
+		if(memcmp_mask2(buf+start, needle, mask, len)==0)
+		{
+//			printf("got one at 0x%x\n", start);
+			return start;
+		}
+		start += align;
+		if(start+len > buflen) break;
+    }
+ //   printf("failed, returning 0x%x\n", start);
+    return -1;
+}
+
 
 int search_replace(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pMask, unsigned char *pNeedle_patch, unsigned char *pMask_patch, int needle_len)
 {
@@ -306,6 +375,8 @@ void hexdump_le32_table(uint8_t *buf, int len, const char *end)
     printf("%s", end);
 }
 
+
+
 //This function compares text strings, one of which can have wildcards ('*').
 //
 char matchString(char * test, char * pWildText, char bCaseSensitive)  // By default, match on 'X' vs 'x'
@@ -418,6 +489,7 @@ char matchString(char * test, char * pWildText, char bCaseSensitive)  // By defa
 }
 
 unsigned short get16(unsigned char *s) { return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); }
+unsigned short get16le(unsigned char *s) { return (unsigned short)( ((s[0] <<  8)) | ((s[1]                                   )) ); }
 
 unsigned long  get32(unsigned char *s) { return (unsigned long )( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) ); }
 

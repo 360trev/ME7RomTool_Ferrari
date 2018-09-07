@@ -883,51 +883,104 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 					//printf("\nCurrent Offset : %x\n",current_offset);
 				}
 				printf("\n\n");
-#if 0
+#if 1
 //
 // work in progress...
 //
 				current_offset = 0;
+				int new_offset=0;
+				unsigned char *tmp_ptr;
+				unsigned char *map_table_start;
+				unsigned int map_table_adr;
+				unsigned int map_table_x_axis_adr;
+				unsigned int map_table_y_axis_adr;
+				unsigned int map_table_x_num_adr;
+				unsigned int x_num, y_num;
+				unsigned int map_table_y_num_adr;
+				unsigned long val, seg;
+				
 				while(1)
 				{
 					// search for signature for X/Y-Axis (multirow/column) table..
-					addr = search( fh, (unsigned char *)&mapfinder_xy_needle, (unsigned char *)&mapfinder_xy_mask, sizeof(mapfinder_xy_needle), current_offset);
-
-					// exit the searching loop when we reach end of rom region
-					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+					current_offset = search_offset(offset_addr+new_offset, (fh->len)-new_offset, (unsigned char *)&mapfinder_xy2_needle, (unsigned char *)&mapfinder_xy2_mask, sizeof(mapfinder_xy2_needle), 0);
+					if(current_offset == 0) break;
 
 					// if we find a match lets dump it!
-					if(addr != NULL) {
-						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
-						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					if(current_offset != NULL) {
+						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
 
-						unsigned char *table_start = offset_addr+map_adr+2;			// 2 bytes to skip x and y bytes
-						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
-						unsigned char y_axis       = *(offset_addr+map_adr+1);		// get number of colums
+						addr = offset_addr+current_offset+new_offset;
 						
-//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
-						printf("phy:0x%x, file-offset=0x%x x-axis=%d, y-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis, y_axis);
+//						printf("addr = 0x%x\n",addr);
+//						hexdump(addr, 16, " ");
+//						printf("\n");
 
+#if 1						
+						val                   = get16((unsigned char *)addr + 30);	// from rom routine extract value (offset in rom to table)
+						seg                   = get16((unsigned char *)addr + 26);	// and segment (required to regenerate physical address from segment)
+						map_table_x_num_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_table_x_num_adr  &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+						map_table_x_num_adr  += (unsigned int)offset_addr;
+						tmp_ptr               = (unsigned char *)map_table_x_num_adr;
+						x_num                 = *(tmp_ptr);
+//						printf("val=0x%x seg=0x%x  map_table_x_num_adr   : 0x%x  x_num=%d\n",val,seg,map_table_x_num_adr-(int)offset_addr, x_num );
+
+						val                   = get16((unsigned char *)addr + 46);	// from rom routine extract value (offset in rom to table)
+						seg                   = get16((unsigned char *)addr + 42);	// and segment (required to regenerate physical address from segment)
+						map_table_y_num_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_table_y_num_adr  &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+						map_table_y_num_adr  += (unsigned int)offset_addr;
+						tmp_ptr               = (unsigned char *)map_table_y_num_adr;
+						y_num                 = *(tmp_ptr);
+//						printf("val=0x%x seg=0x%x  map_table_y_num_adr   : 0x%x  y_num=%d\n",val,seg,map_table_y_num_adr-(int)offset_addr, y_num );
+
+						val                   = get16((unsigned char *)addr + 34);	// from rom routine extract value (offset in rom to table)
+						seg                   = get16((unsigned char *)addr + 38);	// and segment (required to regenerate physical address from segment)
+						map_table_x_axis_adr  = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_table_x_axis_adr &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+						map_table_x_axis_adr  += (unsigned int)offset_addr;
+//						printf("val=0x%x seg=0x%x  map_table_x_axis_adr  : 0x%x \n",val,seg,map_table_x_axis_adr-(int)offset_addr);
+
+						val                   = get16((unsigned char *)addr + 14);	// from rom routine extract value (offset in rom to table)
+						seg                   = get16((unsigned char *)addr + 18);	// and segment (required to regenerate physical address from segment)
+						map_table_y_axis_adr  = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_table_y_axis_adr &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+						map_table_y_axis_adr  += (unsigned int)offset_addr;
+//						printf("val=0x%x seg=0x%x  map_table_y_axis_adr  : 0x%x \n",val,seg,map_table_y_axis_adr-(int)offset_addr);
+
+						val                   = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+						seg                   = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+						map_table_adr         = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_table_adr        &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+						map_table_adr        += (unsigned int)offset_addr;
+						map_table_start       = (unsigned char *)map_table_adr;
+//						printf("val=0x%x seg=0x%x  map_table_data_adr    : 0x%x \n",val,seg,map_table_start-(int)offset_addr);
+
+						printf("\nTable  : Identification not yet implemented (coming soon!)\n");
+						printf("X-Axis : %d rows\n", x_num);
+						printf("Y-Axis : %d rows\n\n", y_num);
+						
 						printf("\n\t");
-						for(y=0;y<x_axis;y++)
-						{
-							for(x=0;x<y_axis;x++) 
-							{
-								printf("%-2.2x ", (int)(*(table_start+x_axis+y_axis+y_axis*y+x)) );	// show values directly out of the table
-							}
-							printf("\n\t");
+						for(x=0;x<x_num;x++) {
+							printf("[%2d ]--\t", x+1);
 						}
+						printf("\n\t");
+						for(y=0;y<y_num;y++) 
+						{
+							for(x=0;x<x_num;x++) 
+							{
+								printf(" %x\t", (unsigned int)get16((map_table_start + y*y_num + x*2)) );	// show values directly out of the table
+							}
+							// conversion of y-axis row data to human readable
+							printf("[%2d ] \n\t",y+1); 
+						}					
 
+#endif
+
+
+						new_offset += current_offset+sizeof(mapfinder_xy2_needle);
 					}
 					printf("\n");
-					
-					// continue search from next location after this match...
-					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
-
-					//printf("\nCurrent Offset : %x\n",current_offset);
 				}
 				printf("\n\n");
 #endif				
