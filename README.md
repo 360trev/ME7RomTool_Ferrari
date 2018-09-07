@@ -103,8 +103,13 @@
    
    -valves  : Try to identify exhaust valve opening table in the firmware.
 
-   -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'. 
+   -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'.
    
+   -force   : If a checksummed file needs saving overwrite it anyway if it already exists.
+
+   -outfile : Optional filename for saving romfiles after they have been modified (overrides default name)
+
+
    Q. How does this work?
    
    This tool not only finds signatures it also extract segment information directly
