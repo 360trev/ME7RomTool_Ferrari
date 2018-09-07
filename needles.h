@@ -712,6 +712,37 @@ const unsigned char mask_6[] = {
 
 // note: without the last 6 lines this is a 'common' snippet to find pretty much any map in a ME7 ;)
 
+const unsigned char KFAGK_needle2[] = {
+ 0xE6, 0xFC, XXXX, XXXX,  // mov     r12, #(KFAGK_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the Exhaust Flap Table
+ 0xE6, 0xFD, XXXX, XXXX,  // mov     r13, #XXXXh
+ 0xC2, 0xFE, XXXX, XXXX,  // movbz   r14, XXXX
+ 0xC2, 0xFF, XXXX, XXXX,  // movbz   r15, XXXX
+ 0xDA, XXXX, XXXX, XXXX,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
+ 0xF1, 0xC8,              // movb    rl6, rl4
+ 0x3D, XXXX,              // jmpr    cc_NZ, loc_846218
+ 0xE6, 0xF4, 0xBF, 0xFF,  // mov     r4, #0FFBFh
+ 0x64, 0xF4, XXXX, XXXX,  // and     word_9CF0, r4
+ 0x0D, XXXX,              // jmpr    cc_UC, loc_846224
+ 0x49, 0xC2,              // cmpb    rl6, #2
+ 0x3D, XXXX               // jmpr    cc_NZ, loc_846224
+};
+
+const unsigned char KFAGK_mask2[] = {
+ MASK, MASK, SKIP, SKIP,  // mov     r12, #(KFAGK_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the Exhaust Flap Table
+ MASK, MASK, SKIP, SKIP,  // mov     r13, #XXXXh
+ MASK, MASK, SKIP, SKIP,  // movbz   r14, XXXX
+ MASK, MASK, SKIP, SKIP,  // movbz   r15, XXXX
+ MASK, SKIP, SKIP, SKIP,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
+ MASK, MASK,              // movb    rl6, rl4
+ MASK, SKIP,              // jmpr    cc_NZ, loc_846218
+ MASK, MASK, MASK, MASK,  // mov     r4, #0FFBFh
+ MASK, MASK, SKIP, SKIP,    // and     word_9CF0, r4
+ MASK, SKIP,              // jmpr    cc_UC, loc_846224
+ MASK, MASK,              // cmpb    rl6, #2
+ MASK, XXXX               // jmpr    cc_NZ, loc_846224
+};
+
+
 const unsigned char KFAGK_needle[] = {
  0xE6, 0xFC, XXXX, XXXX,  // mov     r12, #(KFAGK_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the Exhaust Flap Table
  0xE6, 0xFD, XXXX, XXXX,  // mov     r13, #XXXXh

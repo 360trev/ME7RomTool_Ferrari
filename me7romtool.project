@@ -93,6 +93,7 @@
     </Configuration>
   </Settings>
   <VirtualDirectory Name="src">
+    <File Name="README.md"/>
     <File Name="main.c"/>
     <File Name="utils.h"/>
     <File Name="needles.h"/>

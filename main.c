@@ -327,9 +327,16 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 		if(valves == OPTION_SET) {
 			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
 			{		
-				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine [manages exhaust valve/flap opening] \n");
+				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine Variant #1 [manages exhaust valve/flap opening] \n");
 				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, sizeof(KFAGK_needle), 0 );
-				if(addr != NULL) {
+				if(addr == NULL) 
+				{
+					printf("\n>>> Scanning for KFAGK Table #1 Checking sub-routine Variant #2 [manages exhaust valve/flap opening] \n");
+					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, sizeof(KFAGK_needle2), 0 );
+				}
+				
+				if(addr != NULL)
+				{
 					printf("Found at offset=0x%x ",(int)(addr-offset_addr) );
 
 					unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
