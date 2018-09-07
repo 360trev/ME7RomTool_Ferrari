@@ -1,2 +1,7 @@
 
 *.bin
+*.d
+*.o
+*.db
+*.session
+*.tags
