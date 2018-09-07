@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     int ok,required;
     int i,j, result;
 	
-	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.02\n",__DATE__,__TIME__);
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.03\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
 	
 	/*

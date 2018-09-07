@@ -33,8 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-//#include <io.h>
-<<<<<<< HEAD
 
 #define MAX_DHFM_ENTRIES     1024
 #define DEFAULT_DHFM_ENTRIES 512
@@ -61,8 +59,6 @@ typedef struct OPTS_ENTRY {
 
 #define MANDATORY  0
 #define OPTIONAL   1
-=======
->>>>>>> 44a5631a55cafeb0f1d0b842f02bd300c2b594c2
 
 typedef struct ImageHandle {
 	union {
