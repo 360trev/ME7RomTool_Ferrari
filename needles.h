@@ -744,6 +744,7 @@ const unsigned char mapfinder_needle[] = {
  0xE6, 0xFC, XXXX, XXXX,  // mov     r12, #(MAP_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the MAP XXX
  0xE6, 0xFD, XXXX, XXXX,  // mov     r13, #XXXXh
  0xC2, 0xFE, XXXX, XXXX,  // movbz   r14, XXXX
+// 0xC2, 0xFF, XXXX, XXXX,  // movbz   r15, XXXX
  0xDA, XXXX, XXXX, XXXX,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
 };
 
@@ -751,24 +752,31 @@ const unsigned char mapfinder_mask[] = {
  MASK, MASK, SKIP, SKIP,  // mov     r12, #(MAP_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the MAP XXX
  MASK, MASK, SKIP, SKIP,  // mov     r13, #XXXXh
  MASK, MASK, SKIP, SKIP,  // movbz   r14, XXXX		// x-axis
+// MASK, MASK, SKIP, SKIP,  // movbz   r15, XXXX		// y-axis
  MASK, SKIP, SKIP, SKIP,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
 };
+
 
 const unsigned char mapfinder_xy_needle[] = {
  0xE6, 0xFC, XXXX, XXXX,  // mov     r12, #(MAP_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the MAP XXX
  0xE6, 0xFD, XXXX, XXXX,  // mov     r13, #XXXXh
- 0xC2, 0xFE, XXXX, XXXX,  // movbz   r14, XXXX
- 0xC2, 0xFF, XXXX, XXXX,  // movbz   r15, XXXX
+ 0xF2, 0xFE, XXXX, XXXX,  // mov     r14, word_XXXX
+ 0xF2, 0xFF, XXXX, XXXX,  // mov     r14, word_XXXX
  0xDA, XXXX, XXXX, XXXX,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
+ 0xF6, 0xF4, XXXX, XXXX,  // mov     word_XXXX, r4
 };
+
 
 const unsigned char mapfinder_xy_mask[] = {
  MASK, MASK, SKIP, SKIP,  // mov     r12, #(MAP_X_NUM - ROM_MAP_REGION_818000)   <--- * This is the MAP XXX
  MASK, MASK, SKIP, SKIP,  // mov     r13, #XXXXh
- MASK, MASK, SKIP, SKIP,  // movbz   r14, XXXX		// x-axis
- MASK, MASK, SKIP, SKIP,  // movbz   r15, XXXX		// y-axis
+ MASK, MASK, SKIP, SKIP,  // mov     r14, word_XXXX		// x-axis
+ MASK, MASK, SKIP, SKIP,  // mov     r15, word_XXXX		// x-axis
  MASK, SKIP, SKIP, SKIP,  // calls   XXXXh, Lookup_Table_Data ; References a lookup tableAE
+ MASK, MASK, SKIP, SKIP,  // mov     word_XXXX, r4
 };
+
+
 
 
 const unsigned char crc32_needle[] = {

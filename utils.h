@@ -33,7 +33,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <io.h>
+//#include <io.h>
+
+#define MAX_DHFM_ENTRIES     1024
+#define DEFAULT_DHFM_ENTRIES 512
+#define MAP_FILE_OFFSET      0x10000
+#define MAX_FILENAME         256
+#define ROM_FILESIZE		 512*1024
+#define MAX_ROM_REGIONS      32
+#define SEGMENT_SIZE         0x4000
+#define ROM_BASE_ADDRESS     0x800000
+#define ROM_1MB_MASK         0xFFF00000
+
+int search_rom(int mode, char *filename_rom, char *filename_hfm);
+
+// shared library externs
+typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);
+
+typedef struct OPTS_ENTRY {
+	unsigned char *option_name;
+	int *option_var;
+	int  option_value;
+	char **filename;
+	int  options_bump;
+} OPTS_ENTRY;
+
+#define MANDATORY  0
+#define OPTIONAL   1
 
 typedef struct ImageHandle {
 	union {

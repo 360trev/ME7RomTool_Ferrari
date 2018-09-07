@@ -470,3 +470,134 @@ void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset)
     }
     printf("\n");
 }
+
+int CheckFileExist( char *filename )
+{
+    struct stat buf;
+    int Result = stat( filename, &buf );
+    return Result == 0;
+}
+
+
+int parse_cli_options(int argc, char *argv[],int i, OPTS_ENTRY table[], int entrysize)
+{
+	int j,opt;
+	int *current_var;
+	char **current_name;
+	
+	/* walk through options list and process them */
+	for (j = 0; j < entrysize; j++) 
+	{
+		if (strcmp(argv[i],table[j].option_name)==0) 
+		{
+			opt = table[j].options_bump;
+			current_name = table[j].filename;			// get filename from args (if req.d)
+			if(current_name != 0) {
+				*current_name = 0;
+			    if (i+1 <= argc) { 
+					if(argv[i+1] != 0) {
+						*current_name = argv[++i]; 
+						if(opt == MANDATORY && *current_name == 0) {
+							printf("Mandatory option not provided for agument '%s'\n",table[j].option_name);
+							return(1);
+						}
+					}
+				}
+			}
+			current_var  = table[j].option_var;
+			*current_var = table[j].option_value;		// set its option value
+		}
+	}	
+	return 0;
+}
+
+unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, int segment, int table_index)
+{
+	unsigned int   var;
+	unsigned char *var_addr;
+	unsigned int   var_offset;
+	unsigned int   segment_offset;
+
+	segment_offset = (unsigned int)get16((unsigned char *)segment);          // get segment offset 
+	var            = (unsigned int)get16((unsigned char *)addr);             // get address word
+	var_addr       = (unsigned char *)(var)+(segment_offset*SEGMENT_SIZE);
+	var_offset     = (int)var_addr;
+	var_offset    &= ~(ROM_1MB_MASK);
+
+	return((unsigned int)rom_start_addr+var_offset+table_index);
+}
+		
+unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, int segment, int table_index)
+{
+	unsigned int   var_hi;
+	unsigned int   var_lo;
+	unsigned char *var_lo_addr;
+	unsigned char *var_hi_addr;
+	unsigned int   var_hi_offset;
+	unsigned int   var_lo_offset;
+	unsigned int   var_hi_value=0;
+	unsigned int   var_lo_value=0;
+	unsigned long  var_final_address=0;
+	unsigned int   segment_offset;
+
+    //
+	// get segment register & high/low addresses
+	// from rom function
+	//
+	segment_offset    = (unsigned int)get16((unsigned char *)segment); 	// get segment offset 
+//		printf("segment=%x\n",segment_offset);
+
+	if(lo_addr != 0) {
+		var_lo            = (unsigned int)get16((unsigned char *)lo_addr); // get low address word
+//		printf("lo_val=%x\n",var_lo);
+		// calculate physical address from segment register and offset word
+		var_lo_addr       = (unsigned char *)(var_lo)+(segment_offset*SEGMENT_SIZE);
+//		printf("var_lo_addr=%x\n",var_lo_addr);
+		// deduct rom start address to get OFFSET from 0 byte indexes (used to index loaded rom image)
+//		var_lo_offset     = (int)var_lo_addr-ROM_BASE_ADDRESS;
+		var_lo_offset     = (int)var_lo_addr;
+		var_lo_offset    &= ~(ROM_1MB_MASK);
+
+		// now extract (from firmware using calulated byte offsets )
+		if(lo_bits == 16) {
+			var_lo_value      = (unsigned int)(get16((unsigned char *)rom_start_addr + var_lo_offset + table_index));
+		} else if(lo_bits == 32) {
+			var_lo_value      = (unsigned int)(get32((unsigned char *)rom_start_addr + var_lo_offset + table_index));
+		}		
+		var_final_address = (unsigned long )var_lo_value;
+	}
+	
+	if(hi_addr != 0) {
+		var_hi            = (unsigned int)get16((unsigned char *)hi_addr);	// get high address word
+//		printf("hi_val=%x\n",var_hi);
+		// calculate physical address from segment register and hi/lo words
+		var_hi_addr       = (unsigned char *)(var_hi)+(segment_offset*SEGMENT_SIZE);
+		// deduct rom start address to get OFFSET from 0 byte indexes (used to index loaded rom image)
+//		var_hi_offset     = (int)var_hi_addr-ROM_BASE_ADDRESS;
+		var_hi_offset     = (int)var_hi_addr;
+		var_hi_offset    &= ~(ROM_1MB_MASK);
+
+		// now extract (from firmware using calulated byte offsets )
+		if(hi_bits == 16) {
+			var_hi_value      = (unsigned int)(get16((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
+		} else if(hi_bits == 32) {
+			var_hi_value      = (unsigned int)(get32((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
+		}
+		var_final_address = (unsigned long )var_hi_value;
+	}
+
+	if(hi_addr ==0)
+	{
+		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+	} else {
+		if(lo_addr ==0) 
+		{
+//			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
+		} else {
+		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+		// re-create 32-bit unsigned long from hi and low words
+		var_final_address = (unsigned long )(((var_hi_value <<  16)) | var_lo_value );
+		}
+	}
+	return(var_final_address);
+}

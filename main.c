@@ -29,16 +29,45 @@
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
+
 #include "utils.h"
 #include "needles.h"
 #include "crc32.h"
 
-#define HFM_NOTSET   0
 #define HFM_READING  1
 #define HFM_WRITING  2
 #define HFM_IDENTIFY 3
 
-int search_rom(int mode, char *filename_rom, char *filename_hfm);
+#define OPTION_SET   1
+
+// this globals will be eliminated later (fixme)
+char *rom_name=NULL;
+char *hfm_name=NULL;
+char *save_name=NULL;
+int got_romfile=0;
+int got_outfile=0;
+int seedkey_patch=0;
+int find_x_axis_maps=0;
+int correct_checksums=0;
+int force_write;
+int valves=0;
+int find_dpp=0;
+int find_mlhfm=0;
+
+OPTS_ENTRY opts_table[] = {
+//	  option      field to set        value to set  argument   req'd or not
+	{ "-romfile", &got_romfile,       OPTION_SET,   &rom_name,  MANDATORY },
+	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY },
+	{ "-seedkey", &seedkey_patch,     OPTION_SET,   0,          OPTIONAL  },
+	{ "-dppx",    &find_dpp,          OPTION_SET,   0,          OPTIONAL  },
+	{ "-valves",  &valves,            OPTION_SET,   0,          OPTIONAL  },
+	{ "-maps",    &find_x_axis_maps,  OPTION_SET,   0,          OPTIONAL  },
+	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL  },
+	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL  },
+	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  OPTIONAL  },
+	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY },
+	{ "-ihfm",    &find_mlhfm,        HFM_IDENTIFY, &hfm_name,  OPTIONAL  }
+};
 	
 int show_usage(char *argv[])
 {
@@ -57,121 +86,45 @@ int show_usage(char *argv[])
 	printf(" -valves  : Try to identify exhaust valve opening table in the firmware.\n\n");
 
 	printf(" -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'.\n");
+	printf(" -force   : If a checksummed file needs saving overwrite it anyway if it already exists.\n");
+	printf(" -outfile : Optional filename for saving romfiles after they have been modified (overrides default name)\n");
 
 	return 0;
 }
 
-// shared library externs
-typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);
-
-// this will be done better later (fixme)
-int got_romfile=0;
-int seedkey_patch=0;
-int find_x_axis_maps=0;
-int correct_checksums=0;
-int valves=0;
-int find_dpp=0;
-int options=0;
-
 int main(int argc, char *argv[])
 {
-    int ok;
-	char *hfm_name=NULL;
-	char *rom_name=NULL;
-    int i,mode=HFM_NOTSET;
+    int ok,required;
+    int i,j, result;
+	
 	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.02\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
-
-	options       = 0;
-	seedkey_patch = 0;
-	got_romfile   = 0;
 	
 	/*
-	 * check which mode to operate in depending on console options specified
-	 */
-	
-    for (i = 0; i < argc; i++) {
-		/* READ ROMFILE in.. */
-        if (strcmp(argv[i],"-romfile")==0) {
-       if (i+1 <= argc) {
-                rom_name = argv[++i];
-            }
-			got_romfile = 1;
-        }
-		/* IDENTIFY a SEEDKEY in a Firmware Rom */
-        if (strcmp(argv[i],"-seedkey")==0) {
-//			printf("Seedkey Bypass - This will try to identify the Seedkey login check routine and implement a bypass so any seed/key combinations work.\n\n");
-            seedkey_patch = 1;
-			options++;
-        }
-
-		/* IDENTIFY a MAPS in a Firmware Rom */
-        if (strcmp(argv[i],"-dppx")==0) {
-            find_dpp = 1;
-			options++;
-        }
-
-		/* IDENTIFY a MAPS in a Firmware Rom */
-        if (strcmp(argv[i],"-valves")==0) {
-            valves = 1;
-			options++;
-        }
-
-		/* IDENTIFY a MAPS in a Firmware Rom */
-        if (strcmp(argv[i],"-maps")==0) {
-            find_x_axis_maps = 1;
-			options++;
-        }
-
-		/* CHECK the checksums and rewrite? */
-        if (strcmp(argv[i],"-fixsums")==0) {
-            correct_checksums = 1;
-			options++;
-        }
-
-		/* READ MHFM file in previously extracted */
-		if (strcmp(argv[i],"-rhfm")==0) {
-			options++;
-            mode = HFM_READING;
-			printf("MLHFM Table Extraction Mode - This will dump and try to identify the MLHFM table from the loaded rom file.\n");
-            if (i+1 <= argc) {
-                hfm_name = argv[++i];
-            } 
-        }
-		/* WRITE MLHFM into using a given filename */
-        else if (strcmp(argv[i],"-whfm")==0) {
-			options++;
-			printf("MLHFM Table Update Mode - This will try to replace the MLHFM table in the specified rom file with a new one.\n");
-            mode = HFM_WRITING;
-            if (i+1 <= argc) {
-                hfm_name = argv[++i];
-            } 
-        }
-		/* IDENTIFY a MLHFM in a Firmware Rom */
-        else if (strcmp(argv[i],"-ihfm")==0) {
-			options++;
-			printf("MLHFM Table Identification Mode - This will try to identify the MLHFM table in the specified rom file.\nIt wont write anything\n\n");
-            mode = HFM_IDENTIFY;
-        }
-
-    }
-
-	if(got_romfile == 0)
+	 * parse and check which options provided by console
+	 */	
+    for (i = 0; i < argc; i++) 
 	{
+		result = parse_cli_options(argc, argv,i, &opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
+		if(result == 1) { exit(0); }
+	}
+
+	/* if no arguments are specified show usage */
+	if(argc < 2) {
 		show_usage(argv);
+		return 0;
+	}
+
+	/* only proceed if we have been passed a valid romfile name */
+	if(rom_name == 0) {
+		printf("**No rom filename specified, e.g. -romfile rom.bin\n\n");
 		return 0;		
 	}
 
-	if(options == 0) {
-		printf("No options specified. Please choose at least one!\n\n");
-		
-		show_usage(argv);
-		return 0;		
-	}
- 	/*
-	 * sanity check any options for the given operational mode 
+	/*
+	 * sanity check any options for the given operational find_mlhfm 
 	 */
-	switch(mode)
+	switch(find_mlhfm)
 	{
 		case HFM_READING:
 		{
@@ -188,38 +141,18 @@ int main(int argc, char *argv[])
 			if(hfm_name != NULL) {
 				printf("HFM Input Filename: '%s'\n",hfm_name);
 			} else {
-				printf("You didnt specify a filename for HFM table to load.\n");
+				printf("You didnt specify a <mandatory> filename for HFM table to load.\n");
 				return 0;
 			}
 		} break;
-
-		case HFM_IDENTIFY:
-		{
-/*			printf("MLHFM Indentification Mode\n"); */
-		} break;
-
 		default:
-		{
-//			show_usage(argv);
-//			return 0;
-		}
 		break;
 	}
-	
-	if(argc < 2) {
-		show_usage(argv);
-		return 0;
-	}
-
-//	if(mode == HFM_NOTSET) {
-//		printf("No options set. Please choose what you want to do first!\n");
-//		return 0;
-//	}
-	
+		
 	/*
-	 * now lets search rom for mode selected..
+	 * now lets search rom for find_mlhfm selected..
 	 */
-    ok = search_rom(mode, rom_name,hfm_name);
+    ok = search_rom(find_mlhfm, rom_name,hfm_name);
     if (ok) { 
 		printf("File could not be found. Please check and try again.");  
 	}
@@ -227,9 +160,9 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-//
-// Calculate the Bosch Motronic ME71 checksum for the given range
-//
+/*
+ * Calculate the Bosch Motronic ME71 checksum for the given range
+ */
 uint32_t CalcChecksumBlk(struct ImageHandle *ih, uint32_t start, uint32_t end)
 {
 	uint32_t sum=0, i;
@@ -239,112 +172,11 @@ uint32_t CalcChecksumBlk(struct ImageHandle *ih, uint32_t start, uint32_t end)
 	return sum;
 }
 
-#define MAX_DHFM_ENTRIES     1024
-#define DEFAULT_DHFM_ENTRIES 512
-#define MAP_FILE_OFFSET      0x10000
-#define MAX_FILENAME         256
-#define ROM_FILESIZE		 512*1024
-#define MAX_ROM_REGIONS      32
-#define SEGMENT_SIZE         0x4000
-#define ROM_BASE_ADDRESS     0x800000
-#define ROM_1MB_MASK         0xFFF00000
-
-unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, int segment, int table_index)
-{
-	unsigned int   var;
-	unsigned char *var_addr;
-	unsigned int   var_offset;
-	unsigned int   segment_offset;
-
-	segment_offset = (unsigned int)get16((unsigned char *)segment);          // get segment offset 
-	var            = (unsigned int)get16((unsigned char *)addr);             // get address word
-	var_addr       = (unsigned char *)(var)+(segment_offset*SEGMENT_SIZE);
-	var_offset     = (int)var_addr;
-	var_offset    &= ~(ROM_1MB_MASK);
-
-	return((unsigned int)rom_start_addr+var_offset+table_index);
-}
-		
-unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, int segment, int table_index)
-{
-	unsigned int   var_hi;
-	unsigned int   var_lo;
-	unsigned char *var_lo_addr;
-	unsigned char *var_hi_addr;
-	unsigned int   var_hi_offset;
-	unsigned int   var_lo_offset;
-	unsigned int   var_hi_value=0;
-	unsigned int   var_lo_value=0;
-	unsigned long  var_final_address=0;
-	unsigned int   segment_offset;
-
-    //
-	// get segment register & high/low addresses
-	// from rom function
-	//
-	segment_offset    = (unsigned int)get16((unsigned char *)segment); 	// get segment offset 
-//		printf("segment=%x\n",segment_offset);
-
-	if(lo_addr != 0) {
-		var_lo            = (unsigned int)get16((unsigned char *)lo_addr); // get low address word
-//		printf("lo_val=%x\n",var_lo);
-		// calculate physical address from segment register and offset word
-		var_lo_addr       = (unsigned char *)(var_lo)+(segment_offset*SEGMENT_SIZE);
-//		printf("var_lo_addr=%x\n",var_lo_addr);
-		// deduct rom start address to get OFFSET from 0 byte indexes (used to index loaded rom image)
-//		var_lo_offset     = (int)var_lo_addr-ROM_BASE_ADDRESS;
-		var_lo_offset     = (int)var_lo_addr;
-		var_lo_offset    &= ~(ROM_1MB_MASK);
-
-		// now extract (from firmware using calulated byte offsets )
-		if(lo_bits == 16) {
-			var_lo_value      = (unsigned int)(get16((unsigned char *)rom_start_addr + var_lo_offset + table_index));
-		} else if(lo_bits == 32) {
-			var_lo_value      = (unsigned int)(get32((unsigned char *)rom_start_addr + var_lo_offset + table_index));
-		}		
-		var_final_address = (unsigned long )var_lo_value;
-	}
-	
-	if(hi_addr != 0) {
-		var_hi            = (unsigned int)get16((unsigned char *)hi_addr);	// get high address word
-//		printf("hi_val=%x\n",var_hi);
-		// calculate physical address from segment register and hi/lo words
-		var_hi_addr       = (unsigned char *)(var_hi)+(segment_offset*SEGMENT_SIZE);
-		// deduct rom start address to get OFFSET from 0 byte indexes (used to index loaded rom image)
-//		var_hi_offset     = (int)var_hi_addr-ROM_BASE_ADDRESS;
-		var_hi_offset     = (int)var_hi_addr;
-		var_hi_offset    &= ~(ROM_1MB_MASK);
-
-		// now extract (from firmware using calulated byte offsets )
-		if(hi_bits == 16) {
-			var_hi_value      = (unsigned int)(get16((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
-		} else if(hi_bits == 32) {
-			var_hi_value      = (unsigned int)(get32((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
-		}
-		var_final_address = (unsigned long )var_hi_value;
-	}
-
-	if(hi_addr ==0)
-	{
-		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
-	} else {
-		if(lo_addr ==0) 
-		{
-//			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
-		} else {
-		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
-		// re-create 32-bit unsigned long from hi and low words
-		var_final_address = (unsigned long )(((var_hi_value <<  16)) | var_lo_value );
-		}
-	}
-	return(var_final_address);
-}
-
-int search_rom(int mode, char *filename_rom, char *filename_hfm)
+int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 {
 	ImageHandle f_hfm;
 	ImageHandle *fh_hfm = &f_hfm;
-	int load_hfm_result;
+	int load_hfm_result, exists;
 	ImageHandle f;
 	ImageHandle *fh = &f;
 	int load_result;
@@ -398,7 +230,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
 			 */
 			 
-		if(find_dpp == 1)
+		if(find_dpp == OPTION_SET)
 		{
 			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
 
@@ -431,13 +263,14 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			 * search: *** Seed/Key Check Patch #1 ***
 			 */
 			 
-			if(seedkey_patch == 1) {
+			if(seedkey_patch == OPTION_SET) 
+			{
 				printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
 
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
 				if(addr != NULL) {
-					seedkey_patch = 2;
+					seedkey_patch = 2;		// since we discovered this, set this to 2 to skip unrequired secondary check
 					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
 					printf("Applying patch so any login seed is successful... ");
 					addr[0x5d] = 0x14; 
@@ -451,7 +284,8 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			 * search: *** Seed/Key Check Patch #2 ***
 			 */
 
-			if(seedkey_patch == 1) {
+			if(seedkey_patch == OPTION_SET) 
+			{
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, sizeof(needle_6), 0 );
 				if(addr != NULL) {
@@ -490,7 +324,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
 			 */
 
-		if(valves == 1) {
+		if(valves == OPTION_SET) {
 			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
 			{		
 				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine [manages exhaust valve/flap opening] \n");
@@ -566,13 +400,13 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
  * 
  *  Have fun ;)
  */
-			if(find_x_axis_maps == 1)
+			if(find_x_axis_maps == OPTION_SET)
 			{
-			printf("-[ Generic X-Axis MAP Table Scanner! ]---------------------------------------------------------------------\n\n");
+				printf("-[ Generic X-Axis MAP Table Scanner! ]---------------------------------------------------------------------\n\n");
 				printf(">>> Scanning for Map Tables #1 Checking sub-routine [map finder!] \n");
 				
 				int current_offset=0;
-				int x;
+				int x,y;
 				i=0;
 				while(1)
 				{
@@ -611,14 +445,61 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					//printf("\nCurrent Offset : %x\n",current_offset);
 				}
 				printf("\n\n");
-				
+#if 0
+//
+// work in progress...
+//
+				current_offset = 0;
+				while(1)
+				{
+					// search for signature for X/Y-Axis (multirow/column) table..
+					addr = search( fh, (unsigned char *)&mapfinder_xy_needle, (unsigned char *)&mapfinder_xy_mask, sizeof(mapfinder_xy_needle), current_offset);
+
+					// exit the searching loop when we reach end of rom region
+					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+
+					// if we find a match lets dump it!
+					if(addr != NULL) {
+						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
+						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+						unsigned char *table_start = offset_addr+map_adr+2;			// 2 bytes to skip x and y bytes
+						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
+						unsigned char y_axis       = *(offset_addr+map_adr+1);		// get number of colums
+						
+//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
+						printf("phy:0x%x, file-offset=0x%x x-axis=%d, y-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis, y_axis);
+
+						printf("\n\t");
+						for(y=0;y<x_axis;y++)
+						{
+							for(x=0;x<y_axis;x++) 
+							{
+								printf("%-2.2x ", (int)(*(table_start+x_axis+y_axis+y_axis*y+x)) );	// show values directly out of the table
+							}
+							printf("\n\t");
+						}
+
+					}
+					printf("\n");
+					
+					// continue search from next location after this match...
+					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
+
+					//printf("\nCurrent Offset : %x\n",current_offset);
+				}
+				printf("\n\n");
+#endif				
 			}				
 
 //-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** HFM Linearization code sequence ***
 			 */
-	if (mode != HFM_NOTSET)
+	if (find_mlhfm != 0)
 	{
 			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
 
@@ -655,7 +536,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					uint32_t crc_hfm;
 					crc_hfm = crc32(0, fh->d.p + MAP_FILE_OFFSET + offset, entries*2);
 
-					if(mode == HFM_WRITING)
+					if(find_mlhfm == HFM_WRITING)
 					{
 						/* load in MLHFM table from a file */
 						load_hfm_result = iload_file(fh_hfm, filename_hfm, 0);
@@ -701,7 +582,6 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 						return 0;
 					}
 
-
 					if(filename_hfm != 0)
 					{
 						snprintf(ml_filename, MAX_FILENAME, "%s_%x.bin", filename_hfm, crc_hfm);
@@ -724,9 +604,9 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					}
 		
 					/*
-					 * only try to save MLHFM table to file if in DUMPING/READING mode..
+					 * only try to save MLHFM table to file if in DUMPING/READING_mlhfm..
 					 */
-					if(mode == HFM_READING)
+					if(find_mlhfm == HFM_READING)
 					{
 						printf("Saving raw MLHFM table (dumped with no endian conversion) to file: '%s'\n\n", ml_filename);
 						save_result = save_file(ml_filename, fh->d.p + MAP_FILE_OFFSET + offset, entries*2 );
@@ -746,11 +626,13 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 			}
 		}
 
-//-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
-		if(correct_checksums == 1)
+//-[ Checksum Correction ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+		if(correct_checksums == OPTION_SET)
 		{
-//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+			//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** CRC32_ChecksumCalc Routine #1 ***
 			 */
@@ -778,6 +660,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
+			//-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			printf("\n\n-[ Main-Rom Checksum Analysis ]----------------------------------------------------------\n\n");
 			
 			/*
@@ -804,7 +687,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				}	
 			}
 
-//-[ MAINROM <Start/End Array> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			//-[ MAINROM <Start/End Array> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #1 ***
@@ -843,7 +726,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 
 			}
 #endif
-//-[ MAINROM <Start/End Array> Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			//-[ MAINROM <Start/End Array> Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
 			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2 [to extract Start/End regions] ");
 			addr = search( fh, (unsigned char *)&needle_2, (unsigned char *)&mask_2, sizeof(needle_2), 0 );
@@ -877,7 +760,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				printf("\n");
 			}
 
-//-[ MAINROM <Stored Checksums> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			//-[ MAINROM <Stored Checksums> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
 			/*
 			 * search: *** Main Rom Checksum bytecode sequence #3 : MAIN ROM stored HI/LO checksums ***
@@ -954,7 +837,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 				
 			}
 		
-//-[ Multipoint <Number of Table Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			//-[ Multipoint <Number of Table Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
 				printf("\n\n-[ Multipoint Checksum Analysis ]--------------------------------------------------------\n");
 
@@ -989,8 +872,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					}				
 				}
 
-
-//-[ Multipoint <Stored Checksums> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+				//-[ Multipoint <Stored Checksums> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
 				/*
 				 * search: *** Multipoint Checksum bytecode sequence #2b : Multipoint  stored HI/LO checksum list ***
@@ -1011,7 +893,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 					lo_addr     = addr+54;
 					hi_addr     = 0;
 					skip_factor = 0;
-					do_multipoint = 1;
+					do_multipoint = 1;			// only try multipoint checks if we find the needle!
 				} else {
 
 					// if not found try alternative variant
@@ -1025,15 +907,15 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 						seg_addr    = addr+24;
 						lo_addr     = addr+28;
 						hi_addr     = addr+32;
-						skip_factor = 32;				// skip past 1st 2 entries which are actually CRC32's in table
-						do_multipoint = 1;
+						skip_factor = 32;		// skip past 1st 2 entries which are actually CRC32's in table
+						do_multipoint = 1;		// only try multipoint checks if we find the needle!
 
 						num_multipoint_entries_byte -= 2;						
 						printf("***Experimental***: Note Variant #B has 2 crc32's in the table before the multipoints. Skipping the CRC's and just doing the multipoints..\n");
 					}				
 				}
 				
-				if(do_multipoint == 1)
+				if(do_multipoint == 1)	// only try multipoint checks if we found the needles!
 				{
 					int j, good=0, bad=0;
 //					int nCalcCRC;
@@ -1118,8 +1000,52 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm)
 
 				if(corrected >0 || fixed > 0) {
 					snprintf(newrom_filename, MAX_FILENAME, "%s_corrected.bin", filename_rom);
-					printf("\nSaving corrected rom to '%s'...\n", newrom_filename);
-					save_result = save_file(newrom_filename, fh->d.p, fh->len );
+					
+					printf("\nAttempting to save corrected rom to ");
+					if(save_name != 0) {
+						printf("'%s'...\n", save_name);
+					} else {
+						printf("'%s'...\n", newrom_filename);
+					}
+					
+					// check if file exists so we don't overwrite it!
+					if(save_name != 0) {
+						if( CheckFileExist(save_name)) {
+							printf("File already exists.\n");
+							exists = 1;
+						} else {
+							exists = 0;
+						}
+					} else {
+						
+						if( CheckFileExist(newrom_filename)) {
+							printf("File already exists.\n");
+							exists = 1;
+						} else {
+							exists = 0;
+						}
+					}
+					
+					// added support for forced overwriting
+					if(exists == 0 || force_write == 1)
+					{
+						if(force_write == 1) {
+							printf("Overwriting old file (-force). ");
+						}
+						
+						if(save_name != 0) {
+							printf("Overriding default save filename to: '%s'\n",save_name);
+							save_result = save_file(save_name, fh->d.p, fh->len );						
+						} else {
+							save_result = save_file(newrom_filename, fh->d.p, fh->len );						
+						}
+
+						if(save_result == 0) {
+							printf("Save completed OK.\n");
+						} else {
+							printf("Error: Failed to save file. Check permissions!\n");
+						}
+					}
 				}
 			}
 		} else {
