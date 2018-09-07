@@ -3,33 +3,15 @@
 
    By 360trev. Needle lookup function borrowed from nyet (Thanks man!) from
    the ME7sum tool development (see github).
-           
+
+   Summary:
    This tool is for analyzing/upgrading/modifying Ferrari 360 Firmware dumps.
    However its been re-written in a very unique way as to be compatible with
    as many Bosch ME7.x firmware dumps as possible.
-   
-   This version illustrates how to identify code segments, variables and data 
-   table areas directly within a firmware image that 'move around' due to 
-   conditional compilation and absolute addressing modes of the resultant
-   machine code between different firmware versions and builds. The code explicitly
-   supports both 512kbyte and 1Mb rom images despite Ferrari roms only being
-   512kbytes. I note it works with Alfa and Volvo roms for the checksumming
-   in the tests I've done so far (again down to the unique way I identify the
-   variables and tables.)...
-   
-   The basic approach is to identify the code block sequences (which are common) 
-   and then extract from the machine code itself the offsets to either a variable,
-   map or list area where they are stored. 
-   
-   This means that this approach works across ALL Ferrari 360 firmware dumps and
-   many more besides. The approach can ofcourse be used to search for ALL map 
-   tables. The advantage of doing this vs simple byte signatures is that you can 
-   extract offsets and information directly out of the code. Also since we are
-   masking out all of the absolute address information directly out of the machine
-   code the searching for common routines works across different generations and
-   even different versions of ME7.x! 
-	
-   This tool currently supports identification of the Main Checksum areas;
+
+   Chekcksumming Feature:  '-fixsums'
+   This tool currently supports identification of the Main Checksum areas & Multipoint
+   Checksums;
    1. Firstly we identify the code snippet which tells us how many regions are
    being processed by the original code.
    2. Then we identify the array of start and end addresses out of the code where 
@@ -41,9 +23,8 @@
    Note: If they do not match either 1) the firmware dump is bad or its been changed
    since production. Without working main checksum the ecu won't boot the firmware.
    Since we know exactly where to store the re-calculated checksum we can put this
-   directly back into the rom and save it out (step 3 discovered its location).
-   
-   The tool also can walk through the Multipoint Checksum areas too;
+   directly back into the rom and save it out (step 3 discovered its location).   
+   The tool also will walk through the Multipoint Checksum areas too;
    1. Again we search for the code which tells us how many multipoints exist in
    this firmware rom.
    2. At this stage we search for 2 different variants of the stored checksum
@@ -51,24 +32,59 @@
    multipoint checksum array (16 bytes per entry) comprising of start address,
    end address, crc32 and 1's complement crc32. we can walk through the list
    and check them by re-calculating them checksums.
-   
    Some notes: Since the rom addresses contain rom base addresses (and often 
    all though not always the case (volvo roms start from 0) not from 0 address I
    opted to use bitmasks to eliminate the high address so we could translate from
    physical addresses to ram offsets.
-   
-   Furthermore the tool can also identify (currently 2) different variants of
-   the SecurityAccess seed calcuation routines and patch them so that they always
-   return TRUE (1) which means any login password works to grant full access over
-   OBD-II. (e.g access to eeprom and flash writing).
-   
-   And finally it can also be used to (Ferrari only at this time) identify the
+
+   Seedkey Patch Feature: '-seedkey'
+   The tool can also identify (currently 2) different variants of the SecurityAccess 
+   seed calcuation routines and patch them so that they always return TRUE (1) which 
+   means any login password works to grant full access over OBD-II. (e.g access to 
+   eeprom and flash writing).
+
+
+   Identify DPPx Register Values: '-dppx'
+   The dppx registers are values used by the cpu to determine physical addresses
+   such as where main system ram is located. By correctly setting the DPPx registers
+   it will help using IDA on the given rom image. Since they are different between
+   different rom's this feature will help you to quickly determine what they should be!
+
+
+   MLHFM Table Swapping Features: '-rhfm' - Read & save it
+   This is currently Ferrari specific but it basically identifies the
    MLHFM table which comprises of (typically) 512 entries, each 2 bytes 
    (1024 bytes total) of linearization data for the type of Bosch Air Flow Meters
-   fitted to the Ferrari 360.
+   fitted to the Ferrari 360.   
+   This option saves out the table and tries to recognise what table it is. e.g. for 
+   a Challenge Stradale sized Air Flow Meters or Modena.
+   This is a great feature for those looking to upgrade to larger AFM's as it yields
+   greater peak power. The larger CS/599/F430 AFM's can flow more air at higher RPM's.
 
-   The current 'modes' supported are below (cut from usage of program)
-  
+
+   MLHFM Table Swapping Features: '-whfm' - Write & save rom
+   This option allows you to load a previously saved MLHFM binary table and swap it
+   in a new rom. It also tries to recognise what table it is. e.g. for 
+   a Challenge Stradale sized Air Flow Meters or Modena. After you've dumped the
+   AFM's from another rom use this to upgrade the rom. If you also add '-fixsums'
+   it will also automatically correct the sums and the output file is ready for
+   flashing. Nothing else to do!
+
+
+   MLHFM Table Swapping Features: '-ihfm' - Identify only
+   This option allows you to load a identify which MLHFM binary table exists in the
+   specified romfile.
+
+   Map Dump Feature: '-maps' - Dump (generic) map locations
+   This is a powerful feature that's currently work in progress, its aim is to automatically 
+   identify all the maps in a given rom image so you can easily dump, edit and swap them. 
+   Watch this space. Big updates on this very soon.
+
+   Exhaust Flap Control Table : '-valves' - identify and dump its location
+   I did one table so far (whoop!). It allows you to see how all tables in the future will be 
+   formatted. This one shows rpm vs throttle position and what happens to exhaust valves.
+
+
    Usage: me7romtool <mode> <rom_filename> <extra options> ...
    
    -romfile : Try to identify map in the firmware. You *must* specify a romfile!
@@ -89,12 +105,29 @@
 
    -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'. 
    
-
-   The swapping of HFM air flow meter tables on Ferrari roms fully works
-   and can save out a replaced rom and will automatically fix the checksums so its ready to reflash!
+   Q. How does this work?
    
-   So, if you use this tool you'll need to update them separately after
-   using it before flashing the output file to your ecu's.
+   This tool not only finds signatures it also extract segment information directly
+   out of the machine code (no guessing or manual entry required). Also since variables 
+   and data table areas directly within a firmware image that 'move around' due to 
+   conditional compilation and absolute addressing modes of the resultant
+   machine code between different firmware versions and builds. The code explicitly
+   supports both 512kbyte and 1Mb rom images despite Ferrari roms only being
+   512kbytes. I note it works with Alfa and Volvo roms for the checksumming
+   in the tests I've done so far (again down to the unique way I identify the
+   variables and tables.)...
+   
+   The basic approach is to identify the code block sequences (which are common) 
+   and then extract from the machine code itself the offsets to either a variable,
+   map or list area where they are stored. 
+   
+   This means that this approach works across ALL Ferrari 360 firmware dumps and
+   many more besides. The approach can ofcourse be used to search for ALL map 
+   tables. The advantage of doing this vs simple byte signatures is that you can 
+   extract offsets and information directly out of the code. Also since we are
+   masking out all of the absolute address information directly out of the machine
+   code the searching for common routines works across different generations and
+   even different versions of ME7.x! 
    
    Have fun!
    
