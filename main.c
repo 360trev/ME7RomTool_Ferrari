@@ -53,6 +53,7 @@ int force_write;
 int valves=0;
 int find_dpp=0;
 int find_mlhfm=0;
+char newrom_filename[MAX_FILENAME];
 
 OPTS_ENTRY opts_table[] = {
 //	  option      field to set        value to set  argument   req'd or not
@@ -172,467 +173,22 @@ uint32_t CalcChecksumBlk(struct ImageHandle *ih, uint32_t start, uint32_t end)
 	return sum;
 }
 
-int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
+int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsigned long dynamic_ROM_FILESIZE, unsigned char *offset_addr)
 {
-	ImageHandle f_hfm;
-	ImageHandle *fh_hfm = &f_hfm;
-	int load_hfm_result, exists;
-	ImageHandle f;
-	ImageHandle *fh = &f;
-	int load_result;
-	int save_result;
-	char ml_filename[MAX_FILENAME];
-	char newrom_filename[MAX_FILENAME];
-//	int segment_offset;
-	unsigned char *addr;
-	unsigned char *offset_addr;
-	unsigned short offset,entries;
+	int num_entries = 0;
+	int num_multipoint_entries_byte;
+	unsigned long checksum_norm;
+	unsigned long checksum_comp;
+	uint32_t i, sum, final_sum=0;
 	unsigned long masked_start_addr=0;
 	unsigned long masked_end_addr=0;
 	unsigned long start_addr=0;
 	unsigned long end_addr=0;
 	unsigned long last_end_addr=0;
-	unsigned long checksum_norm;
-	unsigned long checksum_comp;
-	unsigned long dynamic_ROM_FILESIZE=0;
-	uint32_t i, sum, final_sum=0;
-	int num_entries = 0;
-	int num_multipoint_entries_byte;
-	int hiword, loword;
-	unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 	int corrected=0;
 	int fixed=0;
-	
-	
-	/* load file from storage */
-	load_result = iload_file(fh, filename_rom, 0);
-	if(load_result == 0) 
-	{
-		printf("Succeded loading file.\n\n");
-		offset_addr = (unsigned char *)(fh->d.p);
-		
-		/* quick sanity check on firmware rom size (Ferrari 360 images must be 512kbytes/1024kbytes) */
-		if(fh->len == ROM_FILESIZE*1 || fh->len == ROM_FILESIZE*2 ) 
-		{		
-			dynamic_ROM_FILESIZE = fh->len;	// either 512kbytes or 1024kbytes set depending on actual file size...
-
-			if(dynamic_ROM_FILESIZE == ROM_FILESIZE*1 ) {
-				printf("Loaded ROM: Tool in 512Kb Mode\n");
-			} else if(dynamic_ROM_FILESIZE == ROM_FILESIZE*2 ) {
-				printf("Loaded ROM: Tool in 1Mb Mode\n");
-			}
-			printf("\n");
-
-//			show_hex_dump(offset_addr+0x10000, 0x200, 0x100000);
-
-//-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** Main Rom Checksum bytecode sequence #1 ***
-			 */
-			 
-		if(find_dpp == OPTION_SET)
-		{
-			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
-
-			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
-			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, sizeof(needle_dpp), 0 );
-			if(addr == NULL) {
-				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
-				return 0;
-			} else {
-				printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
-
-				dpp0_value = (get16((unsigned char *)addr + 2 + 0));
-				dpp1_value = (get16((unsigned char *)addr + 2 + 4));
-				dpp2_value = (get16((unsigned char *)addr + 2 + 8));
-				dpp3_value = (get16((unsigned char *)addr + 2 + 12));
-
-				printf("\ndpp0: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp0_value),(dpp0_value*SEGMENT_SIZE) );
-				printf("\ndpp1: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp1_value),(dpp1_value*SEGMENT_SIZE) );
-				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",(int)(dpp2_value),(dpp2_value*SEGMENT_SIZE) );
-				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",(int)(dpp3_value),(dpp3_value*SEGMENT_SIZE) );
-				printf("\n\nNote: dpp3 is always 3, otherwise accessing CPU register area not possible",(int)(dpp3_value) );
-				printf("\n");
-					
-			}
-			printf("\n");
-		}
-
-//-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** Seed/Key Check Patch #1 ***
-			 */
-			 
-			if(seedkey_patch == OPTION_SET) 
-			{
-				printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
-
-				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
-				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
-				if(addr != NULL) {
-					seedkey_patch = 2;		// since we discovered this, set this to 2 to skip unrequired secondary check
-					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
-					printf("Applying patch so any login seed is successful... ");
-					addr[0x5d] = 0x14; 
-					printf("Patched!\n");
-				}
-				printf("\n");
-			} 
-			
-//-[ Seedkey Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** Seed/Key Check Patch #2 ***
-			 */
-
-			if(seedkey_patch == OPTION_SET) 
-			{
-				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
-				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, sizeof(needle_6), 0 );
-				if(addr != NULL) {
-					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
-					printf("Applying patch so any login seed is successful... ");
-					addr[0x64] = 0x14; 
-					printf("Patched!\n");
-				}
-				printf("\n\n");
-			}
-
-//-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
-			/*
-			 * search: *** KFAGK Routine #1 ***
-		 	 *
-			 * KFAGK defines the characteristics map for exhaust flap changeover. This changes if the car has a loud or 
-			 * quiet exhaust sound depending on the Throttle % and Engine RPM speed.
-			 * 
-			 * A "typical" raw KFAGK table from a rom file looks like below;
-			 * 
-			 *  ROM:81852D 0A                        KFAGK_Y_NUM:        db 10                   ; number of rows down
-			 *	ROM:81852E 06                        KFAGK_X_NUM:        db 6                    ; number of colums across        
-             *
-		     *	ROM:81852F 14 19 3F 44 49 5D 62 7D+  KFAGK_TABL_Y_RANGE: db 14h, 19h, 3Fh, 44h, 49h, 5Dh 62h, 7Dh, 96h, 0E1h  ; RPM (Scaled by / 40)
-			 *	ROM:818539 00 1B 55 5C 6C 85         KFAGK_TABL_X_RANGE: db 0, 1Bh, 55h, 5Ch, 6Ch, 85h                        ; Percentage of Throttle (% val * 1.33333)
-             *
-			 *	ROM:81853F 00 00 00 00 00 00 00 00+  KFAGK_TABL_DATA:    db 0, 0, 0, 0, 0, 0     ;  800 rpm
-			 *	           00 00 00 00 00 00 00 00+                      db 0, 0, 0, 0, 0, 0     ; 1520 rpm
-			 *	           00 00 00 00 01 01 01 01+                      db 0, 0, 0, 0, 0, 0     ; 2520 rpm
-			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 1, 1, 1     ; 2720 rpm
-			 *	           01 02 02 02 00 00 01 02+                      db 0, 0, 1, 2, 2, 2     ; 2920 rpm
-			 *             02 02 00 00 01 02 02 02+                      db 0, 0, 1, 2, 2, 2     ; 3720 rpm
-			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 2, 2, 2     ; 4120 rpm
-			 *	           01 02 02 02                                   db 0, 0, 1, 2, 2, 2     ; 5000 rpm
-			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 6000 rpm
-			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
-			 */
-
-		if(valves == OPTION_SET) {
-			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
-			{		
-				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine Variant #1 [manages exhaust valve/flap opening] \n");
-				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, sizeof(KFAGK_needle), 0 );
-				if(addr == NULL) 
-				{
-					printf("\n>>> Scanning for KFAGK Table #1 Checking sub-routine Variant #2 [manages exhaust valve/flap opening] \n");
-					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, sizeof(KFAGK_needle2), 0 );
-				}
-				
-				if(addr != NULL)
-				{
-					printf("Found at offset=0x%x ",(int)(addr-offset_addr) );
-
-					unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-					unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-					unsigned long kfagk_adr    = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-					kfagk_adr                 &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-					unsigned char *table_start = offset_addr+kfagk_adr+2;			// 2 bytes to skip x and y bytes
-					double throttle_percent;
-					int y;
-					unsigned char y_axis = *(offset_addr+kfagk_adr+0);		// get number of rows
-					unsigned char x_axis = *(offset_addr+kfagk_adr+1);		// get number of colums
-					
-					printf("(seg:0x%x phy:0x%x val:0x%x)\n\n",seg, seg*SEGMENT_SIZE, val);
-					
-					printf("KFAGK table: Characteristic map for exhaust flap changeover\n",x_axis  );
-					printf("KFAGK table: 0x%-8.8x (file-offset)\n",(char *)kfagk_adr  );
-					printf("KFAGK table: X-Axis: %2d Rows : %% of Throttle Applied.\n",x_axis  );
-					printf("KFAGK table: Y-Axis: %2d Rows : RPM before Opening occurs.\n\n",y_axis  );
-
-					// lets draw a simple column/row table ;)
-
-					// show table header
-					printf("\t");					
-					// conversion of x-axis column data to human readable
-					for(i=0;i<x_axis;i++) {
-						printf("%-2.2f%%\t", (double)(*(table_start+y_axis+i))/1.33333 );		// convert stored table value to percentage
-					}
-					printf("\n\t");
-					for(i=0;i<x_axis;i++) {
-						printf("[%d]----\t", i+1);
-					}
-
-					// show y-axis data
-					printf("\n\t");
-					for(i=0;i<y_axis;i++) 
-					{
-						for(y=0;y<x_axis;y++) 
-						{
-							printf(" %-2d\t", (int)(*(table_start+x_axis+y_axis+i*x_axis+y)) );	// show values directly out of the table
-						}
-						// conversion of y-axis row data to human readable
-						printf("[%2d] : %-5d rpm\n\t",i+1, (*(table_start+i))*40); 				// values stored need to be *40 to get back to RPM
-					}					
-					
-				}
-				printf("\n\n");
-			}
-		}
-
-//-[ Map Table Finder :) ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-/*  Things get quite interesting here on in...
- * 
- *  What I am about to show is how to identify 'generic' map tables directly from the rom function signatures ;)
- *  The idea is we directly find signatures for all 'known' maps, then find ALL maps and remove the known ones from the
- *  list. This yields a good 'catch all' ...
- * 
- *  The approach of masking all segment and relocation information out of the signatures means it works on any ME7x rom file 
- *  compiled for C167x cpu and works right across a huge number of rom variants.
- *
- *  This is just showing X-Axis tables (entire set of rom tables will come shortly and then we can easily match them too!)... 
- *  But ofcourse its quite simple to make this work for ALL the ROM resident tables. 
- * 
- *  This is a far better way than 'guessing' the maps knowing they reside (as some even commercial tools do) within a certain range 
- *  in the rom. This guarentee's your actually looking at real tables. The next step is to push the table start addresses into a hash 
- *  table to make it easy to de-duplicate them so you don't find calls to the lookups to the same tables (happens occasionally since 
- *  we are walking through the rom code and literaly picking up ALL of the accesses to the tables.
- * 
- *  Have fun ;)
- */
-			if(find_x_axis_maps == OPTION_SET)
-			{
-				printf("-[ Generic X-Axis MAP Table Scanner! ]---------------------------------------------------------------------\n\n");
-				printf(">>> Scanning for Map Tables #1 Checking sub-routine [map finder!] \n");
-				
-				int current_offset=0;
-				int x,y;
-				i=0;
-				while(1)
-				{
-					// search for signature for X-Axis (1 row) table..
-					addr = search( fh, (unsigned char *)&mapfinder_needle, (unsigned char *)&mapfinder_mask, sizeof(mapfinder_needle), current_offset);
-
-					// exit the searching loop when we reach end of rom region
-					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
-
-					// if we find a match lets dump it!
-					if(addr != NULL) {
-						printf("\n[Map #%d] X-Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
-						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-
-						unsigned char *table_start = offset_addr+map_adr+1;			// 2 bytes to skip x and y bytes
-						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
-//						unsigned char x_axis       = *(offset_addr+map_adr+1);		// get number of colums
-						
-//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
-						printf("phy:0x%x, file-offset=0x%x x-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis);
-
-						printf("\n\t");
-						for(x=0;x<x_axis;x++) 
-						{
-							printf("%-2.2x ", (int)(*(table_start+x)) );	// show values directly out of the table
-						}
-					}
-					printf("\n");
-					
-					// continue search from next location after this match...
-					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
-
-					//printf("\nCurrent Offset : %x\n",current_offset);
-				}
-				printf("\n\n");
-#if 0
-//
-// work in progress...
-//
-				current_offset = 0;
-				while(1)
-				{
-					// search for signature for X/Y-Axis (multirow/column) table..
-					addr = search( fh, (unsigned char *)&mapfinder_xy_needle, (unsigned char *)&mapfinder_xy_mask, sizeof(mapfinder_xy_needle), current_offset);
-
-					// exit the searching loop when we reach end of rom region
-					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
-
-					// if we find a match lets dump it!
-					if(addr != NULL) {
-						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
-						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-
-						unsigned char *table_start = offset_addr+map_adr+2;			// 2 bytes to skip x and y bytes
-						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
-						unsigned char y_axis       = *(offset_addr+map_adr+1);		// get number of colums
-						
-//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
-						printf("phy:0x%x, file-offset=0x%x x-axis=%d, y-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis, y_axis);
-
-						printf("\n\t");
-						for(y=0;y<x_axis;y++)
-						{
-							for(x=0;x<y_axis;x++) 
-							{
-								printf("%-2.2x ", (int)(*(table_start+x_axis+y_axis+y_axis*y+x)) );	// show values directly out of the table
-							}
-							printf("\n\t");
-						}
-
-					}
-					printf("\n");
-					
-					// continue search from next location after this match...
-					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
-
-					//printf("\nCurrent Offset : %x\n",current_offset);
-				}
-				printf("\n\n");
-#endif				
-			}				
-
-//-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** HFM Linearization code sequence ***
-			 */
-	if (find_mlhfm != 0)
-	{
-			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
-
-			printf(">>> Scanning for HFM Linearization Table Lookup code sequence... \n");
-			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, sizeof(needle_1), 0 );
-			if(addr == NULL) {
-				printf("\nhfm sequence not found\n\n");
-			} else {
-				/* this offset is the machine code for the check against last entry in HFM table
-				 * if we extract it we know how many entries are in the table. 
-				 */ 
-				entries = get16(addr+4); /* using endian conversion, get XXXX offset from 'cmp r12 #XXXXh' : part of GGHFM_lookup(); */
-				/* sanity check for MAX_ENTRIES that we expect to see.. */
-				if(entries != 0)
-				{
-					if(entries > MAX_DHFM_ENTRIES) { printf("unusual entries size, defaulting to 512"); entries=DEFAULT_DHFM_ENTRIES; };
-					
-					/* this offset refers to the MAP storage for HFM linearization table
-					 * if we extract it we know precisly where our HFM  table is located in the firmware dump
-                     */					
-					offset = get16(addr+14); /* using endian conversion, get XXXX offset from 'mov r5, [r4 + XXXX]' : part of GGHFM_lookup(); */
-
-					/* lets show the sequence we looked for and found
-					 * in hex (this is the machine code sequence for the GGHFM_DHFM_Lookup() function in the firmware image
-					 */
-					printf("\n\nFound GGHFM_DHFM_Lookup() instruction sequence at file offset: 0x%x, len=%d\n", addr-(fh->d.u8), sizeof(needle_1) );			
-					hexdump(addr, sizeof(needle_1), " ");
-
-					printf("\nExtracted MLHFM map table offset from mov instruction = 0x%x (endian compliant)\n",offset);
-					printf("Extracted %d table entries from code.\n",entries);
-					
-					printf("\nFile offset to MLHFM table 0x%x (%d) [%d bytes]\n",(MAP_FILE_OFFSET + offset),(MAP_FILE_OFFSET + offset), entries*2 );
-					
-					uint32_t crc_hfm;
-					crc_hfm = crc32(0, fh->d.p + MAP_FILE_OFFSET + offset, entries*2);
-
-					if(find_mlhfm == HFM_WRITING)
-					{
-						/* load in MLHFM table from a file */
-						load_hfm_result = iload_file(fh_hfm, filename_hfm, 0);
-						if(load_hfm_result == 0) 
-						{
-							if(fh_hfm->len != 1024) {
-								ifree_file(fh_hfm);
-								printf("MLHFM table is the wrong size, cannot continue. Exiting. Are you sure its a MLHFM table?");
-								return 0;
-							}
-							printf("Correctly loaded in an MLHFM file '%s'\n", filename_hfm);
-							
-							uint32_t crc_hfm_file;
-							crc_hfm_file = crc32(0, fh_hfm->d.p, 1024);
-							
-							if(crc_hfm_file == 0x4200bc1)			/* crc32 checksum of MLHFM 1024byte table */
-							{
-								printf("MLHFM Table Identified in loaded file: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
-							} else if(crc_hfm_file == 0x87b3489a)	/* crc32 checksum of MLHFM 1024byte table */
-							{
-								printf("MLHFM Table Identified in loaded file: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
-							} else {
-								printf("MLHFM Table Not Identified in loaded file: Custom or not an MLHFM file!\n");
-							}
-							
-							/* check if firmware ALREADY matches the loaded in MLHFM table */
-							if(crc_hfm == crc_hfm_file) {
-								printf("\nMLHFM Table already IDENTICAL in the rom specified. Nothing to do here...\n");
-								return 0;
-							}
-
-							/* copying hfm table from file into rom image in memory */
-							printf("\nMerging MLHFM table into rom...\n");
-							memcpy(fh->d.p + MAP_FILE_OFFSET + offset, fh_hfm->d.p, fh_hfm->len);
-
-							/* save it.. */
-							snprintf(newrom_filename, MAX_FILENAME, "%s_patched.bin", filename_rom);
-							printf("\nSaving modified rom to '%s'...\n", newrom_filename);
-							save_result = save_file(newrom_filename, fh->d.p, fh->len );
- 
-							printf("\nAll done.\n");
-						}
-						return 0;
-					}
-
-					if(filename_hfm != 0)
-					{
-						snprintf(ml_filename, MAX_FILENAME, "%s_%x.bin", filename_hfm, crc_hfm);
-						printf("Saving MLHFM filename as '%s'\n", ml_filename);
-					}
-					else 
-					{
-						/*
-						 * create filename for table (lets try to identify this MLHFM first
-						 */
-						if(crc_hfm == 0x4200bc1)			// crc32 checksum of MLHFM 1024byte table
-						{
-							printf("MLHFM Table Identified: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
-							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Modena_%x.bin", crc_hfm);
-						} else if(crc_hfm == 0x87b3489a)	// crc32 checksum of MLHFM 1024byte table
-						{
-							printf("MLHFM Table Identified: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
-							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Stradale_%x.bin", crc_hfm);
-						}
-					}
-		
-					/*
-					 * only try to save MLHFM table to file if in DUMPING/READING_mlhfm..
-					 */
-					if(find_mlhfm == HFM_READING)
-					{
-						printf("Saving raw MLHFM table (dumped with no endian conversion) to file: '%s'\n\n", ml_filename);
-						save_result = save_file(ml_filename, fh->d.p + MAP_FILE_OFFSET + offset, entries*2 );
-						if(save_result) {
-							printf("\nFailed to save, result = %d\n", save_result);
-						}
-
-						// get offset
-						printf("unsigned short MLHFM_%x[%d] = {\n", crc_hfm, entries);
-						hexdump_le_table(fh->d.p + MAP_FILE_OFFSET + offset, entries, "};\n");					
-	
-
-					}
-				} else {
-					printf("MLHFM not found. Probaby a matching byte sequence but not in a firmware image");
-				}
-			}
-		}
-
+	int exists;
+	int save_result;
 
 //-[ Checksum Correction ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
@@ -1054,7 +610,469 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 						}
 					}
 				}
+			}	
+		return 0;
+}
+
+
+int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
+{
+	ImageHandle f_hfm;
+	ImageHandle *fh_hfm = &f_hfm;
+	int load_hfm_result;
+	ImageHandle f;
+	ImageHandle *fh = &f;
+	int load_result;
+	int save_result;
+	char ml_filename[MAX_FILENAME];
+//	int segment_offset;
+	unsigned char *addr;
+	unsigned char *offset_addr;
+	unsigned short offset,entries;
+	unsigned long dynamic_ROM_FILESIZE=0;
+	uint32_t i;
+	int hiword, loword;
+	unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
+	
+	
+	/* load file from storage */
+	load_result = iload_file(fh, filename_rom, 0);
+	if(load_result == 0) 
+	{
+		printf("Succeded loading file.\n\n");
+		offset_addr = (unsigned char *)(fh->d.p);
+		
+		/* quick sanity check on firmware rom size (Ferrari 360 images must be 512kbytes/1024kbytes) */
+		if(fh->len == ROM_FILESIZE*1 || fh->len == ROM_FILESIZE*2 ) 
+		{		
+			dynamic_ROM_FILESIZE = fh->len;	// either 512kbytes or 1024kbytes set depending on actual file size...
+
+			if(dynamic_ROM_FILESIZE == ROM_FILESIZE*1 ) {
+				printf("Loaded ROM: Tool in 512Kb Mode\n");
+			} else if(dynamic_ROM_FILESIZE == ROM_FILESIZE*2 ) {
+				printf("Loaded ROM: Tool in 1Mb Mode\n");
 			}
+			printf("\n");
+
+//			show_hex_dump(offset_addr+0x10000, 0x200, 0x100000);
+
+//-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** Main Rom Checksum bytecode sequence #1 ***
+			 */
+			 
+		if(find_dpp == OPTION_SET)
+		{
+			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
+
+			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
+			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, sizeof(needle_dpp), 0 );
+			if(addr == NULL) {
+				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
+				return 0;
+			} else {
+				printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+
+				dpp0_value = (get16((unsigned char *)addr + 2 + 0));
+				dpp1_value = (get16((unsigned char *)addr + 2 + 4));
+				dpp2_value = (get16((unsigned char *)addr + 2 + 8));
+				dpp3_value = (get16((unsigned char *)addr + 2 + 12));
+
+				printf("\ndpp0: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp0_value),(dpp0_value*SEGMENT_SIZE) );
+				printf("\ndpp1: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp1_value),(dpp1_value*SEGMENT_SIZE) );
+				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",(int)(dpp2_value),(dpp2_value*SEGMENT_SIZE) );
+				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",(int)(dpp3_value),(dpp3_value*SEGMENT_SIZE) );
+				printf("\n\nNote: dpp3 is always 3, otherwise accessing CPU register area not possible",(int)(dpp3_value) );
+				printf("\n");
+					
+			}
+			printf("\n");
+		}
+
+//-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** Seed/Key Check Patch #1 ***
+			 */
+			 
+			if(seedkey_patch == OPTION_SET) 
+			{
+				printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
+
+				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
+				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
+				if(addr != NULL) {
+					seedkey_patch = 2;		// since we discovered this, set this to 2 to skip unrequired secondary check
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					printf("Applying patch so any login seed is successful... ");
+					addr[0x5d] = 0x14; 
+					printf("Patched!\n");
+				}
+				printf("\n");
+			} 
+			
+//-[ Seedkey Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** Seed/Key Check Patch #2 ***
+			 */
+
+			if(seedkey_patch == OPTION_SET) 
+			{
+				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
+				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, sizeof(needle_6), 0 );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					printf("Applying patch so any login seed is successful... ");
+					addr[0x64] = 0x14; 
+					printf("Patched!\n");
+				}
+				printf("\n\n");
+			}
+
+//-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
+			/*
+			 * search: *** KFAGK Routine #1 ***
+		 	 *
+			 * KFAGK defines the characteristics map for exhaust flap changeover. This changes if the car has a loud or 
+			 * quiet exhaust sound depending on the Throttle % and Engine RPM speed.
+			 * 
+			 * A "typical" raw KFAGK table from a rom file looks like below;
+			 * 
+			 *  ROM:81852D 0A                        KFAGK_Y_NUM:        db 10                   ; number of rows down
+			 *	ROM:81852E 06                        KFAGK_X_NUM:        db 6                    ; number of colums across        
+             *
+		     *	ROM:81852F 14 19 3F 44 49 5D 62 7D+  KFAGK_TABL_Y_RANGE: db 14h, 19h, 3Fh, 44h, 49h, 5Dh 62h, 7Dh, 96h, 0E1h  ; RPM (Scaled by / 40)
+			 *	ROM:818539 00 1B 55 5C 6C 85         KFAGK_TABL_X_RANGE: db 0, 1Bh, 55h, 5Ch, 6Ch, 85h                        ; Percentage of Throttle (% val * 1.33333)
+             *
+			 *	ROM:81853F 00 00 00 00 00 00 00 00+  KFAGK_TABL_DATA:    db 0, 0, 0, 0, 0, 0     ;  800 rpm
+			 *	           00 00 00 00 00 00 00 00+                      db 0, 0, 0, 0, 0, 0     ; 1520 rpm
+			 *	           00 00 00 00 01 01 01 01+                      db 0, 0, 0, 0, 0, 0     ; 2520 rpm
+			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 1, 1, 1     ; 2720 rpm
+			 *	           01 02 02 02 00 00 01 02+                      db 0, 0, 1, 2, 2, 2     ; 2920 rpm
+			 *             02 02 00 00 01 02 02 02+                      db 0, 0, 1, 2, 2, 2     ; 3720 rpm
+			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 2, 2, 2     ; 4120 rpm
+			 *	           01 02 02 02                                   db 0, 0, 1, 2, 2, 2     ; 5000 rpm
+			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 6000 rpm
+			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
+			 */
+
+		if(valves == OPTION_SET) {
+			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
+			{		
+				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine Variant #1 [manages exhaust valve/flap opening] \n");
+				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, sizeof(KFAGK_needle), 0 );
+				if(addr == NULL) 
+				{
+					printf("\n>>> Scanning for KFAGK Table #1 Checking sub-routine Variant #2 [manages exhaust valve/flap opening] \n");
+					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, sizeof(KFAGK_needle2), 0 );
+				}
+				
+				if(addr != NULL)
+				{
+					printf("Found at offset=0x%x ",(int)(addr-offset_addr) );
+
+					unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+					unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+					unsigned long kfagk_adr    = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+					kfagk_adr                 &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					unsigned char *table_start = offset_addr+kfagk_adr+2;			// 2 bytes to skip x and y bytes
+					double throttle_percent;
+					int y;
+					unsigned char y_axis = *(offset_addr+kfagk_adr+0);		// get number of rows
+					unsigned char x_axis = *(offset_addr+kfagk_adr+1);		// get number of colums
+					
+					printf("(seg:0x%x phy:0x%x val:0x%x)\n\n",seg, seg*SEGMENT_SIZE, val);
+					
+					printf("KFAGK table: Characteristic map for exhaust flap changeover\n",x_axis  );
+					printf("KFAGK table: 0x%-8.8x (file-offset)\n",(char *)kfagk_adr  );
+					printf("KFAGK table: X-Axis: %2d Rows : %% of Throttle Applied.\n",x_axis  );
+					printf("KFAGK table: Y-Axis: %2d Rows : RPM before Opening occurs.\n\n",y_axis  );
+
+					// lets draw a simple column/row table ;)
+
+					// show table header
+					printf("\t");					
+					// conversion of x-axis column data to human readable
+					for(i=0;i<x_axis;i++) {
+						printf("%-2.2f%%\t", (double)(*(table_start+y_axis+i))/1.33333 );		// convert stored table value to percentage
+					}
+					printf("\n\t");
+					for(i=0;i<x_axis;i++) {
+						printf("[%d]----\t", i+1);
+					}
+
+					// show y-axis data
+					printf("\n\t");
+					for(i=0;i<y_axis;i++) 
+					{
+						for(y=0;y<x_axis;y++) 
+						{
+							printf(" %-2d\t", (int)(*(table_start+x_axis+y_axis+i*x_axis+y)) );	// show values directly out of the table
+						}
+						// conversion of y-axis row data to human readable
+						printf("[%2d] : %-5d rpm\n\t",i+1, (*(table_start+i))*40); 				// values stored need to be *40 to get back to RPM
+					}					
+					
+				}
+				printf("\n\n");
+			}
+		}
+
+//-[ Map Table Finder :) ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+
+/*  Things get quite interesting here on in...
+ * 
+ *  What I am about to show is how to identify 'generic' map tables directly from the rom function signatures ;)
+ *  The idea is we directly find signatures for all 'known' maps, then find ALL maps and remove the known ones from the
+ *  list. This yields a good 'catch all' ...
+ * 
+ *  The approach of masking all segment and relocation information out of the signatures means it works on any ME7x rom file 
+ *  compiled for C167x cpu and works right across a huge number of rom variants.
+ *
+ *  This is just showing X-Axis tables (entire set of rom tables will come shortly and then we can easily match them too!)... 
+ *  But ofcourse its quite simple to make this work for ALL the ROM resident tables. 
+ * 
+ *  This is a far better way than 'guessing' the maps knowing they reside (as some even commercial tools do) within a certain range 
+ *  in the rom. This guarentee's your actually looking at real tables. The next step is to push the table start addresses into a hash 
+ *  table to make it easy to de-duplicate them so you don't find calls to the lookups to the same tables (happens occasionally since 
+ *  we are walking through the rom code and literaly picking up ALL of the accesses to the tables.
+ * 
+ *  Have fun ;)
+ */
+			if(find_x_axis_maps == OPTION_SET)
+			{
+				printf("-[ Generic X-Axis MAP Table Scanner! ]---------------------------------------------------------------------\n\n");
+				printf(">>> Scanning for Map Tables #1 Checking sub-routine [map finder!] \n");
+				
+				int current_offset=0;
+				int x,y;
+				i=0;
+				while(1)
+				{
+					// search for signature for X-Axis (1 row) table..
+					addr = search( fh, (unsigned char *)&mapfinder_needle, (unsigned char *)&mapfinder_mask, sizeof(mapfinder_needle), current_offset);
+
+					// exit the searching loop when we reach end of rom region
+					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+
+					// if we find a match lets dump it!
+					if(addr != NULL) {
+						printf("\n[Map #%d] X-Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
+						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+						unsigned char *table_start = offset_addr+map_adr+1;			// 2 bytes to skip x and y bytes
+						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
+//						unsigned char x_axis       = *(offset_addr+map_adr+1);		// get number of colums
+						
+//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
+						printf("phy:0x%x, file-offset=0x%x x-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis);
+
+						printf("\n\t");
+						for(x=0;x<x_axis;x++) 
+						{
+							printf("%-2.2x ", (int)(*(table_start+x)) );	// show values directly out of the table
+						}
+					}
+					printf("\n");
+					
+					// continue search from next location after this match...
+					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
+
+					//printf("\nCurrent Offset : %x\n",current_offset);
+				}
+				printf("\n\n");
+#if 0
+//
+// work in progress...
+//
+				current_offset = 0;
+				while(1)
+				{
+					// search for signature for X/Y-Axis (multirow/column) table..
+					addr = search( fh, (unsigned char *)&mapfinder_xy_needle, (unsigned char *)&mapfinder_xy_mask, sizeof(mapfinder_xy_needle), current_offset);
+
+					// exit the searching loop when we reach end of rom region
+					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+
+					// if we find a match lets dump it!
+					if(addr != NULL) {
+						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
+						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
+						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
+						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+						unsigned char *table_start = offset_addr+map_adr+2;			// 2 bytes to skip x and y bytes
+						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
+						unsigned char y_axis       = *(offset_addr+map_adr+1);		// get number of colums
+						
+//						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
+						printf("phy:0x%x, file-offset=0x%x x-axis=%d, y-axis=%d",seg*SEGMENT_SIZE+val, (unsigned long)table_start-(int)offset_addr, x_axis, y_axis);
+
+						printf("\n\t");
+						for(y=0;y<x_axis;y++)
+						{
+							for(x=0;x<y_axis;x++) 
+							{
+								printf("%-2.2x ", (int)(*(table_start+x_axis+y_axis+y_axis*y+x)) );	// show values directly out of the table
+							}
+							printf("\n\t");
+						}
+
+					}
+					printf("\n");
+					
+					// continue search from next location after this match...
+					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
+
+					//printf("\nCurrent Offset : %x\n",current_offset);
+				}
+				printf("\n\n");
+#endif				
+			}				
+
+//-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
+			/*
+			 * search: *** HFM Linearization code sequence ***
+			 */
+	if (find_mlhfm != 0)
+	{
+			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
+
+			printf(">>> Scanning for HFM Linearization Table Lookup code sequence... \n");
+			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, sizeof(needle_1), 0 );
+			if(addr == NULL) {
+				printf("\nhfm sequence not found\n\n");
+			} else {
+				/* this offset is the machine code for the check against last entry in HFM table
+				 * if we extract it we know how many entries are in the table. 
+				 */ 
+				entries = get16(addr+4); /* using endian conversion, get XXXX offset from 'cmp r12 #XXXXh' : part of GGHFM_lookup(); */
+				/* sanity check for MAX_ENTRIES that we expect to see.. */
+				if(entries != 0)
+				{
+					if(entries > MAX_DHFM_ENTRIES) { printf("unusual entries size, defaulting to 512"); entries=DEFAULT_DHFM_ENTRIES; };
+					
+					/* this offset refers to the MAP storage for HFM linearization table
+					 * if we extract it we know precisly where our HFM  table is located in the firmware dump
+                     */					
+					offset = get16(addr+14); /* using endian conversion, get XXXX offset from 'mov r5, [r4 + XXXX]' : part of GGHFM_lookup(); */
+
+					/* lets show the sequence we looked for and found
+					 * in hex (this is the machine code sequence for the GGHFM_DHFM_Lookup() function in the firmware image
+					 */
+					printf("\n\nFound GGHFM_DHFM_Lookup() instruction sequence at file offset: 0x%x, len=%d\n", addr-(fh->d.u8), sizeof(needle_1) );			
+					hexdump(addr, sizeof(needle_1), " ");
+
+					printf("\nExtracted MLHFM map table offset from mov instruction = 0x%x (endian compliant)\n",offset);
+					printf("Extracted %d table entries from code.\n",entries);
+					
+					printf("\nFile offset to MLHFM table 0x%x (%d) [%d bytes]\n",(MAP_FILE_OFFSET + offset),(MAP_FILE_OFFSET + offset), entries*2 );
+					
+					uint32_t crc_hfm;
+					crc_hfm = crc32(0, fh->d.p + MAP_FILE_OFFSET + offset, entries*2);
+
+					if(find_mlhfm == HFM_WRITING)
+					{
+						/* load in MLHFM table from a file */
+						load_hfm_result = iload_file(fh_hfm, filename_hfm, 0);
+						if(load_hfm_result == 0) 
+						{
+							if(fh_hfm->len != 1024) {
+								ifree_file(fh_hfm);
+								printf("MLHFM table is the wrong size, cannot continue. Exiting. Are you sure its a MLHFM table?");
+								return 0;
+							}
+							printf("Correctly loaded in an MLHFM file '%s'\n", filename_hfm);
+							
+							uint32_t crc_hfm_file;
+							crc_hfm_file = crc32(0, fh_hfm->d.p, 1024);
+							
+							if(crc_hfm_file == 0x4200bc1)			/* crc32 checksum of MLHFM 1024byte table */
+							{
+								printf("MLHFM Table Identified in loaded file: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
+							} else if(crc_hfm_file == 0x87b3489a)	/* crc32 checksum of MLHFM 1024byte table */
+							{
+								printf("MLHFM Table Identified in loaded file: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
+							} else {
+								printf("MLHFM Table Not Identified in loaded file: Custom or not an MLHFM file!\n");
+							}
+							
+							/* check if firmware ALREADY matches the loaded in MLHFM table */
+							if(crc_hfm == crc_hfm_file) {
+								printf("\nMLHFM Table already IDENTICAL in the rom specified. Nothing to do here...\n");
+								return 0;
+							}
+
+							/* copying hfm table from file into rom image in memory */
+							printf("\nMerging MLHFM table into rom...\n");
+							memcpy(fh->d.p + MAP_FILE_OFFSET + offset, fh_hfm->d.p, fh_hfm->len);
+
+							// now that we've merged MLHFM force checksum re-correction
+							correct_checksums == OPTION_SET;
+							// do checksum correction
+							fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
+
+							/* save it.. */
+							snprintf(newrom_filename, MAX_FILENAME, "%s_patched.bin", filename_rom);
+							printf("\nSaving modified rom to '%s'...\n", newrom_filename);
+							save_result = save_file(newrom_filename, fh->d.p, fh->len );
+ 
+							printf("\nAll done.\n");
+						}
+						return 0;
+					}
+
+					if(filename_hfm != 0)
+					{
+						snprintf(ml_filename, MAX_FILENAME, "%s_%x.bin", filename_hfm, crc_hfm);
+						printf("Saving MLHFM filename as '%s'\n", ml_filename);
+					}
+					else 
+					{
+						/*
+						 * create filename for table (lets try to identify this MLHFM first
+						 */
+						if(crc_hfm == 0x4200bc1)			// crc32 checksum of MLHFM 1024byte table
+						{
+							printf("MLHFM Table Identified: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
+							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Modena_%x.bin", crc_hfm);
+						} else if(crc_hfm == 0x87b3489a)	// crc32 checksum of MLHFM 1024byte table
+						{
+							printf("MLHFM Table Identified: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
+							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Stradale_%x.bin", crc_hfm);
+						}
+					}
+		
+					/*
+					 * only try to save MLHFM table to file if in DUMPING/READING_mlhfm..
+					 */
+					if(find_mlhfm == HFM_READING)
+					{
+						printf("Saving raw MLHFM table (dumped with no endian conversion) to file: '%s'\n\n", ml_filename);
+						save_result = save_file(ml_filename, fh->d.p + MAP_FILE_OFFSET + offset, entries*2 );
+						if(save_result) {
+							printf("\nFailed to save, result = %d\n", save_result);
+						}
+
+						// get offset
+						printf("unsigned short MLHFM_%x[%d] = {\n", crc_hfm, entries);
+						hexdump_le_table(fh->d.p + MAP_FILE_OFFSET + offset, entries, "};\n");					
+	
+
+					}
+				} else {
+					printf("MLHFM not found. Probaby a matching byte sequence but not in a firmware image");
+				}
+			}
+		}
+
+		// do correction
+		fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
+
+
 		} else {
 			printf("File size isn't a supported firmware size. Only 512kbyte and 1Mb images supported. ");
 		}
