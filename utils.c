@@ -290,6 +290,64 @@ void hexdump(uint8_t *buf, int len, const char *end)
     while(len--) printf("%02x%s", *buf++, len?" ":"");
     printf("%s", end);
 }
+
+void hexdump_le(uint8_t *buf, int len, const char *end)
+{
+	uint8_t chA;
+	uint8_t chB;
+	uint8_t chC;
+	uint8_t chD;
+	uint32_t i=0;
+		
+    while(len--) 
+	{
+	if(len > 4) {			
+			chA = *buf++;
+			chB = *buf++;
+			
+			chD = *buf++;
+			chC = *buf++;
+
+here:		switch(chA)
+			{
+				case 0x08:
+				case 0xa8:
+				case 0x0d:
+				case 0x88:
+				case 0x48:
+				case 0x50:
+				case 0x7c:
+				case 0x9d:
+				case 0xfd:
+				{
+					printf("a=%02X b=%02X\nc=%02X d=%02X",chA, chB, chD, chC); 
+					
+					if(len > 4) {
+						chC = *buf++;
+						chD = *buf++;
+						printf(" c=%02X,d=%02X#\n",chC, chD); 
+
+					}
+					break;
+				}
+
+				case 0xf2:
+				{
+					printf("a=%02X b=%02X d=%02X c=%02X\n",chA, chB, chD, chC); 
+				} break;
+				
+				default:
+				{
+					printf("a=%02X b=%02X c=%02X D=%02X\n",chA, chB, chD, chC); 
+					if(chA == 0xDA) { printf("\n"); }
+				} break;
+			}
+
+		}
+	}
+//	exit(0);
+}
+
 #endif
 
 void hexdump_le_table(uint8_t *buf, int len, const char *end)
@@ -550,6 +608,14 @@ int CheckFileExist( char *filename )
     return Result == 0;
 }
 
+void show_cli_usage(int argc, char *argv[], OPTS_ENTRY table[], int entrysize)
+{
+	int j;
+	/* walk through options list and process them */
+	for (j = 0; j < entrysize; j++) {
+		printf(" %-10s: %s", table[j].option_name, table[j].desc);
+	}	
+}
 
 int parse_cli_options(int argc, char *argv[],int i, OPTS_ENTRY table[], int entrysize)
 {

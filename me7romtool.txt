@@ -1,1 +1,1 @@
-./Release/main.c.o ./Release/crc32.c.o ./Release/utils.c.o   
+./Release/mlhfm.c.o ./Release/crc32.c.o ./Release/fixsums.c.o ./Release/main.c.o ./Release/utils.c.o ./Release/show_tables.c.o ./Release/table_spec.c.o ./Release/needles.c.o ./Release/find_dppx.c.o   

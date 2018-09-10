@@ -1,4 +1,4 @@
-/* me7romtool [ Firmware analysis tool for Bosch ME7.3H4 Ferrari firmware's]
+/* me7romtool [ namFirmware analysis tool for Bosch ME7.3H4 Ferrari firmware's]
    By 360trev. Needle lookup function borrowed from nyet (Thanks man!) from
    the ME7sum tool development (see github).
    
@@ -33,12 +33,11 @@
 #include "utils.h"
 #include "needles.h"
 #include "crc32.h"
-
-#define HFM_READING  1
-#define HFM_WRITING  2
-#define HFM_IDENTIFY 3
-
-#define OPTION_SET   1
+#include "show_tables.h"
+#include "table_spec.h"
+#include "fixsums.h"
+#include "find_dppx.h"
+#include "mlhfm.h"
 
 // this globals will be eliminated later (fixme)
 char *rom_name=NULL;
@@ -51,45 +50,46 @@ int find_x_axis_maps=0;
 int correct_checksums=0;
 int force_write;
 int valves=0;
-int find_dpp=0;
+int pedal=0;
+//int find_dpp=1;
 int find_mlhfm=0;
-char newrom_filename[MAX_FILENAME];
+int full_debug=0;
+int show_hex=0;
+int show_adr=0;
+int show_phy=1;
+int show_help=0;
+unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
 OPTS_ENTRY opts_table[] = {
 //	  option      field to set        value to set  argument   req'd or not
-	{ "-romfile", &got_romfile,       OPTION_SET,   &rom_name,  MANDATORY },
-	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY },
-	{ "-seedkey", &seedkey_patch,     OPTION_SET,   0,          OPTIONAL  },
-	{ "-dppx",    &find_dpp,          OPTION_SET,   0,          OPTIONAL  },
-	{ "-valves",  &valves,            OPTION_SET,   0,          OPTIONAL  },
-	{ "-maps",    &find_x_axis_maps,  OPTION_SET,   0,          OPTIONAL  },
-	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL  },
-	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL  },
-	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  OPTIONAL  },
-	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY },
-	{ "-ihfm",    &find_mlhfm,        HFM_IDENTIFY, &hfm_name,  OPTIONAL  }
+	{ "-romfile", &got_romfile,       OPTION_SET,   &rom_name,  MANDATORY, "Try to identify map in the firmware. You *must* specify a romfile!\n"                             },
+	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY, "Optional filename for saving romfiles after they have been modified (overrides default name)\n"   },
+	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL,  "If a checksummed file needs saving overwrite it anyway even if it already exists.\n\n"            },
+
+//	{ "-dppx",    &find_dpp,          OPTION_SET,   0,          OPTIONAL,  "Try to identify DPPx register settings to help with disassembly. (on as default)\n"               },
+	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                    },
+	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n\n"                           },
+	
+	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
+	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"            },
+	{ "-ihfm",    &find_mlhfm,        HFM_IDENTIFY, &hfm_name,  OPTIONAL,  "Try to identify mlhfm table in specified romfile.\n"                                              },
+	{ "-maps",    &find_x_axis_maps,  OPTION_SET,   0,          OPTIONAL,  "Try to identify map in the firmware (Experimental!).\n"                                           },
+	{ "-seedkey", &seedkey_patch,     OPTION_SET,   0,          OPTIONAL,  "Try to identify seedkey function and patch login so any login password works.\n\n"                },
+
+	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL,  "Try to correct checksums, if corrected it saves appending '_corrected.bin'.\n\n"                  },
+
+	{ "-hex",     &show_hex,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
+	{ "-adr",     &show_adr,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
+	{ "-dbg",     &full_debug,        OPTION_SET,   0,          OPTIONAL,  "Show -phy (on as default), -hex and -adr in map table output.\n"                                  },
+	{ "-nophy",   &show_phy,          OPTION_CLR,   0,          OPTIONAL,  "Override default behaviour and dont show formatted values in map table output.\n\n"               },
+	
+	{ "?",        &show_help,         OPTION_SET,   0,          OPTIONAL,  "Show this help.\n\n"                     },
 };
 	
-int show_usage(char *argv[])
+int show_usage(char *argv[], int argc)
 {
-	printf("Usage: %s <mode> <rom_filename> <extra options> ...\n\n",argv[0]);
-
-	printf(" -romfile : Try to identify map in the firmware. You *must* specify a romfile!\n\n");
-
-	printf(" -dppx    : Try to identify DPPx register settings to help with disassembly.\n");
-	
-	printf(" -rhfm    : Read and extract hfm from romfile, optional dump filename to override default write name.\n");
-	printf(" -whfm    : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n");
-	printf(" -ihfm    : Try to identify mlhfm table in specified romfile.\n\n");
-
-	printf(" -seedkey : Try to identify seedkey function and patch login so any login password works.\n");
-	printf(" -maps    : Try to identify map in the firmware.\n");
-	printf(" -valves  : Try to identify exhaust valve opening table in the firmware.\n\n");
-
-	printf(" -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'.\n");
-	printf(" -force   : If a checksummed file needs saving overwrite it anyway if it already exists.\n");
-	printf(" -outfile : Optional filename for saving romfiles after they have been modified (overrides default name)\n");
-
+	printf("Usage: %s <options> ...\n\n",argv[0]);
+	show_cli_usage(argc, argv, &opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
 	return 0;
 }
 
@@ -97,10 +97,9 @@ int main(int argc, char *argv[])
 {
     int ok,required;
     int i,j, result;
-	
-	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.03\n",__DATE__,__TIME__);
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.4\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
-	
+
 	/*
 	 * parse and check which options provided by console
 	 */	
@@ -111,8 +110,8 @@ int main(int argc, char *argv[])
 	}
 
 	/* if no arguments are specified show usage */
-	if(argc < 2) {
-		show_usage(argv);
+	if(argc < 2 || show_help == 1) {
+		show_usage(argv, argc);
 		return 0;
 	}
 
@@ -139,7 +138,7 @@ int main(int argc, char *argv[])
 		
 		case HFM_WRITING:
 		{
-			if(hfm_name != NULL) {
+			if(hfm_name != NULL ) {
 				printf("HFM Input Filename: '%s'\n",hfm_name);
 			} else {
 				printf("You didnt specify a <mandatory> filename for HFM table to load.\n");
@@ -161,470 +160,12 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-/*
- * Calculate the Bosch Motronic ME71 checksum for the given range
- */
-uint32_t CalcChecksumBlk(struct ImageHandle *ih, uint32_t start, uint32_t end)
-{
-	uint32_t sum=0, i;
-	for(i = start/2; i <= end/2; i++) { 	
-		sum += le16toh( ih->d.u16[i] );
-	}
-	return sum;
-}
-
-int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsigned long dynamic_ROM_FILESIZE, unsigned char *offset_addr)
-{
-	int num_entries = 0;
-	int num_multipoint_entries_byte;
-	unsigned long checksum_norm;
-	unsigned long checksum_comp;
-	uint32_t i, sum, final_sum=0;
-	unsigned long masked_start_addr=0;
-	unsigned long masked_end_addr=0;
-	unsigned long start_addr=0;
-	unsigned long end_addr=0;
-	unsigned long last_end_addr=0;
-	int corrected=0;
-	int fixed=0;
-	int exists;
-	int save_result;
-
-//-[ Checksum Correction ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-		if(correct_checksums == OPTION_SET)
-		{
-
-			//-[ CRC32_ChecksumCalc Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** CRC32_ChecksumCalc Routine #1 ***
-			 */
-
-			printf("-[ CRC32_ChecksumCalc ]---------------------------------------------------------------------\n\n");
-			{
-				int crc32_table_hi;
-				int crc32_table_lo;
-				unsigned long crc32_table_addr;
-				
-				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 Checking sub-routine [calculates crc32 from polynomial table] \n");
-				addr = search( fh, (unsigned char *)&crc32_needle, (unsigned char *)&crc32_mask, sizeof(crc32_needle), 0 );
-				if(addr != NULL) {
-					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
-					crc32_table_lo   = (get16((unsigned char *)addr + 38));	
-					crc32_table_hi    = (get16((unsigned char *)addr + 42));	
-					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
-					crc32_table_addr &= ~(ROM_1MB_MASK);
-					
-					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, crc32_table_addr );
-
-					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", crc32_table_addr, 256);
-					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
-				}
-				printf("\n\n");
-			}
-
-			//-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			printf("\n\n-[ Main-Rom Checksum Analysis ]----------------------------------------------------------\n\n");
-			
-			/*
-			 * search: *** Main Rom Checksum bytecode sequence #1 ***
-			 */
-			printf(">>> Scanning for Main ROM Checksum sub-routine #1 [to extract number of entries in table] ");
-			addr = search( fh, (unsigned char *)&needle_2b, (unsigned char *)&mask_2b, sizeof(needle_2b), 0 );
-			if(addr == NULL) {
-				printf("\nmain checksum byte sequence for number of entries not found\nGiving up.\n");
-			} else {
-				printf("\nmain checksum byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
-				
-				int entries_byte = *(addr+27);	// offset 27 into needle_2b is the compare instruction for the number of entries, lets extract it and convert to entries
-				switch(entries_byte) {
-					case 0xA2:	num_entries = 1;	break;
-					case 0xA4:	num_entries = 2;	break;
-					case 0xA6:	num_entries = 3;	break;
-					default:	num_entries = 0;	break;
-				}
-				if(num_entries > 0) {
-					printf("Found #%d Regional Block Entries in table\n", num_entries);
-				} else {
-					printf("Unable to determine number of entries. Please contact developers.\n");
-				}	
-			}
-
-			//-[ MAINROM <Start/End Array> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			
-			/*
-			 * search: *** Main Rom Checksum bytecode sequence #1 ***
-			 */
-#if 0
-			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2c [to extract Start/End regions] ");
-			addr = search( fh, (unsigned char *)&needle_2v2, (unsigned char *)&mask_2v2, sizeof(needle_2v2), 0 );
-			if(addr == NULL) {
-				printf("\nmain checksum byte sequence not found\nGiving up.\n");
-			} else {
-				printf("\nmain checksum byte sequence #2c found at offset=0x%x.\n",(int)(addr-offset_addr) );
-				final_sum = 0;
-				for(i=0;i < num_entries;i++) 
-				{
-					// address of rom_table [8 bytes] -- Region [i]: start,end
-					printf("\nMain Region Block #%d: ",i+1);		
-					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, (int)addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
-					start_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)start_addr );		
-					
-					last_end_addr = end_addr;
-					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, i*8);		// extract 'end address' directly from identified checksum machine code
-					end_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)end_addr );
-
-					// calculate checksum for this block
-					sum = CalcChecksumBlk(fh,start_addr,end_addr);
-					printf(" sum=%lx ~sum=%lx : acc_sum=%lx", (unsigned long)sum, (unsigned long)~sum, (unsigned long)final_sum);
-
-					// add this regions sum to final accumulative checksum
-					final_sum += sum;
-				}
-				printf("\n\nFinal Main ROM Checksum calculation:  0x%-8.8lx (after %d rounds)", (unsigned long)final_sum,i);
-				printf("\nFinal Main ROM Checksum calculation: ~0x%-8.8lx\n",(unsigned long)~final_sum);
-				printf("\n");
-
-			}
-#endif
-			//-[ MAINROM <Start/End Array> Version #2 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2 [to extract Start/End regions] ");
-			addr = search( fh, (unsigned char *)&needle_2, (unsigned char *)&mask_2, sizeof(needle_2), 0 );
-			if(addr == NULL) {
-				printf("\nmain checksum byte sequence not found\nGiving up.\n");
-			} else {
-				printf("\nmain checksum byte sequence #2 found at offset=0x%x.\n",(int)(addr-offset_addr) );
-				final_sum = 0;
-				for(i=0;i < num_entries;i++) 
-				{
-					// address of rom_table [8 bytes] -- Region [i]: start,end
-					printf("\nMain Region Block #%d: ",i+1);		
-					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, (int)addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
-					start_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)start_addr );		
-				
-					last_end_addr = end_addr;
-					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+26, 16, addr+22+26, 16, (int)addr+14, i*8);		// extract 'end address' directly from identified checksum machine code
-					end_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)end_addr );
-
-					// calculate checksum for this block
-					sum = CalcChecksumBlk(fh,start_addr,end_addr);
-					printf(" sum=%lx ~sum=%lx : acc_sum=%lx", (unsigned long)sum, (unsigned long)~sum, (unsigned long)final_sum);
-
-					// add this regions sum to final accumulative checksum
-					final_sum += sum;
-				}
-				printf("\n\nFinal Main ROM Checksum calculation:  0x%-8.8lx (after %d rounds)", (unsigned long)final_sum,i);
-				printf("\nFinal Main ROM Checksum calculation: ~0x%-8.8lx\n",(unsigned long)~final_sum);
-				printf("\n");
-			}
-
-			//-[ MAINROM <Stored Checksums> Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-			/*
-			 * search: *** Main Rom Checksum bytecode sequence #3 : MAIN ROM stored HI/LO checksums ***
-			 */
-			printf("\n>>> Scanning for Main ROM Checksum sub-routine #3 variant #A [to extract stored checksums and locations in ROM] ");
-			addr = search( fh, (unsigned char *)&needle_3, (unsigned char *)&mask_3, sizeof(needle_3), 0 );
-			if(addr == NULL) {
-				printf("\nmain checksum byte sequence #3 variant #A not found\nTrying different variant.\n");
-
-				printf("\n>>> Scanning for (!) Main ROM Checksum sub-routine #3 variant #B [to extract stored checksums and locations in ROM] ");
-				addr = search( fh, (unsigned char *)&needle_3b, (unsigned char *)&mask_3b, sizeof(needle_3b), 0 );
-				if(addr == NULL) {
-					printf("\nmain checksum byte sequence #3 variant #B not found\nTrying different variant.\n");
-				} else {
-					printf("\nmain checksum byte sequence #3 variant #B block found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					printf("\nStored Main ROM Block Checksum: ");		
-					checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 0);		// start
-					printf("0x%lx",(long unsigned int)checksum_norm );		
-						
-					printf("\nStored Main ROM Block ~Checksum: ");		
-					checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 4);		// start
-					printf("0x%lx",(long unsigned int)checksum_comp );		
-					printf("\n\n");
-							
-					printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)final_sum, (long)checksum_norm);
-					if(final_sum == checksum_norm)  { printf("OK!\t"); } else {printf("BAD!\t"); }
-					printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
-					if(~final_sum == checksum_comp) { printf("OK!\n"); } else {printf("BAD!\n"); }
-				}				
-				printf("\n");
-			
-			} 
-			else 
-			{
-				unsigned char *adr_chksum_norm;
-				unsigned char *adr_chksum_comp;
-				int bad_main=0;
-
-				printf("\nmain checksum byte sequence #3 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
-//				checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 0);		// start
-//				checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 4);		// start
-
-				adr_chksum_norm = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, (int)addr+10, 0);
-				adr_chksum_comp = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, (int)addr+10, 4);
-
-				checksum_norm   = (unsigned long)get32(adr_chksum_norm);
-				checksum_comp   = (unsigned long)get32(adr_chksum_comp);
-				
-				printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx (calc) ? 0x%-8.8lx (stored) : ",(long)final_sum, (long)checksum_norm);
-				if(final_sum == checksum_norm)  { printf("OK!\t"); bad_main=0; } else {printf("BAD!\t"); bad_main=1; }
-				printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
-				if(~final_sum == checksum_comp) { printf("OK!\n"); bad_main=0; } else {printf("BAD!\n"); bad_main=1; }
-
-				// where the main rom checksum incorrect?
-				if(bad_main == 1) {
-					printf("***CORRECTING STORED MAINROM CHECKSUMS... \n");
-					unsigned int *adr_chksum_norm_int = (unsigned int *)adr_chksum_norm;
-					unsigned int *adr_chksum_comp_int = (unsigned int *)adr_chksum_comp;
-					corrected++;
-					
-					// update main rom checksums them
-					*adr_chksum_norm_int =  final_sum;
-					*adr_chksum_comp_int = ~final_sum;
-					
-					// now read them back..
-					checksum_norm   = (unsigned long)get32(adr_chksum_norm);
-					checksum_comp   = (unsigned long)get32(adr_chksum_comp);
-							
-					printf("MAIN STORED ROM  CHECKSUM: 0x%-8.8lx (calc) ? 0x%-8.8lx (stored) : ",(long)final_sum, (long)checksum_norm);
-					if(final_sum == checksum_norm)  { printf("OK!\t"); } else {printf("BAD!\t"); }
-					printf(" ~CHECKSUM: 0x%-8.8lx ? 0x%-8.8lx : ",(long)~final_sum, (long)checksum_comp);
-					if(~final_sum == checksum_comp) { printf("OK!\n"); } else {printf("BAD!\n"); }
-				}
-				
-			}
-		
-			//-[ Multipoint <Number of Table Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-				printf("\n\n-[ Multipoint Checksum Analysis ]--------------------------------------------------------\n");
-
-				/*
-				 * search: *** Multipoint Checksum bytecode sequence #1 variant #A : Multipoint number of entries ***
-				 */
-				unsigned char *get_offset_addr = 0;
-				
-				printf("\n>>> Scanning for Multipoint Checksum sub-routine #1 Variant A [to extract number entries in stored checksum list in ROM] \n");
-				addr = search( fh, (unsigned char *)&needle_4b, (unsigned char *)&mask_4b, sizeof(needle_4b), 0 );
-				if(addr != NULL) {
-					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					get_offset_addr = ((unsigned char *)addr + 42);
-				} else {
-
-					// if not found try alternative variant
-					printf("\n>>> Scanning for Multipoint Checksum sub-routine #1 Variant B [to extract number entries in stored checksum list in ROM] \n");
-					addr = search( fh, (unsigned char *)&needle_4c, (unsigned char *)&mask_4c, sizeof(needle_4c), 0 );
-					if(addr != NULL) {
-						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
-						get_offset_addr = ((unsigned char *)addr + 44);
-					}
-				}
-
-				if(get_offset_addr != 0) {
-					// extract number of multipoint entries from needle_4bb, byte offset 44
-					num_multipoint_entries_byte = get16(get_offset_addr);
-					if(num_multipoint_entries_byte > 0) {
-						printf("Found #%d Multipoint Entries in table\n", num_multipoint_entries_byte);
-					} else {
-						printf("Unable to determine number of entries. Please Contact Developer!\n");
-					}				
-				}
-
-				//-[ Multipoint <Stored Checksums> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-
-				/*
-				 * search: *** Multipoint Checksum bytecode sequence #2b : Multipoint  stored HI/LO checksum list ***
-				*/
-				int lo_num_bits, hi_num_bits, skip_factor;
-				unsigned char *seg_addr, *lo_addr, *hi_addr;
-				unsigned char *adr_checksum_norm;
-				unsigned char *adr_checksum_comp;
-				int do_multipoint = 0;
-
-				printf("\n>>> Scanning for Multipoint Checksum sub-routine #2 Variant A [to extract address of stored checksum list location in ROM] \n");
-				addr = search( fh, (unsigned char *)&needle_4, (unsigned char *)&mask_4, sizeof(needle_4), 0 );
-				if(addr != NULL) {
-					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
-					lo_num_bits = 32;
-					hi_num_bits = 0;
-					seg_addr    = addr+58;
-					lo_addr     = addr+54;
-					hi_addr     = 0;
-					skip_factor = 0;
-					do_multipoint = 1;			// only try multipoint checks if we find the needle!
-				} else {
-
-					// if not found try alternative variant
-					printf("\n>>> Scanning for Multipoint Checksum sub-routine #2 Variant B [to extract address of stored checksum list location in ROM] \n");
-					addr = search( fh, (unsigned char *)&needle_4aa, (unsigned char *)&mask_4aa, sizeof(needle_4aa), 0 );
-					if(addr != NULL) {
-						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
-						
-						lo_num_bits = 16;
-						hi_num_bits = 16;
-						seg_addr    = addr+24;
-						lo_addr     = addr+28;
-						hi_addr     = addr+32;
-						skip_factor = 32;		// skip past 1st 2 entries which are actually CRC32's in table
-						do_multipoint = 1;		// only try multipoint checks if we find the needle!
-
-						num_multipoint_entries_byte -= 2;						
-						printf("***Experimental***: Note Variant #B has 2 crc32's in the table before the multipoints. Skipping the CRC's and just doing the multipoints..\n");
-					}				
-				}
-				
-				if(do_multipoint == 1)	// only try multipoint checks if we found the needles!
-				{
-					int j, good=0, bad=0;
-//					int nCalcCRC;
-					for(i=0,j=1; j<= num_multipoint_entries_byte; i=i+16) 
-					{
-							// address of rom_table [8 bytes] -- Region [i]: start,end
-							printf("\nMultipoint Block #%-2.2d of #%-2.2d: ",j++, num_multipoint_entries_byte);		
-							long int range;
-							start_addr           = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+0+skip_factor);		// extract 'start address' directly from identified multippoint table
-							masked_start_addr    = start_addr;
-							masked_start_addr   &= ~(ROM_1MB_MASK);
-							printf("Start:   seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx)",(long int)start_addr/SEGMENT_SIZE,(long int)start_addr,(long int)masked_start_addr );
-							
-							end_addr             = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+4+skip_factor);		// extract 'end address  ' directly from identified multippoint table
-							masked_end_addr      = end_addr;
-							masked_end_addr     &= ~(ROM_1MB_MASK);
-
-							// perform calculation sum for the given multipoint range
-							if(masked_start_addr < masked_end_addr) {
-								sum       = CalcChecksumBlk(fh, masked_start_addr, masked_end_addr);
-							} else if(masked_start_addr == masked_end_addr) {
-								sum       = 0;
-							}
-							// extract from rom original stored checksums
-							printf(" End:    seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx) ",(long int)end_addr/SEGMENT_SIZE,(long int)end_addr, (long int)masked_end_addr );
-							
-//							checksum_norm     = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+8+skip_factor);		// extract 'checksum'      directly from identified multippoint table
-							adr_checksum_norm = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, (int)seg_addr, i+8+skip_factor);
-							checksum_norm     = (unsigned long)get32(adr_checksum_norm);
-
-							printf("\n\t Block Checksum: 0x%-8.8lx :  Calculated: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
-
-							// did the stored match the one we just calculated? (for normal version)
-							if(checksum_norm == sum) { 
-								printf("OK"); good++;
-							} else { 
-								bad++;
-								// update the checksum
-								unsigned int *adr_checksum_norm_int = (unsigned int *)adr_checksum_norm;
-								*adr_checksum_norm_int            =  sum;							
-								// reacquire checksum from rom
-								checksum_norm     = (unsigned long)get32(adr_checksum_norm);
-								printf("FIXED!"); 
-								fixed++;
-							} 
-
-//							checksum_comp     = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+12+skip_factor);		// extract '~checksum'     directly from identified multippoint table
-							adr_checksum_comp = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, (int)seg_addr, i+12+skip_factor);
-							checksum_comp     = (unsigned long)get32(adr_checksum_comp);
-
-							printf("\n\t~Block Checksum: 0x%-8.8lx : ~Calculated: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
-
-							// did the stored match the one we just calculated? (for one's complement version)
-							if(checksum_comp == ~sum) { 
-								printf("OK"); good++; 
-							} else { 
-//								printf("BAD! "); 
-								bad++; 
-								// update the checksum
-								unsigned int *adr_checksum_comp_int = (unsigned int *)adr_checksum_comp;
-								*adr_checksum_comp_int            =  ~sum;							
-								// reacquire checksum from rom
-								checksum_comp     = (unsigned long)get32(adr_checksum_comp);
-								printf("FIXED!"); 
-								fixed++;
-							} 
-
-
-					}
-
-					if(good == num_multipoint_entries_byte*2) {
-						printf("\n\nAll Multipoint checksums are correct.\n");
-					} else {
-						// only show percentages if not all multipoints passed
-						printf("\n\nTotal Multipoint Checksums Passed : %3d (~%d%%)\n", good, (good*100)/((((num_multipoint_entries_byte*2)*100)/100)) );
-						printf("Total Multipoint Checksums Failed : %3d (~%d%%)\n", bad,  (bad*100)/((((num_multipoint_entries_byte*2)*100)/100)) );
-						printf("Total Multipoint Checksums Fixed  : %3d (~%d%%)\n", fixed,  (fixed*100)/((((num_multipoint_entries_byte*2)*100)/100)) );
-						printf("\n");
-					}
-
-				}
-
-				if(corrected >0 || fixed > 0) {
-					snprintf(newrom_filename, MAX_FILENAME, "%s_corrected.bin", filename_rom);
-					
-					printf("\nAttempting to save corrected rom to ");
-					if(save_name != 0) {
-						printf("'%s'...\n", save_name);
-					} else {
-						printf("'%s'...\n", newrom_filename);
-					}
-					
-					// check if file exists so we don't overwrite it!
-					if(save_name != 0) {
-						if( CheckFileExist(save_name)) {
-							printf("File already exists.\n");
-							exists = 1;
-						} else {
-							exists = 0;
-						}
-					} else {
-						
-						if( CheckFileExist(newrom_filename)) {
-							printf("File already exists.\n");
-							exists = 1;
-						} else {
-							exists = 0;
-						}
-					}
-					
-					// added support for forced overwriting
-					if(exists == 0 || force_write == 1)
-					{
-						if(force_write == 1) {
-							printf("Overwriting old file (-force). ");
-						}
-						
-						if(save_name != 0) {
-							printf("Overriding default save filename to: '%s'\n",save_name);
-							save_result = save_file(save_name, fh->d.p, fh->len );						
-						} else {
-							save_result = save_file(newrom_filename, fh->d.p, fh->len );						
-						}
-
-						if(save_result == 0) {
-							printf("Save completed OK.\n");
-						} else {
-							printf("Error: Failed to save file. Check permissions!\n");
-						}
-					}
-				}
-			}	
-		return 0;
-}
-
-
 int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 {
-	ImageHandle f_hfm;
-	ImageHandle *fh_hfm = &f_hfm;
-	int load_hfm_result;
 	ImageHandle f;
 	ImageHandle *fh = &f;
 	int load_result;
-	int save_result;
-	char ml_filename[MAX_FILENAME];
+//	int save_result;
 //	int segment_offset;
 	unsigned char *addr;
 	unsigned char *offset_addr;
@@ -632,8 +173,6 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 	unsigned long dynamic_ROM_FILESIZE=0;
 	uint32_t i;
 	int hiword, loword;
-	unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
-	
 	
 	/* load file from storage */
 	load_result = iload_file(fh, filename_rom, 0);
@@ -657,38 +196,24 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 //			show_hex_dump(offset_addr+0x10000, 0x200, 0x100000);
 
 //-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** Main Rom Checksum bytecode sequence #1 ***
-			 */
-			 
-		if(find_dpp == OPTION_SET)
-		{
+
 			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
 
 			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
-			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, sizeof(needle_dpp), 0 );
+			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, needle_dpp_len, 0 );
 			if(addr == NULL) {
 				printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
-				return 0;
+				exit(0);	// force quit program
+
 			} else {
 				printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
-
-				dpp0_value = (get16((unsigned char *)addr + 2 + 0));
-				dpp1_value = (get16((unsigned char *)addr + 2 + 4));
-				dpp2_value = (get16((unsigned char *)addr + 2 + 8));
-				dpp3_value = (get16((unsigned char *)addr + 2 + 12));
-
-				printf("\ndpp0: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp0_value),(dpp0_value*SEGMENT_SIZE) );
-				printf("\ndpp1: (seg: 0x%-4.4x phy:0x%-8.8x)",(int)(dpp1_value),(dpp1_value*SEGMENT_SIZE) );
-				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",(int)(dpp2_value),(dpp2_value*SEGMENT_SIZE) );
-				printf("\ndpp2: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",(int)(dpp3_value),(dpp3_value*SEGMENT_SIZE) );
-				printf("\n\nNote: dpp3 is always 3, otherwise accessing CPU register area not possible",(int)(dpp3_value) );
-				printf("\n");
-					
+				// do the work of dppx extraction...
+				dpp0_value = extract_dppx(addr,0);
+				dpp1_value = extract_dppx(addr,1);
+				dpp2_value = extract_dppx(addr,2);
+				dpp3_value = extract_dppx(addr,3);
 			}
-			printf("\n");
-		}
-
+	
 //-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
 			 * search: *** Seed/Key Check Patch #1 ***
@@ -699,10 +224,11 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n-[ SeedKey Security Access ]-------------------------------------------------------------\n");
 
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #1 Checking sub-routine [allow any login seed to pass] \n");
-				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, sizeof(needle_5), 0 );
+				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, needle_5_len, 0 );
 				if(addr != NULL) {
 					seedkey_patch = 2;		// since we discovered this, set this to 2 to skip unrequired secondary check
 					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					// do the work of patching...
 					printf("Applying patch so any login seed is successful... ");
 					addr[0x5d] = 0x14; 
 					printf("Patched!\n");
@@ -718,100 +244,58 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			if(seedkey_patch == OPTION_SET) 
 			{
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
-				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, sizeof(needle_6), 0 );
+				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, needle_6_len, 0 );
 				if(addr != NULL) {
 					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					// do the work of patching...
 					printf("Applying patch so any login seed is successful... ");
-					addr[0x64] = 0x14; 
+					addr[0x64] = 0x14; 	// very simple patch to always return TRUE...
 					printf("Patched!\n");
 				}
 				printf("\n\n");
 			}
 
 //-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
-			/*
-			 * search: *** KFAGK Routine #1 ***
-		 	 *
-			 * KFAGK defines the characteristics map for exhaust flap changeover. This changes if the car has a loud or 
-			 * quiet exhaust sound depending on the Throttle % and Engine RPM speed.
-			 * 
-			 * A "typical" raw KFAGK table from a rom file looks like below;
-			 * 
-			 *  ROM:81852D 0A                        KFAGK_Y_NUM:        db 10                   ; number of rows down
-			 *	ROM:81852E 06                        KFAGK_X_NUM:        db 6                    ; number of colums across        
-             *
-		     *	ROM:81852F 14 19 3F 44 49 5D 62 7D+  KFAGK_TABL_Y_RANGE: db 14h, 19h, 3Fh, 44h, 49h, 5Dh 62h, 7Dh, 96h, 0E1h  ; RPM (Scaled by / 40)
-			 *	ROM:818539 00 1B 55 5C 6C 85         KFAGK_TABL_X_RANGE: db 0, 1Bh, 55h, 5Ch, 6Ch, 85h                        ; Percentage of Throttle (% val * 1.33333)
-             *
-			 *	ROM:81853F 00 00 00 00 00 00 00 00+  KFAGK_TABL_DATA:    db 0, 0, 0, 0, 0, 0     ;  800 rpm
-			 *	           00 00 00 00 00 00 00 00+                      db 0, 0, 0, 0, 0, 0     ; 1520 rpm
-			 *	           00 00 00 00 01 01 01 01+                      db 0, 0, 0, 0, 0, 0     ; 2520 rpm
-			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 1, 1, 1     ; 2720 rpm
-			 *	           01 02 02 02 00 00 01 02+                      db 0, 0, 1, 2, 2, 2     ; 2920 rpm
-			 *             02 02 00 00 01 02 02 02+                      db 0, 0, 1, 2, 2, 2     ; 3720 rpm
-			 *	           00 00 01 02 02 02 00 00+                      db 0, 0, 1, 2, 2, 2     ; 4120 rpm
-			 *	           01 02 02 02                                   db 0, 0, 1, 2, 2, 2     ; 5000 rpm
-			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 6000 rpm
-			 *	                                                         db 0, 0, 1, 2, 2, 2     ; 9000 rpm
-			 */
-
+		/*
+		 * search: *** KFAGK Routine Variant #1 or Variant #2 ***
+	 	 *
+		 * KFAGK defines the characteristics map for exhaust flap changeover. This changes if the car has a loud or 
+		 * quiet exhaust sound depending on the Throttle % and Engine RPM speed.
+		 */
 		if(valves == OPTION_SET) {
 			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
 			{		
 				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine Variant #1 [manages exhaust valve/flap opening] \n");
-				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, sizeof(KFAGK_needle), 0 );
-				if(addr == NULL) 
-				{
+				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, KFAGK_needle_len, 0 );
+				if(addr == NULL) {
 					printf("\n>>> Scanning for KFAGK Table #1 Checking sub-routine Variant #2 [manages exhaust valve/flap opening] \n");
-					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, sizeof(KFAGK_needle2), 0 );
+					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, KFAGK_needle2_len, 0 );
 				}
-				
-				if(addr != NULL)
-				{
-					printf("Found at offset=0x%x ",(int)(addr-offset_addr) );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x \n",(int)(addr-offset_addr) );
+					// dump KFAGK table
+					dump_table(addr, offset_addr, get16((unsigned char *)addr + 2), get16((unsigned char *)addr + 6), &KFAGK_table, 0);						
+				}
+				printf("\n\n");
+			}
+		}
 
-					unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-					unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-					unsigned long kfagk_adr    = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-					kfagk_adr                 &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-					unsigned char *table_start = offset_addr+kfagk_adr+2;			// 2 bytes to skip x and y bytes
-					double throttle_percent;
-					int y;
-					unsigned char y_axis = *(offset_addr+kfagk_adr+0);		// get number of rows
-					unsigned char x_axis = *(offset_addr+kfagk_adr+1);		// get number of colums
-					
-					printf("(seg:0x%x phy:0x%x val:0x%x)\n\n",seg, seg*SEGMENT_SIZE, val);
-					
-					printf("KFAGK table: Characteristic map for exhaust flap changeover\n",x_axis  );
-					printf("KFAGK table: 0x%-8.8x (file-offset)\n",(char *)kfagk_adr  );
-					printf("KFAGK table: X-Axis: %2d Rows : %% of Throttle Applied.\n",x_axis  );
-					printf("KFAGK table: Y-Axis: %2d Rows : RPM before Opening occurs.\n\n",y_axis  );
-
-					// lets draw a simple column/row table ;)
-
-					// show table header
-					printf("\t");					
-					// conversion of x-axis column data to human readable
-					for(i=0;i<x_axis;i++) {
-						printf("%-2.2f%%\t", (double)(*(table_start+y_axis+i))/1.33333 );		// convert stored table value to percentage
-					}
-					printf("\n\t");
-					for(i=0;i<x_axis;i++) {
-						printf("[%d]----\t", i+1);
-					}
-
-					// show y-axis data
-					printf("\n\t");
-					for(i=0;i<y_axis;i++) 
-					{
-						for(y=0;y<x_axis;y++) 
-						{
-							printf(" %-2d\t", (int)(*(table_start+x_axis+y_axis+i*x_axis+y)) );	// show values directly out of the table
-						}
-						// conversion of y-axis row data to human readable
-						printf("[%2d] : %-5d rpm\n\t",i+1, (*(table_start+i))*40); 				// values stored need to be *40 to get back to RPM
-					}					
-					
+		/*
+		 * search: *** KFPEDR/KFPED Routine #1 ***
+	 	 *
+		 * KFPEDR/KFPED defines the characteristics map for Throttle Pedal torque requests.
+		 */
+		if(pedal == OPTION_SET) {
+			printf("\n-[ Throttle Pedal KFPED/KFPEDR Table ]---------------------------------------------------------------------\n\n");
+			{		
+				printf(">>> Scanning for KFPED/KFPEDR Table #1 Checking sub-routine Variant #1 [manages throttle pedal torque requests] \n");
+				addr = search( fh, (unsigned char *)&KFPED_needle, (unsigned char *)&KFPED_mask, KFPED_needle_len, 0 );
+				if(addr != NULL) {
+					printf("Found at offset=0x%x\n\n",(int)(addr-offset_addr));
+					// dump KPEDR table
+					dump_table(addr, offset_addr, get16((unsigned char *)addr + 14), dpp1_value-1, &KPEDR_table, 0);
+					// dump KPED table (found table, rom, val, segment, table def)
+					dump_table(addr, offset_addr, get16((unsigned char *)addr + 36), dpp1_value-1, &KPED_table, 0);
 				}
 				printf("\n\n");
 			}
@@ -844,26 +328,26 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf(">>> Scanning for Map Tables #1 Checking sub-routine [map finder!] \n");
 				
 				int current_offset=0;
-				int x,y;
-				i=0;
+				int x,y1, i=0;
+#if 1
 				while(1)
 				{
 					// search for signature for X-Axis (1 row) table..
-					addr = search( fh, (unsigned char *)&mapfinder_needle, (unsigned char *)&mapfinder_mask, sizeof(mapfinder_needle), current_offset);
+					addr = search( fh, (unsigned char *)&mapfinder_needle, (unsigned char *)&mapfinder_mask, mapfinder_needle_len, current_offset);
 
 					// exit the searching loop when we reach end of rom region
-					if(addr-offset_addr > dynamic_ROM_FILESIZE-sizeof(mapfinder_needle)) { break; }
+					if(addr-offset_addr > dynamic_ROM_FILESIZE-mapfinder_needle_len) { break; }
 
 					// if we find a match lets dump it!
 					if(addr != NULL) {
-						printf("\n[Map #%d] X-Axis Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
+						printf("\n[Map #%d] 1D X-Axis  : Map function found at: offset=0x%x ",(i++)+1, (int)(addr-offset_addr) );
 						unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
 						unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
 						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
 						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 
 						unsigned char *table_start = offset_addr+map_adr+1;			// 2 bytes to skip x and y bytes
-						unsigned char x_axis       = *(offset_addr+map_adr+0);		// get number of rows
+						unsigned char x_axis       = get16(offset_addr+map_adr+0);		// get number of rows
 //						unsigned char x_axis       = *(offset_addr+map_adr+1);		// get number of colums
 						
 //						printf("(seg:0x%x phy:0x%x val:0x%x), offset=0x%x x-axis=%d",seg, seg*SEGMENT_SIZE+val, val, (unsigned long)table_start-(int)offset_addr, x_axis);
@@ -878,248 +362,109 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 					printf("\n");
 					
 					// continue search from next location after this match...
-					current_offset = (addr-offset_addr)+sizeof(mapfinder_needle);
+					current_offset = (addr-offset_addr)+mapfinder_needle_len;
 
 					//printf("\nCurrent Offset : %x\n",current_offset);
 				}
-				printf("\n\n");
-#if 1
-//
-// work in progress...
-//
-				current_offset = 0;
-				int new_offset=0;
-				unsigned char *tmp_ptr;
-				unsigned char *map_table_start;
-				unsigned int map_table_adr;
-				unsigned int map_table_x_axis_adr;
-				unsigned int map_table_y_axis_adr;
-				unsigned int map_table_x_num_adr;
-				unsigned int x_num, y_num;
-				unsigned int map_table_y_num_adr;
-				unsigned long val, seg;
-				
-				while(1)
-				{
-					// search for signature for X/Y-Axis (multirow/column) table..
-					current_offset = search_offset(offset_addr+new_offset, (fh->len)-new_offset, (unsigned char *)&mapfinder_xy2_needle, (unsigned char *)&mapfinder_xy2_mask, sizeof(mapfinder_xy2_needle), 0);
-					if(current_offset == 0) break;
-
-					// if we find a match lets dump it!
-					if(current_offset != NULL) {
-						printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map function found at: offset=0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
-
-						addr = offset_addr+current_offset+new_offset;
-						
-//						printf("addr = 0x%x\n",addr);
-//						hexdump(addr, 16, " ");
-//						printf("\n");
-
-#if 1						
-						val                   = get16((unsigned char *)addr + 30);	// from rom routine extract value (offset in rom to table)
-						seg                   = get16((unsigned char *)addr + 26);	// and segment (required to regenerate physical address from segment)
-						map_table_x_num_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_table_x_num_adr  &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-						map_table_x_num_adr  += (unsigned int)offset_addr;
-						tmp_ptr               = (unsigned char *)map_table_x_num_adr;
-						x_num                 = *(tmp_ptr);
-//						printf("val=0x%x seg=0x%x  map_table_x_num_adr   : 0x%x  x_num=%d\n",val,seg,map_table_x_num_adr-(int)offset_addr, x_num );
-
-						val                   = get16((unsigned char *)addr + 46);	// from rom routine extract value (offset in rom to table)
-						seg                   = get16((unsigned char *)addr + 42);	// and segment (required to regenerate physical address from segment)
-						map_table_y_num_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_table_y_num_adr  &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-						map_table_y_num_adr  += (unsigned int)offset_addr;
-						tmp_ptr               = (unsigned char *)map_table_y_num_adr;
-						y_num                 = *(tmp_ptr);
-//						printf("val=0x%x seg=0x%x  map_table_y_num_adr   : 0x%x  y_num=%d\n",val,seg,map_table_y_num_adr-(int)offset_addr, y_num );
-
-						val                   = get16((unsigned char *)addr + 34);	// from rom routine extract value (offset in rom to table)
-						seg                   = get16((unsigned char *)addr + 38);	// and segment (required to regenerate physical address from segment)
-						map_table_x_axis_adr  = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_table_x_axis_adr &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-						map_table_x_axis_adr  += (unsigned int)offset_addr;
-//						printf("val=0x%x seg=0x%x  map_table_x_axis_adr  : 0x%x \n",val,seg,map_table_x_axis_adr-(int)offset_addr);
-
-						val                   = get16((unsigned char *)addr + 14);	// from rom routine extract value (offset in rom to table)
-						seg                   = get16((unsigned char *)addr + 18);	// and segment (required to regenerate physical address from segment)
-						map_table_y_axis_adr  = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_table_y_axis_adr &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-						map_table_y_axis_adr  += (unsigned int)offset_addr;
-//						printf("val=0x%x seg=0x%x  map_table_y_axis_adr  : 0x%x \n",val,seg,map_table_y_axis_adr-(int)offset_addr);
-
-						val                   = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
-						seg                   = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
-						map_table_adr         = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_table_adr        &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-						map_table_adr        += (unsigned int)offset_addr;
-						map_table_start       = (unsigned char *)map_table_adr;
-//						printf("val=0x%x seg=0x%x  map_table_data_adr    : 0x%x \n",val,seg,map_table_start-(int)offset_addr);
-
-						printf("\nTable  : Identification not yet implemented (coming soon!)\n");
-						printf("X-Axis : %d rows\n", x_num);
-						printf("Y-Axis : %d rows\n\n", y_num);
-						
-						printf("\n\t");
-						for(x=0;x<x_num;x++) {
-							printf("[%2d ]--\t", x+1);
-						}
-						printf("\n\t");
-						for(y=0;y<y_num;y++) 
-						{
-							for(x=0;x<x_num;x++) 
-							{
-								printf(" %x\t", (unsigned int)get16((map_table_start + y*y_num + x*2)) );	// show values directly out of the table
-							}
-							// conversion of y-axis row data to human readable
-							printf("[%2d ] \n\t",y+1); 
-						}					
-
 #endif
-
-
-						new_offset += current_offset+sizeof(mapfinder_xy2_needle);
-					}
-					printf("\n");
-				}
 				printf("\n\n");
-#endif				
-			}				
 
-//-[ Ferrari HFM Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
-			/*
-			 * search: *** HFM Linearization code sequence ***
-			 */
-	if (find_mlhfm != 0)
-	{
-			printf("-[ Ferrari AirFlow Meter HFM ]-----------------------------------------------------------\n\n");
-
-			printf(">>> Scanning for HFM Linearization Table Lookup code sequence... \n");
-			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, sizeof(needle_1), 0 );
-			if(addr == NULL) {
-				printf("\nhfm sequence not found\n\n");
-			} else {
-				/* this offset is the machine code for the check against last entry in HFM table
-				 * if we extract it we know how many entries are in the table. 
-				 */ 
-				entries = get16(addr+4); /* using endian conversion, get XXXX offset from 'cmp r12 #XXXXh' : part of GGHFM_lookup(); */
-				/* sanity check for MAX_ENTRIES that we expect to see.. */
-				if(entries != 0)
+				//
+				// Multi-dimensional Type #1
+				//
 				{
-					if(entries > MAX_DHFM_ENTRIES) { printf("unusual entries size, defaulting to 512"); entries=DEFAULT_DHFM_ENTRIES; };
+					current_offset = 0;
+					int new_offset=0;
+					unsigned char *tmp_ptr;
+					unsigned char *map_table_start;
+					unsigned int map_table_adr;
+					unsigned int map_table_x_axis_adr;
+					unsigned int map_table_y_axis_adr;
+					unsigned int map_table_x_num_adr;
+					unsigned int x_num, y_num;
+					unsigned int map_table_y_num_adr;
+					unsigned long val, seg;
 					
-					/* this offset refers to the MAP storage for HFM linearization table
-					 * if we extract it we know precisly where our HFM  table is located in the firmware dump
-                     */					
-					offset = get16(addr+14); /* using endian conversion, get XXXX offset from 'mov r5, [r4 + XXXX]' : part of GGHFM_lookup(); */
-
-					/* lets show the sequence we looked for and found
-					 * in hex (this is the machine code sequence for the GGHFM_DHFM_Lookup() function in the firmware image
-					 */
-					printf("\n\nFound GGHFM_DHFM_Lookup() instruction sequence at file offset: 0x%x, len=%d\n", addr-(fh->d.u8), sizeof(needle_1) );			
-					hexdump(addr, sizeof(needle_1), " ");
-
-					printf("\nExtracted MLHFM map table offset from mov instruction = 0x%x (endian compliant)\n",offset);
-					printf("Extracted %d table entries from code.\n",entries);
-					
-					printf("\nFile offset to MLHFM table 0x%x (%d) [%d bytes]\n",(MAP_FILE_OFFSET + offset),(MAP_FILE_OFFSET + offset), entries*2 );
-					
-					uint32_t crc_hfm;
-					crc_hfm = crc32(0, fh->d.p + MAP_FILE_OFFSET + offset, entries*2);
-
-					if(find_mlhfm == HFM_WRITING)
+					while(1)
 					{
-						/* load in MLHFM table from a file */
-						load_hfm_result = iload_file(fh_hfm, filename_hfm, 0);
-						if(load_hfm_result == 0) 
-						{
-							if(fh_hfm->len != 1024) {
-								ifree_file(fh_hfm);
-								printf("MLHFM table is the wrong size, cannot continue. Exiting. Are you sure its a MLHFM table?");
-								return 0;
-							}
-							printf("Correctly loaded in an MLHFM file '%s'\n", filename_hfm);
-							
-							uint32_t crc_hfm_file;
-							crc_hfm_file = crc32(0, fh_hfm->d.p, 1024);
-							
-							if(crc_hfm_file == 0x4200bc1)			/* crc32 checksum of MLHFM 1024byte table */
-							{
-								printf("MLHFM Table Identified in loaded file: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
-							} else if(crc_hfm_file == 0x87b3489a)	/* crc32 checksum of MLHFM 1024byte table */
-							{
-								printf("MLHFM Table Identified in loaded file: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
-							} else {
-								printf("MLHFM Table Not Identified in loaded file: Custom or not an MLHFM file!\n");
-							}
-							
-							/* check if firmware ALREADY matches the loaded in MLHFM table */
-							if(crc_hfm == crc_hfm_file) {
-								printf("\nMLHFM Table already IDENTICAL in the rom specified. Nothing to do here...\n");
-								return 0;
-							}
+						// search for signature for X/Y-Axis (multirow/column) table..
+						current_offset = search_offset(offset_addr+new_offset, (fh->len)-new_offset, (unsigned char *)&mapfinder_xy2_needle, (unsigned char *)&mapfinder_xy2_mask, mapfinder_xy2_needle_len, 0);
+						if(current_offset == 0) break;
 
-							/* copying hfm table from file into rom image in memory */
-							printf("\nMerging MLHFM table into rom...\n");
-							memcpy(fh->d.p + MAP_FILE_OFFSET + offset, fh_hfm->d.p, fh_hfm->len);
-
-							// now that we've merged MLHFM, force a checksum re-correction (note: his will automatically re-save!)
-							correct_checksums == OPTION_SET;
-							// do checksum correction and autosave it.
-							fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
- 
-							printf("\nAll done.\n");
+						// if we find a match lets dump it!
+						if(current_offset != NULL) {
+							printf("\n------------------------------------------------------------------\n[Map #%d] Multi Axis Map Type #1 function found at: offset=0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
+							addr = offset_addr+current_offset+new_offset;
+							dump_table(addr, offset_addr, get16((unsigned char *)addr + 30), get16((unsigned char *)addr + 26), &XXXX_table, 0);
+							new_offset += current_offset+mapfinder_xy2_needle_len;
 						}
-						return 0;
+						printf("\n");
 					}
-
-					if(filename_hfm != 0)
-					{
-						snprintf(ml_filename, MAX_FILENAME, "%s_%x.bin", filename_hfm, crc_hfm);
-						printf("Saving MLHFM filename as '%s'\n", ml_filename);
-					}
-					else 
-					{
-						/*
-						 * create filename for table (lets try to identify this MLHFM first
-						 */
-						if(crc_hfm == 0x4200bc1)			// crc32 checksum of MLHFM 1024byte table
-						{
-							printf("MLHFM Table Identified: Ferrari 360 Modena/Spider/Challenge (Stock) Air Flow Meters\n");						
-							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Modena_%x.bin", crc_hfm);
-						} else if(crc_hfm == 0x87b3489a)	// crc32 checksum of MLHFM 1024byte table
-						{
-							printf("MLHFM Table Identified: Ferrari 360 Challenge Stradale (Stock) Air Flow Meters\n");
-							snprintf(ml_filename, MAX_FILENAME, "MLHFM_Stradale_%x.bin", crc_hfm);
-						}
-					}
-		
-					/*
-					 * only try to save MLHFM table to file if in DUMPING/READING_mlhfm..
-					 */
-					if(find_mlhfm == HFM_READING)
-					{
-						printf("Saving raw MLHFM table (dumped with no endian conversion) to file: '%s'\n\n", ml_filename);
-						save_result = save_file(ml_filename, fh->d.p + MAP_FILE_OFFSET + offset, entries*2 );
-						if(save_result) {
-							printf("\nFailed to save, result = %d\n", save_result);
-						}
-
-						// get offset
-						printf("unsigned short MLHFM_%x[%d] = {\n", crc_hfm, entries);
-						hexdump_le_table(fh->d.p + MAP_FILE_OFFSET + offset, entries, "};\n");					
-	
-
-					}
-				} else {
-					printf("MLHFM not found. Probaby a matching byte sequence but not in a firmware image");
+					printf("\n\n");
 				}
+
+				//
+				// Single-dimensional Type #1
+				//
+				{
+					current_offset = 0;
+					int new_offset=0;
+					unsigned int map_table_adr;
+					unsigned int map_axis_adr;
+					unsigned long val, seg;
+					
+					while(1)
+					{
+						// search for signature for X/Y-Axis (multirow/column) table..
+						current_offset = search_offset(offset_addr+new_offset, (fh->len)-new_offset, (unsigned char *)&mapfinder_xy3_needle, (unsigned char *)&mapfinder_xy3_mask, mapfinder_xy3_needle_len, 0);
+						if(current_offset == 0) break;
+
+						// if we find a match lets dump it!
+						if(current_offset != NULL) {
+							printf("\n------------------------------------------------------------------\n[Map #%d] Multi Map Type #2 lookup function found @ offset: 0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
+
+							addr = offset_addr+current_offset+new_offset;
+							unsigned char *pos=addr;
+							unsigned char val;
+							int i=0;
+
+							// lets try to determine (experimental!!!) start of main subroutine this belongs too
+							while(1)
+							{
+								i++;
+								if(*(pos+0) == 0xDB)
+								{
+										if(*(pos+1) == 0x00) {
+											i++;
+											printf("\nFound estimated function start address: 0x%-8x", pos-offset_addr);
+											break;
+										}
+								}
+								if(pos <= offset_addr) { printf("not found\n"); break; } 
+								pos--;
+							}
+							printf("\nBacktrack offset: 0x%x (%d bytes)\n\n",(int)(current_offset+new_offset+4)-i,i);
+							
+							val                   = get16((unsigned char *)addr + 14 - 10) ;	// from rom routine extract value (offset in rom to table)
+							seg                   = get16((unsigned char *)addr + 18 - 10);	// and segment (required to regenerate physical address from segment)
+							map_table_adr         = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+							dump_table(addr, offset_addr, get16((unsigned char *)addr + 22 - 10), get16((unsigned char *)addr + 26 - 10), &XXXXB_table, map_table_adr);
+
+							new_offset += current_offset+mapfinder_xy2_needle_len;
+						}
+						printf("\n");
+					}
+					printf("\n\n");
+				}
+				
+				
 			}
-		}
 
-		// do correction
-		fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
+			// mlhfm support
+			check_mlhfm(fh, addr, filename_rom, filename_hfm, dynamic_ROM_FILESIZE, offset_addr);
 
+			// do correction
+			fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
 
 		} else {
 			printf("File size isn't a supported firmware size. Only 512kbyte and 1Mb images supported. ");

@@ -93,6 +93,17 @@
     </Configuration>
   </Settings>
   <VirtualDirectory Name="src">
+    <File Name="mlhfm.h"/>
+    <File Name="mlhfm.c"/>
+    <File Name="find_dppx.h"/>
+    <File Name="find_dppx.c"/>
+    <File Name="needles.c"/>
+    <File Name="fixsums.h"/>
+    <File Name="fixsums.c"/>
+    <File Name="table_spec.h"/>
+    <File Name="table_spec.c"/>
+    <File Name="show_tables.h"/>
+    <File Name="show_tables.c"/>
     <File Name="README.md"/>
     <File Name="main.c"/>
     <File Name="utils.h"/>

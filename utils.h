@@ -34,6 +34,9 @@
 #include <string.h>
 #include <errno.h>
 
+#define OPTION_CLR   0
+#define OPTION_SET   1
+
 #define MAX_DHFM_ENTRIES     1024
 #define DEFAULT_DHFM_ENTRIES 512
 #define MAP_FILE_OFFSET      0x10000
@@ -55,6 +58,7 @@ typedef struct OPTS_ENTRY {
 	int  option_value;
 	char **filename;
 	int  options_bump;
+	char *desc;
 } OPTS_ENTRY;
 
 #define MANDATORY  0
