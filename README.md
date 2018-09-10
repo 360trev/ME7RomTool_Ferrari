@@ -84,33 +84,42 @@
    I did one table so far (whoop!). It allows you to see how all tables in the future will be 
    formatted. This one shows rpm vs throttle position and what happens to exhaust valves.
 
+Usage: me7romtool.exe <options> ...
 
-   Usage: me7romtool <mode> <rom_filename> <extra options> ...
-   
-   -romfile : Try to identify map in the firmware. You *must* specify a romfile!
+ -romfile  : Try to identify map in the firmware. You *must* specify a romfile!
+ 
+ -outfile  : Optional filename for saving romfiles after they have been modified (overrides default name)
 
-   -dppx    : Try to identify DPPx register settings to help with disassembly.
-   
-   -rhfm    : Read and extract hfm from romfile, optional dump filename to override default write name.
-   
-   -whfm    : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
-   
-   -ihfm    : Try to identify mlhfm table in specified romfile.
+ -force    : If a checksummed file needs saving overwrite it anyway even if it already exists.
 
-   -seedkey : Try to identify seedkey function and patch login so any login password works.
+ -KFAGK    : Try to identify and show KFAGK exhaust valve opening table in the firmware.
+ 
+ -KFPED    : Try to identify and show KFPED/KFPEDR pedal torque request tables.
+ 
+ -rhfm     : Read and extract hfm from romfile, optional dump filename to override default write name.
+
+ -whfm     : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
    
-   -maps    : Try to identify map in the firmware.
-   
-   -valves  : Try to identify exhaust valve opening table in the firmware.
+ -ihfm     : Try to identify mlhfm table in specified romfile.
+ 
+ -maps     : Try to identify map in the firmware (Experimental!).
+ 
+ -seedkey  : Try to identify seedkey function and patch login so any login password works.
 
-   -fixsums : Try to correct checksums, if they are corrected it will automatically save a file with original name plus appending '_corrected.bin'.
-   
-   -force   : If a checksummed file needs saving overwrite it anyway if it already exists.
+ -fixsums  : Try to correct checksums, if corrected it saves appending '_corrected.bin'.
 
-   -outfile : Optional filename for saving romfiles after they have been modified (overrides default name)
+ -hex      : Also show non formatted raw hex values in map table output.
+
+ -adr      : Also show non formatted raw hex values in map table output.
+ 
+ -dbg      : Show -phy (on as default), -hex and -adr in map table output.
+ 
+ -nophy    : Override default behaviour and dont show formatted values in map table output.
+
+ ?         : Show this help.
 
 
-   Q. How does this work?
+Q. How does this work?
    
    This tool not only finds signatures it also extract segment information directly
    out of the machine code (no guessing or manual entry required). Also since variables 
