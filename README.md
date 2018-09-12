@@ -61,7 +61,6 @@
    This is a great feature for those looking to upgrade to larger AFM's as it yields
    greater peak power. The larger CS/599/F430 AFM's can flow more air at higher RPM's.
 
-
    MLHFM Table Swapping Features: '-whfm' - Write & save rom
    This option allows you to load a previously saved MLHFM binary table and swap it
    in a new rom. It also tries to recognise what table it is. e.g. for 
@@ -69,7 +68,6 @@
    AFM's from another rom use this to upgrade the rom. If you also add '-fixsums'
    it will also automatically correct the sums and the output file is ready for
    flashing. Nothing else to do!
-
 
    MLHFM Table Swapping Features: '-ihfm' - Identify only
    This option allows you to load a identify which MLHFM binary table exists in the
@@ -80,9 +78,12 @@
    identify all the maps in a given rom image so you can easily dump, edit and swap them. 
    Watch this space. Big updates on this very soon.
 
-   Exhaust Flap Control Table : '-valves' - identify and dump its location
+   Exhaust Flap Control Table : '-KFAGK' - identify and dump its location
    I did one table so far (whoop!). It allows you to see how all tables in the future will be 
    formatted. This one shows rpm vs throttle position and what happens to exhaust valves.
+
+   Throttle Pedal Torque Table : '-KFPED' - identify and dump its location
+   Throttle pedal charateristics and reversing pedal torque tables.
 
 Usage: me7romtool.exe <options> ...
 
