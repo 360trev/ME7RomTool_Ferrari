@@ -42,70 +42,6 @@
 //
 
 #if 0
- f2 f4 8c 88 		// mov
- 48 40 				// cmp
- fd 0e 				// jmp
- 
- f2 fc 8c 88 		// mov 
- 7c 1c 				// shr
- 46 fc 00 02 		// cmp 
- 9d 05 				// jmpr
- 
- f0 4c 				// mov
- 5c 14 				// shl
- d4 54 ba 48 		// mov  [memadr] <-----
- 0d 02 				// jmpr
- 
- f2 f5 b8 4c		// mov
- 0d 02              // jmpr
-
- f2 f5 ba 48  		// mov
- f6 f5 a8 f9  **	// mov
- f2 f4 b6 f9  		// mov
- f2 f5 b8 f9  		// mov
- 02 f4 a8 f9 
- 12 f5 1c ff 
- 9d 03 				// jmpr
- 
- e6 f4 ff ff 		// mov
- f0 54 				// mov
- f6 f4 b6 f9 		// mov
- f6 f5 b8 f9 		// mov
- 24 8f ba f9 		// sub
- f2 f2 8a 88  		// mov
- 48 20 				// cmp
- fd 0e				// jmp
-
- f2 fc 8a 88 		// mov
- 7c 1c 				// shr
- 46 fc 00 02 		// cmp
- 9d 05 				// jmpr
- 
- f0 4c				// mov 
- 5c 14 				// shl
- d4 54 ba 48 		// mov  [memadr] <-----
- 0d 02 		 		// jmpr
-
- f2 f5 b8 4c  		// mov
- 0d 02 				// jmpr
- 
- f2 f5 ba 48  		// mov
- f6 f5 a6 f9 		// mov
- f2 f4 c2 f9  		// mov
- f2 f5 c4 f9  		// mov
- 02 f4 a6 f9 
- 12 f5 1c ff 
- 9d 03 				// jmpr
-
- e6 f4 ff ff 		// mov
- f0 54 				// mov
- f6 f4 c2 f9 		// mov
- f6 f5 c4 f9 		// mov
- 24 8f c6 f9 		// sub
- db 00				// rets
-#endif
-
-#if 0
 const unsigned char full_needle_1[] = { 
  0xF2, 0xF4, XXXX, XXXX,       //GGHFM_DHFM_Lookup: mov     r4, segram_BASE_ADDRESS_810000
  0x48, 0x40,                   //                   cmp     r4, #0
@@ -185,6 +121,60 @@ const unsigned char mask_1[] = {
  MASK, MASK,                 // mov   r4, r12
  MASK, MASK,                 // shl   r4, #1
  MASK, MASK, SKIP, SKIP      // mov   r5, [r4 + 4300]
+};
+
+const unsigned char kwp2000_ecu_needle[] = 
+{
+0xC2, 0xF4, XXXX, XXXX,                       //movbz   r4, word_380DC8
+0xC2, 0xF5, XXXX, XXXX,                       // movbz   r5, byte_380DCC
+0x00, 0x45,                                   // add     r4, r5
+0x46, 0xF4, XXXX, XXXX,                       //  cmp     r4, #32h ; '2'
+0xDD, 0x0C,                                   //  jmpr    cc_SGE, loc_82792A
+
+0xC2, 0xF4, XXXX, XXXX,                     //  movbz   r4, word_380DC8
+0xC2, 0xF5, XXXX, XXXX,                     //  movbz   r5, byte_380DCC
+0x00, 0x45,                                  // add     r4, r5
+0xF4, 0xA4, XXXX, XXXX                       // movb    rl5, [r4+29h]
+
+#if 0
+ 0xE6, 0xF5, 0x00, 0x08,                             // mov     r5, #800h			; 22
+ 0x74, 0xF5, XXXX, XXXX,                             // or      word_E074, r5		; 26
+ 0xE1, 0x1C,     		                             // movb    rl6, #1				; 2a
+ 0xE7, 0xF8, XXXX, XXXX,                             // movb    rl4, #(a431Me7_369117F131_us15l50sm2080501+28h)	; 2c
+ 0xB9, 0x89,            		                     // movb    [r9], rl4			; 30
+ 0xE1, 0x48,                    		             // movb    rl4, #4;				; 32
+ 0xF7, 0xF8, XXXX, XXXX,                             // movb    byte_E1E6, rl4		; 34
+ 0xE7, 0xFA, XXXX, XXXX,                             // movb    rl5, #a431Me7_369117F131_us15l50sm2080501 ; "43/1/ME7.3/69/117/F131_US//15l50sm2/080"...	; 38
+ 0xF7, 0xFA, XXXX, XXXX, 
+ 0x0D, 0x00
+#endif
+};
+
+unsigned int kwp2000_ecu_needle_len = sizeof(kwp2000_ecu_needle);
+
+const unsigned char kwp2000_ecu_mask[] = { 
+ MASK, MASK, SKIP, SKIP,                      //movbz   r4, word_380DC8
+ MASK, MASK, SKIP, SKIP,                      // movbz   r5, byte_380DCC
+ MASK, MASK,                                  // add     r4, r5
+ MASK, MASK, SKIP, SKIP,                      //  cmp     r4, #32h ; '2'
+ MASK, MASK,                                  //  jmpr    cc_SGE, loc_82792A
+ MASK, MASK, SKIP, SKIP,                    //  movbz   r4, word_380DC8
+ MASK, MASK, SKIP, SKIP,                    //  movbz   r5, byte_380DCC
+ MASK, MASK,                                  // add     r4, r5
+ MASK, MASK, SKIP, SKIP                     // movb    rl5, [r4+29h]
+
+#if 0
+ MASK, MASK, MASK, MASK,                             // mov     r5, #800h			; 22
+ MASK, MASK, SKIP, SKIP,                             // or      word_E074, r5		; 26
+ MASK, MASK,     		                             // movb    rl6, #1				; 2a
+ MASK, MASK, SKIP, SKIP,                             // movb    rl4, #(a431Me7_369117F131_us15l50sm2080501+28h)	; 2c
+ MASK, MASK,           		   		                 // movb    [r9], rl4			; 30
+ MASK, MASK,                    		             // movb    rl4, #4				; 32
+ MASK, MASK, SKIP, SKIP,                             // movb    byte_E1E6, rl4		; 34
+ MASK, MASK, SKIP, SKIP,        // movb    rl5, #a431Me7_369117F131_us15l50sm2080501 ; "43/1/ME7.3/69/117/F131_US//15l50sm2/080"...	; 38
+ MASK, MASK, SKIP, SKIP,        // movb    byte_E1F5, rl5		; 3c
+ MASK, SKIP						// jmpr    cc_UC, loc_82F0C2	; 40
+#endif
 };
 
 //
