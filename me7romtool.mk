@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=hp
-Date                   :=10/09/2018
+Date                   :=12/09/2018
 CodeLitePath           :="C:/Program Files/CodeLite"
 LinkerName             :=C:/MinGW/bin/g++.exe
 SharedObjectLinkerName :=C:/MinGW/bin/g++.exe -shared -fPIC
@@ -62,7 +62,7 @@ AS       := C:/MinGW/bin/as.exe
 ## User defined environment variables
 ##
 CodeLiteDir:=C:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) $(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IntermediateDirectory)/fixsums.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IntermediateDirectory)/show_tables.c$(ObjectSuffix) $(IntermediateDirectory)/table_spec.c$(ObjectSuffix) $(IntermediateDirectory)/needles.c$(ObjectSuffix) $(IntermediateDirectory)/find_dppx.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IntermediateDirectory)/needles.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) $(IntermediateDirectory)/fixsums.c$(ObjectSuffix) $(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IntermediateDirectory)/show_tables.c$(ObjectSuffix) $(IntermediateDirectory)/table_spec.c$(ObjectSuffix) $(IntermediateDirectory)/find_dppx.c$(ObjectSuffix) 
 
 
 
@@ -93,29 +93,21 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix): mlhfm.c $(IntermediateDirectory)/mlhfm.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/mlhfm.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/mlhfm.c$(DependSuffix): mlhfm.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) -MF$(IntermediateDirectory)/mlhfm.c$(DependSuffix) -MM mlhfm.c
+$(IntermediateDirectory)/utils.c$(ObjectSuffix): utils.c $(IntermediateDirectory)/utils.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/utils.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/utils.c$(DependSuffix): utils.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/utils.c$(ObjectSuffix) -MF$(IntermediateDirectory)/utils.c$(DependSuffix) -MM utils.c
 
-$(IntermediateDirectory)/mlhfm.c$(PreprocessSuffix): mlhfm.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mlhfm.c$(PreprocessSuffix) mlhfm.c
+$(IntermediateDirectory)/utils.c$(PreprocessSuffix): utils.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/utils.c$(PreprocessSuffix) utils.c
 
-$(IntermediateDirectory)/crc32.c$(ObjectSuffix): crc32.c $(IntermediateDirectory)/crc32.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/crc32.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/crc32.c$(DependSuffix): crc32.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/crc32.c$(ObjectSuffix) -MF$(IntermediateDirectory)/crc32.c$(DependSuffix) -MM crc32.c
+$(IntermediateDirectory)/needles.c$(ObjectSuffix): needles.c $(IntermediateDirectory)/needles.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/needles.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/needles.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/needles.c$(DependSuffix): needles.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/needles.c$(ObjectSuffix) -MF$(IntermediateDirectory)/needles.c$(DependSuffix) -MM needles.c
 
-$(IntermediateDirectory)/crc32.c$(PreprocessSuffix): crc32.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/crc32.c$(PreprocessSuffix) crc32.c
-
-$(IntermediateDirectory)/fixsums.c$(ObjectSuffix): fixsums.c $(IntermediateDirectory)/fixsums.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/fixsums.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fixsums.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/fixsums.c$(DependSuffix): fixsums.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/fixsums.c$(ObjectSuffix) -MF$(IntermediateDirectory)/fixsums.c$(DependSuffix) -MM fixsums.c
-
-$(IntermediateDirectory)/fixsums.c$(PreprocessSuffix): fixsums.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fixsums.c$(PreprocessSuffix) fixsums.c
+$(IntermediateDirectory)/needles.c$(PreprocessSuffix): needles.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/needles.c$(PreprocessSuffix) needles.c
 
 $(IntermediateDirectory)/main.c$(ObjectSuffix): main.c $(IntermediateDirectory)/main.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/main.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.c$(ObjectSuffix) $(IncludePath)
@@ -125,13 +117,29 @@ $(IntermediateDirectory)/main.c$(DependSuffix): main.c
 $(IntermediateDirectory)/main.c$(PreprocessSuffix): main.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.c$(PreprocessSuffix) main.c
 
-$(IntermediateDirectory)/utils.c$(ObjectSuffix): utils.c $(IntermediateDirectory)/utils.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/utils.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/utils.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/utils.c$(DependSuffix): utils.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/utils.c$(ObjectSuffix) -MF$(IntermediateDirectory)/utils.c$(DependSuffix) -MM utils.c
+$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix): mlhfm.c $(IntermediateDirectory)/mlhfm.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/mlhfm.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/mlhfm.c$(DependSuffix): mlhfm.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mlhfm.c$(ObjectSuffix) -MF$(IntermediateDirectory)/mlhfm.c$(DependSuffix) -MM mlhfm.c
 
-$(IntermediateDirectory)/utils.c$(PreprocessSuffix): utils.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/utils.c$(PreprocessSuffix) utils.c
+$(IntermediateDirectory)/mlhfm.c$(PreprocessSuffix): mlhfm.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mlhfm.c$(PreprocessSuffix) mlhfm.c
+
+$(IntermediateDirectory)/fixsums.c$(ObjectSuffix): fixsums.c $(IntermediateDirectory)/fixsums.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/fixsums.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/fixsums.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/fixsums.c$(DependSuffix): fixsums.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/fixsums.c$(ObjectSuffix) -MF$(IntermediateDirectory)/fixsums.c$(DependSuffix) -MM fixsums.c
+
+$(IntermediateDirectory)/fixsums.c$(PreprocessSuffix): fixsums.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/fixsums.c$(PreprocessSuffix) fixsums.c
+
+$(IntermediateDirectory)/crc32.c$(ObjectSuffix): crc32.c $(IntermediateDirectory)/crc32.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/crc32.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/crc32.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/crc32.c$(DependSuffix): crc32.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/crc32.c$(ObjectSuffix) -MF$(IntermediateDirectory)/crc32.c$(DependSuffix) -MM crc32.c
+
+$(IntermediateDirectory)/crc32.c$(PreprocessSuffix): crc32.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/crc32.c$(PreprocessSuffix) crc32.c
 
 $(IntermediateDirectory)/show_tables.c$(ObjectSuffix): show_tables.c $(IntermediateDirectory)/show_tables.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/show_tables.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/show_tables.c$(ObjectSuffix) $(IncludePath)
@@ -148,14 +156,6 @@ $(IntermediateDirectory)/table_spec.c$(DependSuffix): table_spec.c
 
 $(IntermediateDirectory)/table_spec.c$(PreprocessSuffix): table_spec.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/table_spec.c$(PreprocessSuffix) table_spec.c
-
-$(IntermediateDirectory)/needles.c$(ObjectSuffix): needles.c $(IntermediateDirectory)/needles.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/needles.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/needles.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/needles.c$(DependSuffix): needles.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/needles.c$(ObjectSuffix) -MF$(IntermediateDirectory)/needles.c$(DependSuffix) -MM needles.c
-
-$(IntermediateDirectory)/needles.c$(PreprocessSuffix): needles.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/needles.c$(PreprocessSuffix) needles.c
 
 $(IntermediateDirectory)/find_dppx.c$(ObjectSuffix): find_dppx.c $(IntermediateDirectory)/find_dppx.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "C:/Users/hp/Documents/GitHub/ME7RomTool_Ferrari/find_dppx.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/find_dppx.c$(ObjectSuffix) $(IncludePath)

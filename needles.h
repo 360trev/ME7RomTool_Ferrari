@@ -32,6 +32,10 @@
 #ifndef _NEEDLES_SUPPORT_H
 #define _NEEDLES_SUPPORT_H
 
+extern const unsigned char kwp2000_ecu_needle[] ;
+extern const unsigned char kwp2000_ecu_mask[];
+extern unsigned int kwp2000_ecu_needle_len;
+
 extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;
 extern const unsigned char mask_1[];

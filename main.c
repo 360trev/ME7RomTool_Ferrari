@@ -197,8 +197,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 //-[ DPPx Search ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 
-			printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
-
+						printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
 			printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
 			addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, needle_dpp_len, 0 );
 			if(addr == NULL) {
@@ -212,6 +211,42 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				dpp1_value = extract_dppx(addr,1);
 				dpp2_value = extract_dppx(addr,2);
 				dpp3_value = extract_dppx(addr,3);
+			}
+
+			printf("\n-[ Basic Firmware information ]-----------------------------------------------------------------\n\n");
+
+			printf(">>> Scanning for information #1 [info] ");
+			addr = search( fh, (unsigned char *)&kwp2000_ecu_needle, (unsigned char *)&kwp2000_ecu_mask, kwp2000_ecu_needle_len, 0 );
+			if(addr != NULL) 
+			{
+				printf("\nfound needle at offset=0x%x.\n\n",(int)(addr-offset_addr) );
+						unsigned long val          = get16((unsigned char *)addr + 28);// and segment (required to regenerate physical address from segment)
+						int seg = dpp1_value-1;
+						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+				printf("EPK: @ %#x (",map_adr);
+						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+				unsigned char *adrs = map_adr+offset_addr;
+				i=0;
+				unsigned char len=0;
+				unsigned char ch;
+				len =(unsigned char *)*(adrs+i);
+				i += 2;
+				while(1)
+				{
+					ch =(unsigned char *)adrs[i];
+					if (ch == 0) break;
+		            if(isprint(ch))
+					{
+						printf("%c", ch);
+		            } else {
+						break;
+		            }
+				   i++;
+				   if(i > 64) break;
+				   if(i>=len) break;
+				}
+				printf(")");
 			}
 	
 //-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
@@ -421,7 +456,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 						// if we find a match lets dump it!
 						if(current_offset != NULL) {
-							printf("\n------------------------------------------------------------------\n[Map #%d] Multi Map Type #2 lookup function found @ offset: 0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
+							printf("\n\n------------------------------------------------------------------\n[Map #%d] Multi Map Type #2 lookup function found @ offset: 0x%x \n",(i++)+1, (int)(current_offset+new_offset) );
 
 							addr = offset_addr+current_offset+new_offset;
 							unsigned char *pos=addr;
@@ -477,6 +512,6 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 	}
 	/* free file if allocated */
 	load_result = ifree_file(fh);
-	printf("---\n");
+	printf("\n\n");
 	return 0;
 }
