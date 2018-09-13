@@ -249,8 +249,8 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 #define TBL_MAX_ENTRIES 22
 
 char vmecuhn_str[] = { "VMECUHN [Vehicle Manufacturer ECU Hardware Number]" };
-char ssecuhn_str[] = { "SSECUHN [Hardware Number]" };
-char ssecusn_str[] = { "SSECUSN [Serial Number] " };
+char ssecuhn_str[] = { "SSECUHN [Bosch Hardware Number]" };
+char ssecusn_str[] = { "SSECUSN [Bosch Serial Number] " };
 char erotan_str[]  = { "EROTAN  [Model Description]"  };
 char dif_str[]     = { "DIF"     };
 char brif_str[]    = { "BRIF"    };
@@ -340,8 +340,8 @@ char dummy_str[]   = { "TESTID"  };
 						unsigned long val          = get16((unsigned char *)addr + 28);// and segment (required to regenerate physical address from segment)
 						int seg = dpp1_value-1;
 						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-				printf("EPK: @ %#x { ",map_adr);
 						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+				printf("EPK: @ %#x { ",map_adr);
 
 				unsigned char *adrs = map_adr+offset_addr;
 				i=0;
