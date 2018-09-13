@@ -551,6 +551,22 @@ unsigned short get16le(unsigned char *s) { return (unsigned short)( ((s[0] <<  8
 
 unsigned long  get32(unsigned char *s) { return (unsigned long )( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) ); }
 
+void put16(unsigned short val, unsigned char *adr, int offset) 
+{ 
+	unsigned char *s = (unsigned char *)&val;
+
+
+	if(adr != 0)
+	{
+		adr += offset;
+		printf("adr = %p, val: %-2x\n", adr, *s);
+		*adr++ = *s++;
+		printf("adr = %p, val: %-2x\n", adr, *s);
+		*adr++ = *s++;
+	}
+	printf("\n");
+}
+
 void put32le(unsigned long val, unsigned char *adr) 
 { 
 	unsigned char *s = (unsigned long)val;
