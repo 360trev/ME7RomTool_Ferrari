@@ -32,9 +32,17 @@
 #ifndef _NEEDLES_SUPPORT_H
 #define _NEEDLES_SUPPORT_H
 
+unsigned char me75x_needle[];
+unsigned int  me75x_needle_len;
+unsigned char me75x_mask[];
+
 extern const unsigned char kwp2000_ecu_needle[] ;
 extern const unsigned char kwp2000_ecu_mask[];
 extern unsigned int kwp2000_ecu_needle_len;
+
+extern const unsigned char meinfo_needle[]; 
+extern const unsigned char meinfo_mask[]; 
+extern unsigned int meinfo_needle_len;
 
 extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;

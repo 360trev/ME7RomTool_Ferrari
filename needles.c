@@ -37,6 +37,93 @@
  *   releases so we have to ignore those bytes (mask them out) during
  *   searches.
  */
+ 
+/* 
+		public CRC32ME75_7a94a
+        Calculates the CRC32 checksum
+        
+        r12: AddrFromLo
+        r13: AddrFromHi
+        r14: Length
+*/
+
+unsigned char me75x_needle[] = 
+{ 
+ 0xF6, XXXX, XXXX, XXXX,                            // mov     EntryTable_lkup_var1, r4
+ 0xF6, XXXX, XXXX, XXXX,                            // mov     EntryTable_lkup_var2, r5
+ 0xE6, XXXX, XXXX, XXXX,                            // mov     r4, #HugeEntryTable ; Probable Lookup Table
+// 0xE6, XXXX, XXXX, XXXX,                            // mov     r5, #206h
+// 0xF6, XXXX, XXXX, XXXX,                            // mov     idx_table_addr_dynamic, r4
+// 0xF6, XXXX, XXXX, XXXX,                            // mov     EntryTable_lkup_var3, r5
+// 0x9A, XXXX, XXXX, XXXX,                            // jnb     PROKON.14, loc_82E774
+};
+unsigned int  me75x_needle_len = sizeof( me75x_needle);
+
+unsigned char me75x_mask[] = 
+{ 
+ MASK, SKIP, MASK, MASK,                            // mov     EntryTable_lkup_var1, r4	 [+2]
+ MASK, SKIP, MASK, MASK,                            // mov     EntryTable_lkup_var2, r5  [+6]
+ MASK, SKIP, SKIP, SKIP,                            // mov     r4, #HugeEntryTable ; Probable Lookup Table//
+// MASK, SKIP, SKIP, SKIP,                            // mov     r5, #206h
+// MASK, SKIP, MASK, MASK,                            // mov     idx_table_addr_dynamic, r4 [+18]
+// MASK, SKIP, MASK, MASK,                            // mov     EntryTable_lkup_var3, r5   [+22]
+// MASK, SKIP, SKIP, SKIP,                            // jnb     PROKON.14, loc_82E774
+};
+
+const unsigned char meinfo_needle[] = 
+{ 
+	0xF6, 0xF0,										// mov
+	0x40, 0xE2,										
+	0xF6, 0xF0,										// mov
+	0x40, 0xE2										//
+
+// 0xF6, 0xF4, XXXX, XXXX,                            // mov     EntryTable_lkup_var1, r4
+// 0xF6, 0xF5, XXXX, XXXX,                            // mov     EntryTable_lkup_var2, r5
+// 0xE6, 0xF4, XXXX, XXXX,                            // mov     r4, #HugeEntryTable ; Probable Lookup Table
+// 0xE6, 0xF5, XXXX, XXXX,                            // mov     r5, #206h
+// 0xF6, 0xF4, XXXX, XXXX,                            // mov     idx_table_addr_dynamic, r4
+// 0xF6, 0xF5, XXXX, XXXX,                            // mov     EntryTable_lkup_var3, r5
+// 0x9A, 0x23, XXXX, XXXX,                            // jnb     PROKON.14, loc_82E774
+// 0xE7, 0xF8, 0x00, 0x00,                            // movb    rl4, #11h
+// 0xF7, 0xF8, XXXX, XXXX,                            // movb    byte_E20A, rl4
+// 0x0D, XXXX,                                        // jmpr    cc_UC, loc_82E77C
+// 0xE7, 0xF8, 0x14, 0x00,                            // movb    rl4, #14h
+// 0xF7, 0xF8, XXXX, XXXX,                            // movb    byte_E20A, rl4
+// 0xE6, 0xF4, XXXX, XXXX,                            // mov     r4, #0E922h
+// 0xE6, 0xF5, 0x82, 0x00,                            // mov     r5, #82h ; 'é'
+// 0xF6, 0xF4, XXXX, XXXX,                            // mov     word_E232, r4
+// 0xF6, 0xF5, XXXX, XXXX,                            // mov     word_E234, r5
+// 0xDB, 0x00,                                  // rets
+};
+
+unsigned int  meinfo_needle_len = sizeof( meinfo_needle);
+
+const unsigned char meinfo_mask[] = { 
+	0xFF, 0xF0,
+	0xF0, 0xFF,
+	0xFF, 0xF0,
+	0xF0, 0xFF
+
+// MASK, MASK, SKIP, SKIP,                            // mov     EntryTable_lkup_var1, r4
+// MASK, MASK, SKIP, SKIP,                            // mov     EntryTable_lkup_var2, r5
+// MASK, MASK, SKIP, SKIP,                            // mov     r4, #HugeEntryTable ; Probable Lookup Table//
+// MASK, MASK, SKIP, SKIP,                            // mov     r5, #206h
+// MASK, MASK, SKIP, SKIP,                            // mov     idx_table_addr_dynamic, r4
+// MASK, MASK, SKIP, SKIP,                            // mov     EntryTable_lkup_var3, r5
+// MASK, MASK, SKIP, SKIP,                            // jnb     PROKON.14, loc_82E774
+// MASK, MASK, SKIP, SKIP,                            // movb    rl4, #11h
+// MASK, MASK, SKIP, SKIP,                            // movb    byte_E20A, rl4
+ //MASK, SKIP,                                        // jmpr    cc_UC, loc_82E77C
+// MASK, MASK, SKIP, SKIP,                            // movb    rl4, #14h
+// MASK, MASK, SKIP, SKIP,                            // movb    byte_E20A, rl4
+// MASK, MASK, SKIP, SKIP,                            // mov     r4, #0E922h
+// MASK, MASK, SKIP, SKIP,                            // mov     r5, #82h ; 'é'
+// MASK, MASK, SKIP, SKIP,                            // mov     word_E232, r4
+// MASK, MASK, SKIP, SKIP,                            // mov     word_E234, r5
+// MASK, MASK,  		                                // rets
+};
+
+ 
 //
 // this is the needle (masked) for the GGHFM_Lookup() function
 //

@@ -165,6 +165,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 	ImageHandle f;
 	ImageHandle *fh = &f;
 	int load_result;
+	int val;
 //	int save_result;
 //	int segment_offset;
 	unsigned char *addr;
@@ -173,6 +174,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 	unsigned long dynamic_ROM_FILESIZE=0;
 	uint32_t i;
 	int hiword, loword;
+	unsigned char *p, *tbl;
 	
 	/* load file from storage */
 	load_result = iload_file(fh, filename_rom, 0);
@@ -212,18 +214,133 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				dpp2_value = extract_dppx(addr,2);
 				dpp3_value = extract_dppx(addr,3);
 			}
+//
+
 
 			printf("\n-[ Basic Firmware information ]-----------------------------------------------------------------\n\n");
+			printf(">>> Scanning for ROM String Table Byte Sequence #1 [info] \n");
 
-			printf(">>> Scanning for information #1 [info] ");
+			int search_byte_offset=0;
+
+			search_byte_offset = 0x20000;	// we start searching after 1st 128kbyte. 		
+			offset = search_offset( offset_addr+search_byte_offset , (fh->len)-search_byte_offset , (unsigned char *)&meinfo_needle, (unsigned char *)&meinfo_mask, meinfo_needle_len, 0 );
+			if(offset != NULL) 
+			{
+				addr = offset_addr + search_byte_offset  + offset;
+				
+				printf("\nfound needle at offset=%#x",(int)(addr-offset_addr));
+
+				unsigned long val          = get16((unsigned char *)addr - 6);	// and segment (required to regenerate physical address from segment)
+				unsigned long seg          = get16((unsigned char *)addr - 2);	// and segment (required to regenerate physical address from segment)
+				unsigned long struct_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+				struct_adr                &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+//				p = (int)offset_addr + struct_adr;
+				
+				printf("\nfound table at offset=%#x.\n\n",(int)struct_adr );
+
+				p = (int)offset_addr + struct_adr;
+
+#define TBL_TYPE   0	// 0-1
+#define TBL_LEN    1	// 1-2
+#define TBL_VAL    2	// 2-4
+#define TBL_SEG    4	// 4-6
+#define TBL_SIZEOF 6
+#define TBL_MAX_ENTRIES 22
+
+char vmecuhn_str[] = { "VMECUHN [Vehicle Manufacturer ECU Hardware Number]" };
+char ssecuhn_str[] = { "SSECUHN [Hardware Number]" };
+char ssecusn_str[] = { "SSECUSN [Serial Number] " };
+char erotan_str[]  = { "EROTAN  [Model Description]"  };
+char dif_str[]     = { "DIF"     };
+char brif_str[]    = { "BRIF"    };
+char engid_str[]   = { "OTHERID" };
+char dummy_str[]   = { "TESTID"  };
+
+				{
+					int idx = 1, matches=0;
+					unsigned int type,len,valu,segm,skip=0;
+					char *idx_str = 0;
+					char strbuf[256];
+					
+					for(i=idx; i < TBL_MAX_ENTRIES;i++,idx++) 
+					{
+						tbl = p +    (idx*TBL_SIZEOF);
+
+						type = *(     tbl + TBL_TYPE);		// from rom routine extract value (offset in rom to table)
+						len  = *(     tbl + TBL_LEN);		// from rom routine extract value (offset in rom to table)
+						valu = get16( tbl + TBL_VAL);	// from rom routine extract value (offset in rom to table)
+						segm = get16( tbl + TBL_SEG);	// from rom routine extract value (offset in rom to table)
+
+									if(type == 6 && len > 0)
+									{
+										// list of ids to blacklist display of
+										if(idx == 0x14) { skip = 1; }
+										if(idx == 22)   { skip = 1; }
+
+										if(skip == 0)
+										{	
+											skip = 0;
+											unsigned long str_adr = (unsigned long)(segm*SEGMENT_SIZE)+(long int)valu;	// derive phyiscal address from offset and segment
+											str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+											if(str_adr < fh->len)
+											{
+											str_adr             += offset_addr;
+											unsigned char *p_str = (unsigned char *)str_adr;
+										
+											// to be safe lets filter non printable chars
+											for(i=0; i < len; i++)
+											{
+												if(isprint((unsigned char *)(p_str[i]))) 
+												{
+													strbuf[i] = (unsigned char)p_str[i];
+												} else {
+													strbuf[i] = (unsigned char)" ";
+												}
+											}
+											*(strbuf+len) = 0x00;	// null terminate
+											
+											switch(idx) {
+												case 1:  { idx_str = &vmecuhn_str; break; }
+												case 2:  { idx_str = &ssecuhn_str; break; }
+												case 4:  { idx_str = &ssecusn_str; break; }
+												case 6:  { idx_str = &erotan_str;  break; }
+												case 8:  { idx_str = &dummy_str;   break; }
+												case 10: { idx_str = &dif_str;     break; }
+												case 11: { idx_str = &brif_str;    break; }
+												case 19:
+												case 21: { idx_str = &engid_str;   break; }
+												default: { idx_str = 0; };
+											}
+
+				//							memcpy(strbuf,str_adr,len);
+											printf("Idx=%-3d { %-24s} %#x ", idx, strbuf, (int)str_adr-(int)offset_addr );
+											if(idx_str != NULL) {
+												printf(": %s\n",idx_str);
+											} else {
+												printf("\n");
+											}
+											
+											matches++;
+											}
+										}
+									}
+						}
+						if(matches == 0) {
+							printf("Sorry no entries found in table.\n");
+						}
+					}
+			}
+
+			printf("\n>>> Scanning for information #1 [info] \n");
 			addr = search( fh, (unsigned char *)&kwp2000_ecu_needle, (unsigned char *)&kwp2000_ecu_mask, kwp2000_ecu_needle_len, 0 );
 			if(addr != NULL) 
 			{
-				printf("\nfound needle at offset=0x%x.\n\n",(int)(addr-offset_addr) );
+				printf("\nfound needle at offset=0x%x.\n",(int)(addr-offset_addr) );
 						unsigned long val          = get16((unsigned char *)addr + 28);// and segment (required to regenerate physical address from segment)
 						int seg = dpp1_value-1;
 						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-				printf("EPK: @ %#x (",map_adr);
+				printf("EPK: @ %#x { ",map_adr);
 						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 
 				unsigned char *adrs = map_adr+offset_addr;
@@ -246,7 +363,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				   if(i > 64) break;
 				   if(i>=len) break;
 				}
-				printf(")");
+				printf(" }");
 			}
 	
 //-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
@@ -364,7 +481,6 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				
 				int current_offset=0;
 				int x,y1, i=0;
-#if 1
 				while(1)
 				{
 					// search for signature for X-Axis (1 row) table..
@@ -401,7 +517,6 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 					//printf("\nCurrent Offset : %x\n",current_offset);
 				}
-#endif
 				printf("\n\n");
 
 				//
