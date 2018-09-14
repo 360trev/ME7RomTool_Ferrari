@@ -9,3 +9,5 @@ Makefile
 Makefile
 me7romtool.mk
 me7romtool.txt
+*.idb
+*.zip
