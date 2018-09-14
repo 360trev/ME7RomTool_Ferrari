@@ -58,6 +58,8 @@ int show_hex=0;
 int show_adr=0;
 int show_phy=1;
 int show_help=0;
+int show_rominfo=1;
+
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
 OPTS_ENTRY opts_table[] = {
@@ -78,6 +80,7 @@ OPTS_ENTRY opts_table[] = {
 
 	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL,  "Try to correct checksums, if corrected it saves appending '_corrected.bin'.\n\n"                  },
 
+	{ "-noinfo",  &show_rominfo,      OPTION_CLR,   0,          OPTIONAL,  "Disable rom information report scanning (on as default).\n"                                    },
 	{ "-hex",     &show_hex,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
 	{ "-adr",     &show_adr,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
 	{ "-dbg",     &full_debug,        OPTION_SET,   0,          OPTIONAL,  "Show -phy (on as default), -hex and -adr in map table output.\n"                                  },
@@ -214,33 +217,17 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				dpp2_value = extract_dppx(addr,2);
 				dpp3_value = extract_dppx(addr,3);
 			}
+
 //
-
-
-			printf("\n-[ Basic Firmware information ]-----------------------------------------------------------------\n\n");
-			printf(">>> Scanning for ROM String Table Byte Sequence #1 [info] \n");
-
-			int search_byte_offset=0;
-
-			search_byte_offset = 0x20000;	// we start searching after 1st 128kbyte. 		
-			offset = search_offset( offset_addr+search_byte_offset , (fh->len)-search_byte_offset , (unsigned char *)&meinfo_needle, (unsigned char *)&meinfo_mask, meinfo_needle_len, 0 );
-			if(offset != NULL) 
+// FIXME: this will be moved to its own function shortly (work in progress ;)
+//
+{
+			if(show_rominfo == 1)		// skip rom info if console options override it (e.g. if its causing issues
 			{
-				addr = offset_addr + search_byte_offset  + offset;
-				
-				printf("\nfound needle at offset=%#x",(int)(addr-offset_addr));
+				printf("\n-[ Basic Firmware information ]-----------------------------------------------------------------\n\n");
+				printf(">>> Scanning for ROM String Table Byte Sequence #1 [info] \n");
 
-				unsigned long val          = get16((unsigned char *)addr - 6);	// and segment (required to regenerate physical address from segment)
-				unsigned long seg          = get16((unsigned char *)addr - 2);	// and segment (required to regenerate physical address from segment)
-				unsigned long struct_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-				struct_adr                &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-
-//				p = (int)offset_addr + struct_adr;
-				
-				printf("\nfound table at offset=%#x.\n\n",(int)struct_adr );
-
-				p = (int)offset_addr + struct_adr;
-
+				int search_byte_offset=0;
 #define TBL_TYPE   0	// 0-1
 #define TBL_LEN    1	// 1-2
 #define TBL_VAL    2	// 2-4
@@ -257,7 +244,26 @@ char brif_str[]    = { "BRIF"    };
 char engid_str[]   = { "OTHERID" };
 char dummy_str[]   = { "TESTID"  };
 
+
+				search_byte_offset = 0x20000;	// we start searching after 1st 128kbyte. 		
+				offset = search_offset( offset_addr+search_byte_offset , (fh->len)-search_byte_offset , (unsigned char *)&meinfo_needle, (unsigned char *)&meinfo_mask, meinfo_needle_len, 0 );
+				if(offset != NULL) 
 				{
+					addr = offset_addr + search_byte_offset  + offset;
+					
+					printf("\nfound needle at offset=%#x",(int)(addr-offset_addr));
+
+					unsigned long val          = get16((unsigned char *)addr - 6);	// and segment (required to regenerate physical address from segment)
+					unsigned long seg          = get16((unsigned char *)addr - 2);	// and segment (required to regenerate physical address from segment)
+					unsigned long struct_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+					struct_adr                &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+
+	//				p = (int)offset_addr + struct_adr;
+					
+					printf("\nfound table at offset=%#x.\n\n",(int)struct_adr );
+
+					p = (int)offset_addr + struct_adr;
+
 					int idx = 1, matches=0;
 					unsigned int type,len,valu,segm,skip=0;
 					char *idx_str = 0;
@@ -329,42 +335,43 @@ char dummy_str[]   = { "TESTID"  };
 						if(matches == 0) {
 							printf("Sorry no entries found in table.\n");
 						}
+
+						printf("\n>>> Scanning for information #1 [info] \n");
+						addr = search( fh, (unsigned char *)&kwp2000_ecu_needle, (unsigned char *)&kwp2000_ecu_mask, kwp2000_ecu_needle_len, 0 );
+						if(addr != NULL) 
+						{
+							printf("\nfound needle at offset=0x%x.\n",(int)(addr-offset_addr) );
+									unsigned long val          = get16((unsigned char *)addr + 28);// and segment (required to regenerate physical address from segment)
+									int seg = dpp1_value-1;
+									unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+									map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+							printf("EPK: @ %#x { ",map_adr);
+
+							unsigned char *adrs = map_adr+offset_addr;
+							i=0;
+							unsigned char len=0;
+							unsigned char ch;
+							len =(unsigned char *)*(adrs+i);
+							i += 2;
+							while(1)
+							{
+								ch =(unsigned char *)adrs[i];
+								if (ch == 0) break;
+								if(isprint(ch))
+								{
+									printf("%c", ch);
+								} else {
+									break;
+								}
+							   i++;
+							   if(i > 64) break;
+							   if(i>=len) break;
+							}
+							printf(" }");
+						}
 					}
 			}
-
-			printf("\n>>> Scanning for information #1 [info] \n");
-			addr = search( fh, (unsigned char *)&kwp2000_ecu_needle, (unsigned char *)&kwp2000_ecu_mask, kwp2000_ecu_needle_len, 0 );
-			if(addr != NULL) 
-			{
-				printf("\nfound needle at offset=0x%x.\n",(int)(addr-offset_addr) );
-						unsigned long val          = get16((unsigned char *)addr + 28);// and segment (required to regenerate physical address from segment)
-						int seg = dpp1_value-1;
-						unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-						map_adr                   &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-				printf("EPK: @ %#x { ",map_adr);
-
-				unsigned char *adrs = map_adr+offset_addr;
-				i=0;
-				unsigned char len=0;
-				unsigned char ch;
-				len =(unsigned char *)*(adrs+i);
-				i += 2;
-				while(1)
-				{
-					ch =(unsigned char *)adrs[i];
-					if (ch == 0) break;
-		            if(isprint(ch))
-					{
-						printf("%c", ch);
-		            } else {
-						break;
-		            }
-				   i++;
-				   if(i > 64) break;
-				   if(i>=len) break;
-				}
-				printf(" }");
-			}
+}
 	
 //-[ Seedkey Version #1 ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
 			/*
