@@ -121,6 +121,8 @@ uint8_t *load_file(const char *filename, size_t *filelen);
 
 unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset);
 int search_image(const struct ImageHandle *ih, int start, const void *needle, const void *mask, int len, int align);
+unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len);
+
 char matchString(char * test, char * pWildText, char bCaseSensitive);
 
 void hexdump(uint8_t *buf, int len, const char *end);

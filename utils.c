@@ -167,11 +167,11 @@ unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pM
 		// skip past the last searched point and carry on trying to find matches in entire buffer..
 		i += search_result + needle_len;
 	}
-	printf("No match found");	
+//	printf("No match found");	
 	return 0;
 }
 
-unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset)
+unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len)
 {
 	int i,j;
 	int search_result;
@@ -181,8 +181,8 @@ unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNee
 	/* lets now find patterns.. */
 	for(i=0; i+needle_len < buflen; )
 	{
-		// find a match within the file start/end boundaries from given offset i ..
-		if((search_result = search_image2(buf, buflen, offset, pNeedle, pMask, needle_len, 1)) == -1) break; 
+		// find a match within the file start/end boundaries ..
+		if((search_result = search_image2(buf, buflen, 0, pNeedle, pMask, needle_len, 1)) == -1) break; 
 
 		// found a match.. lets return it to caller
 		if ( i+needle_len < buflen)
