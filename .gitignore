@@ -5,3 +5,7 @@
 *.db
 *.session
 *.tags
+Makefile
+Makefile
+me7romtool.mk
+me7romtool.txt
