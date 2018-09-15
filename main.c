@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     int i=0,j, result;
 	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.5\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
-	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Andriod devices ;)\n\n");
+	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Android devices ;)\n\n");
 	
 	/*
 	 * parse and check which options provided by console
