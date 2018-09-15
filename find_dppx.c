@@ -29,22 +29,22 @@ unsigned long extract_dppx(unsigned char *addr, int i)
 	{
 		case 0:
 			value = (get16((unsigned char *)addr + 2 + i*0));	
-			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x)",i,(int)(value),(value*SEGMENT_SIZE) );
+			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x)",i,(int)(value),(int)value*SEGMENT_SIZE );
 			break;
 
 		case 1:
 			value = (get16((unsigned char *)addr + 2 + 4));	
-			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x)",i,(int)(value),(value*SEGMENT_SIZE) );
+			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x)",i,(int)(value),(int)value*SEGMENT_SIZE );
 			break;
 
 		case 2:
 			value = (get16((unsigned char *)addr + 2 + 8));	
-			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",i,(int)(value),(value*SEGMENT_SIZE) );
+			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x) ram start address",i,(int)(value),(int)value*SEGMENT_SIZE );
 			break;
 
 		case 3:		
 			value = (get16((unsigned char *)addr + 2 + 12));	
-			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",i,(int)(value),(value*SEGMENT_SIZE) );
+			printf("\ndpp%d: (seg: 0x%-4.4x phy:0x%-8.8x) cpu registers",i, value, value*SEGMENT_SIZE );
 			printf("\n\nNote: dpp3 is always 3, otherwise accessing CPU register area not possible",(int)(value) );
 			printf("\n");
 			break;

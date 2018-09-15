@@ -21,7 +21,7 @@
 */
 #include "rominfo.h"
 
-static char vmecuhn_str[] = { "VMECUHN [Vehicle Manufacturer ECU Hardware Number]" };
+static char vmecuhn_str[] = { "VMECUHN [Vehicle Manufacturer ECU Hardware Number SKU]" };
 static char ssecuhn_str[] = { "SSECUHN [Bosch Hardware Number]" };
 static char ssecusn_str[] = { "SSECUSN [Bosch Serial Number] " };
 static char erotan_str[]  = { "EROTAN  [Model Description]"  };
@@ -39,23 +39,26 @@ int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsig
 			if(offset_addr == 0) return 0;
 					
 			unsigned long val          = get16((unsigned char *)addr - 6);	// and segment (required to regenerate physical address from segment)
+//			printf("val=%-4.4x\n",val); fflush(0);
 			unsigned long seg          = get16((unsigned char *)addr - 2);	// and segment (required to regenerate physical address from segment)
+//			printf("seg=%-4.4x\n",seg); fflush(0);
 			unsigned long struct_adr   = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+//			printf("adr=%p\n",struct_adr); fflush(0);
 			struct_adr                &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+//			printf("adr=%p\n",struct_adr); fflush(0);
+			printf("\nfound table at offset=%p.\n\n",(void *)struct_adr ); fflush(0);
 
-			printf("\nfound table at offset=%#x.\n\n",(int)struct_adr );
-
-			p = (int)offset_addr + struct_adr;
+			p = (unsigned char *)offset_addr + struct_adr;
+//			printf("\np at =%p.\n\n",(void*)p ); fflush(0);
 
 					int idx = 1, matches=0;
-					unsigned int type,len,valu,segm,skip=0;
+					unsigned int type=0,len=0,valu=0,segm=0,skip=0;
 					char *idx_str = 0;
 					char strbuf[256];
 					
 					for(i=idx; i < TBL_MAX_ENTRIES;i++,idx++) 
 					{
-						tbl = p +    (idx*TBL_SIZEOF);
-
+						tbl = (unsigned char *)(p +    (idx*TBL_SIZEOF));
 						type = *(     tbl + TBL_TYPE);		// from rom routine extract value (offset in rom to table)
 						len  = *(     tbl + TBL_LEN);		// from rom routine extract value (offset in rom to table)
 						valu = get16( tbl + TBL_VAL);	// from rom routine extract value (offset in rom to table)

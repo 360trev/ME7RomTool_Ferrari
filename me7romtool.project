@@ -1,7 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="me7romtool" InternalType="Console" Version="10.0.0">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0007Release000000000000]]>
+    </Plugin>
+  </Plugins>
   <Description/>
   <Dependencies/>
+  <VirtualDirectory Name="src">
+    <File Name="rominfo.h"/>
+    <File Name="rominfo.c"/>
+    <File Name="mlhfm.h"/>
+    <File Name="mlhfm.c"/>
+    <File Name="find_dppx.h"/>
+    <File Name="find_dppx.c"/>
+    <File Name="needles.c"/>
+    <File Name="fixsums.h"/>
+    <File Name="fixsums.c"/>
+    <File Name="table_spec.h"/>
+    <File Name="table_spec.c"/>
+    <File Name="show_tables.h"/>
+    <File Name="show_tables.c"/>
+    <File Name="README.md"/>
+    <File Name="main.c"/>
+    <File Name="utils.h"/>
+    <File Name="needles.h"/>
+    <File Name="crc32.c"/>
+    <File Name="crc32.h"/>
+    <File Name="utils.c"/>
+  </VirtualDirectory>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -92,24 +119,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <VirtualDirectory Name="src">
-    <File Name="mlhfm.h"/>
-    <File Name="mlhfm.c"/>
-    <File Name="find_dppx.h"/>
-    <File Name="find_dppx.c"/>
-    <File Name="needles.c"/>
-    <File Name="fixsums.h"/>
-    <File Name="fixsums.c"/>
-    <File Name="table_spec.h"/>
-    <File Name="table_spec.c"/>
-    <File Name="show_tables.h"/>
-    <File Name="show_tables.c"/>
-    <File Name="README.md"/>
-    <File Name="main.c"/>
-    <File Name="utils.h"/>
-    <File Name="needles.h"/>
-    <File Name="crc32.c"/>
-    <File Name="crc32.h"/>
-    <File Name="utils.c"/>
-  </VirtualDirectory>
 </CodeLite_Project>

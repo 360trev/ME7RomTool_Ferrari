@@ -53,7 +53,7 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm);
 typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);
 
 typedef struct OPTS_ENTRY {
-	unsigned char *option_name;
+	char *option_name;
 	int *option_var;
 	int  option_value;
 	char **filename;
@@ -122,11 +122,14 @@ uint8_t *load_file(const char *filename, size_t *filelen);
 unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset);
 int search_image(const struct ImageHandle *ih, int start, const void *needle, const void *mask, int len, int align);
 unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len);
+unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, unsigned char *segment, int table_index);
+unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, unsigned char *segment, int table_index);
 
 char matchString(char * test, char * pWildText, char bCaseSensitive);
 
 void hexdump(uint8_t *buf, int len, const char *end);
 void hexdump_le_table(uint8_t *buf, int len, const char *end);
+
 unsigned short get16(unsigned char *s);
 unsigned long get32(unsigned char *s);
 extern void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset);

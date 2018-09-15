@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "utils.h"
@@ -148,7 +149,7 @@ unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pM
 	int i,j;
 	int search_result;
 	unsigned char *start_adr;
-	unsigned int start_len;
+//	unsigned int start_len;
 			
 	/* lets now find patterns.. */
 	for(i=offset; i+needle_len < (fh->len)-offset; )
@@ -665,23 +666,26 @@ int parse_cli_options(int argc, char *argv[],int i, OPTS_ENTRY table[], int entr
 	return 0;
 }
 
-unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, int segment, int table_index)
+unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, unsigned char *segment, int table_index)
 {
 	unsigned int   var;
 	unsigned char *var_addr;
-	unsigned int   var_offset;
+	unsigned long  var_offset;
 	unsigned int   segment_offset;
+
+//	printf("segment_adr=%p\n",segment); fflush(0);
+//	printf("get_addr16_from_rom() - ENTERED\n",segment_offset); fflush(0);
 
 	segment_offset = (unsigned int)get16((unsigned char *)segment);          // get segment offset 
 	var            = (unsigned int)get16((unsigned char *)addr);             // get address word
 	var_addr       = (unsigned char *)(var)+(segment_offset*SEGMENT_SIZE);
-	var_offset     = (int)var_addr;
+	var_offset     = (long)var_addr;
 	var_offset    &= ~(ROM_1MB_MASK);
 
-	return((unsigned int)rom_start_addr+var_offset+table_index);
+	return((unsigned long)rom_start_addr+var_offset+table_index);
 }
 		
-unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, int segment, int table_index)
+unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, unsigned char *segment, int table_index)
 {
 	unsigned int   var_hi;
 	unsigned int   var_lo;
@@ -698,8 +702,10 @@ unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_
 	// get segment register & high/low addresses
 	// from rom function
 	//
+//	printf("segment_adr=%p\n",segment); fflush(0);
+//	printf("get_addr_from_rom() - ENTERED\n"); fflush(0);
 	segment_offset    = (unsigned int)get16((unsigned char *)segment); 	// get segment offset 
-//		printf("segment=%x\n",segment_offset);
+//	printf("segment=%x\n",segment_offset); fflush(0);
 
 	if(lo_addr != 0) {
 		var_lo            = (unsigned int)get16((unsigned char *)lo_addr); // get low address word
@@ -735,23 +741,26 @@ unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_
 		if(hi_bits == 16) {
 			var_hi_value      = (unsigned int)(get16((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
 		} else if(hi_bits == 32) {
-			var_hi_value      = (unsigned int)(get32((unsigned char *)rom_start_addr + var_hi_offset + table_index)); 
+			//var_hi_value      = 
+			return((unsigned long)(get32((unsigned char *)rom_start_addr + var_hi_offset + table_index))); 
 		}
 		var_final_address = (unsigned long )var_hi_value;
 	}
 
 	if(hi_addr ==0)
 	{
-		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+//		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 	} else {
 		if(lo_addr ==0) 
 		{
 //			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
 		} else {
-		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+//		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 		// re-create 32-bit unsigned long from hi and low words
 		var_final_address = (unsigned long )(((var_hi_value <<  16)) | var_lo_value );
 		}
 	}
+//	printf("get_addr_from_rom() - LEFT\n"); fflush(0);
+
 	return(var_final_address);
 }

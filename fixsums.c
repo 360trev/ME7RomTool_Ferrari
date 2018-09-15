@@ -21,6 +21,7 @@
 */
 #include "fixsums.h"
 #include "needles.h"
+#include "utils.h"
 
 extern int correct_checksums;	// 0 or 1
 extern int force_write;			// 0 or 1
@@ -43,8 +44,8 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 	char newrom_filename[MAX_FILENAME];
 	int num_entries = 0;
 	int num_multipoint_entries_byte;
-	unsigned long checksum_norm;
-	unsigned long checksum_comp;
+	uint32_t checksum_norm;
+	uint32_t checksum_comp;
 	uint32_t i, sum, final_sum=0;
 	unsigned long masked_start_addr=0;
 	unsigned long masked_end_addr=0;
@@ -81,9 +82,9 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
 					crc32_table_addr &= ~(ROM_1MB_MASK);
 					
-					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, crc32_table_addr );
+					printf("CRC32 Polynomial Table located at: 0x%-4.4x%-4.4x file offset: %-8.8x\n",(int)crc32_table_hi,(int)crc32_table_lo, (int)crc32_table_addr );
 
-					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", crc32_table_addr, 256);
+					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", 256);
 					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
 				}
 				printf("\n\n");
@@ -132,10 +133,11 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				for(i=0;i < num_entries;i++) 
 				{
 					// address of rom_table [8 bytes] -- Region [i]: start,end
-					printf("\nMain Region Block #%d: ",i+1);		
+					printf("\n>> Main Region Block #%d: ",i+1);  fflush(0);		
 					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, (int)addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
-					start_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)start_addr );		
+					printf("0x%lx",(long int)start_addr ); fflush(0);
+					start_addr &= ~(ROM_1MB_MASK); 
+					printf("0x%lx",(long int)start_addr );	 fflush(0);	
 					
 					last_end_addr = end_addr;
 					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, i*8);		// extract 'end address' directly from identified checksum machine code
@@ -162,24 +164,24 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 			if(addr == NULL) {
 				printf("\nmain checksum byte sequence not found\nGiving up.\n");
 			} else {
-				printf("\nmain checksum byte sequence #2 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				printf("\nmain checksum byte sequence #2 found at offset=0x%x.\n",(int)(addr-offset_addr) );fflush(0);
 				final_sum = 0;
 				for(i=0;i < num_entries;i++) 
 				{
 					// address of rom_table [8 bytes] -- Region [i]: start,end
-					printf("\nMain Region Block #%d: ",i+1);		
-					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, (int)addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
+					printf("\n>>> Main Region Block #%d: ",i+1); fflush(0);		
+					start_addr = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+00, 16, addr+22+00, 16, addr+14, i*8);		// extract 'start address' directly from identified checksum machine code
 					start_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)start_addr );		
+					printf("\n\t Start Addr : 0x%-8.8x", start_addr ); fflush(0);
 				
 					last_end_addr = end_addr;
-					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+26, 16, addr+22+26, 16, (int)addr+14, i*8);		// extract 'end address' directly from identified checksum machine code
+					end_addr   = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+18+26, 16, addr+22+26, 16, addr+14, i*8);		// extract 'end address' directly from identified checksum machine code
 					end_addr &= ~(ROM_1MB_MASK);
-					printf("0x%lx",(long int)end_addr );
+					printf(" End Addr   : 0x%-8.8x", end_addr );fflush(0);
 
 					// calculate checksum for this block
 					sum = CalcChecksumBlk(fh,start_addr,end_addr);
-					printf(" sum=%lx ~sum=%lx : acc_sum=%lx", (unsigned long)sum, (unsigned long)~sum, (unsigned long)final_sum);
+					printf("\n\t sum=%lx ~sum=%lx : acc_sum=%lx", (unsigned long)sum, (unsigned long)~sum, (unsigned long)final_sum);
 
 					// add this regions sum to final accumulative checksum
 					final_sum += sum;
@@ -228,12 +230,12 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				unsigned char *adr_chksum_comp;
 				int bad_main=0;
 
-				printf("\nmain checksum byte sequence #3 block found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				printf("\nmain checksum byte sequence #3 block found at > offset=%p.\n",(long)(addr-offset_addr) );
 //				checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 0);		// start
 //				checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 4);		// start
 
-				adr_chksum_norm = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, (int)addr+10, 0);
-				adr_chksum_comp = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, (int)addr+10, 4);
+				adr_chksum_norm = (unsigned char *)get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, addr+10, 0);
+				adr_chksum_comp = (unsigned char *)get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, addr+10, 4);
 
 				checksum_norm   = (unsigned long)get32(adr_chksum_norm);
 				checksum_comp   = (unsigned long)get32(adr_chksum_comp);
@@ -343,7 +345,7 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 						printf("***Experimental***: Note Variant #B has 2 crc32's in the table before the multipoints. Skipping the CRC's and just doing the multipoints..\n");
 					}				
 				}
-				
+								
 				if(do_multipoint == 1)	// only try multipoint checks if we found the needles!
 				{
 					int j, good=0, bad=0;
@@ -351,14 +353,14 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 					for(i=0,j=1; j<= num_multipoint_entries_byte; i=i+16) 
 					{
 							// address of rom_table [8 bytes] -- Region [i]: start,end
-							printf("\nMultipoint Block #%-2.2d of #%-2.2d: ",j++, num_multipoint_entries_byte);		
+							printf("\nMultipoint Block #%-2.2d of #%-2.2d: ",j++, num_multipoint_entries_byte);	fflush(0);	
 							long int range;
-							start_addr           = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+0+skip_factor);		// extract 'start address' directly from identified multippoint table
+							start_addr           = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits, seg_addr, i+0+skip_factor);		// extract 'start address' directly from identified multippoint table
 							masked_start_addr    = start_addr;
 							masked_start_addr   &= ~(ROM_1MB_MASK);
-							printf("Start:   seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx)",(long int)start_addr/SEGMENT_SIZE,(long int)start_addr,(long int)masked_start_addr );
+							printf("\n\t Start:   seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx)",start_addr/SEGMENT_SIZE,start_addr, masked_start_addr );
 							
-							end_addr             = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+4+skip_factor);		// extract 'end address  ' directly from identified multippoint table
+							end_addr             = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits, seg_addr, i+4+skip_factor);		// extract 'end address  ' directly from identified multippoint table
 							masked_end_addr      = end_addr;
 							masked_end_addr     &= ~(ROM_1MB_MASK);
 
@@ -369,13 +371,13 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 								sum       = 0;
 							}
 							// extract from rom original stored checksums
-							printf(" End:    seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx) ",(long int)end_addr/SEGMENT_SIZE,(long int)end_addr, (long int)masked_end_addr );
+							printf("\n\t End:     seg:0x%-3.3x phy:0x%-8.8lx (offset: 0x%-8.8lx) ",end_addr/SEGMENT_SIZE,end_addr, masked_end_addr );
 							
 //							checksum_norm     = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+8+skip_factor);		// extract 'checksum'      directly from identified multippoint table
-							adr_checksum_norm = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, (int)seg_addr, i+8+skip_factor);
-							checksum_norm     = (unsigned long)get32(adr_checksum_norm);
+							adr_checksum_norm = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, seg_addr, i+8+skip_factor);
+							checksum_norm     = get32(adr_checksum_norm);
 
-							printf("\n\t Block Checksum: 0x%-8.8lx :  Calculated: 0x%-8.8lx ",(long int)checksum_norm, (long int)sum );		
+							printf("\n\t Block Checksum: 0x%-8.8lx :  Calculated: 0x%-8.8lx ", checksum_norm, sum ); fflush(0);		
 
 							// did the stored match the one we just calculated? (for normal version)
 							if(checksum_norm == sum) { 
@@ -386,16 +388,16 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 								unsigned int *adr_checksum_norm_int = (unsigned int *)adr_checksum_norm;
 								*adr_checksum_norm_int            =  sum;							
 								// reacquire checksum from rom
-								checksum_norm     = (unsigned long)get32(adr_checksum_norm);
+								checksum_norm     = get32(adr_checksum_norm);
 								printf("FIXED!"); 
 								fixed++;
 							} 
 
 //							checksum_comp     = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, lo_num_bits, hi_addr, hi_num_bits,(int)seg_addr, i+12+skip_factor);		// extract '~checksum'     directly from identified multippoint table
-							adr_checksum_comp = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, (int)seg_addr, i+12+skip_factor);
-							checksum_comp     = (unsigned long)get32(adr_checksum_comp);
+							adr_checksum_comp = get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, lo_addr, seg_addr, i+12+skip_factor);
+							checksum_comp     = get32(adr_checksum_comp);
 
-							printf("\n\t~Block Checksum: 0x%-8.8lx : ~Calculated: 0x%-8.8lx ",(long int)checksum_comp, (long int)~sum );								
+							printf("\n\t~Block Checksum: 0x%-8.8lx : ~Calculated: 0x%-8.8lx ",checksum_comp, ~sum );								
 
 							// did the stored match the one we just calculated? (for one's complement version)
 							if(checksum_comp == ~sum) { 
@@ -404,10 +406,10 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 //								printf("BAD! "); 
 								bad++; 
 								// update the checksum
-								unsigned int *adr_checksum_comp_int = (unsigned int *)adr_checksum_comp;
+								unsigned int *adr_checksum_comp_int = adr_checksum_comp;
 								*adr_checksum_comp_int            =  ~sum;							
 								// reacquire checksum from rom
-								checksum_comp     = (unsigned long)get32(adr_checksum_comp);
+								checksum_comp     = get32(adr_checksum_comp);
 								printf("FIXED!"); 
 								fixed++;
 							} 

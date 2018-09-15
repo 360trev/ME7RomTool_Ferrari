@@ -100,14 +100,15 @@ int show_usage(char *argv[], int argc)
 int main(int argc, char *argv[])
 {
     int ok,required;
-    int i,j, result;
-	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.4\n",__DATE__,__TIME__);
+    int i=0,j, result;
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.5\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
-
+	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Andriod devices ;)\n\n");
+	
 	/*
 	 * parse and check which options provided by console
 	 */	
-    for (i = 0; i < argc; i++) 
+    for (i=0 ; i < argc; i++) 
 	{
 		result = parse_cli_options(argc, argv,i, &opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
 		if(result == 1) { exit(0); }
