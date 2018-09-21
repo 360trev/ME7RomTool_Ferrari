@@ -44,6 +44,9 @@ extern const unsigned char meinfo_needle[];
 extern const unsigned char meinfo_mask[]; 
 extern unsigned int meinfo_needle_len;
 
+extern unsigned char needle_TVKUP[];
+extern unsigned char mask_TVKUP[];
+extern unsigned int needle_TVKUP_len;
 
 extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;

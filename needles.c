@@ -39,6 +39,41 @@
  *   releases so we have to ignore those bytes (mask them out) during
  *   searches.
  */
+
+unsigned char needle_TVKUP[] =
+{
+ 0xE1, 0x28,                                    // movb    rl4, #2
+ 0xF7, 0xF8, XXXX, XXXX,                        // movb    byte_381CF3, rl4
+ 0xE1, 0x2A,                                    // movb    rl5, #2
+ 0xF7, 0xFA, XXXX, XXXX,                        // movb    byte_381CF2, rl5
+ 0xE1, 0x26,                                    // movb    rl3, #2
+ 0xF7, 0xF6, XXXX, XXXX,                        // movb    byte_381CF4, rl3
+ 0xD7, 0x40, XXXX, XXXX,                        // extp    #206h, #1
+ 0xF3, 0xF4, XXXX, XXXX,                        // movb    rl2, TVERBR
+ 0xF7, 0xF4, XXXX, XXXX,                        // movb    byte_381CF7, rl2
+ 0xF3, 0xF2, XXXX, XXXX,                        // movb    rl1, TVKUP
+ 0xF7, 0xF2, XXXX, XXXX,                        // movb    ram_TVKUP, rl1
+ 0xDB, 0x00                                     // rets
+};
+
+unsigned char mask_TVKUP[] =
+{
+ MASK, MASK,                                    // movb    rl4, #2
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF3, rl4
+ MASK, MASK,                                    // movb    rl5, #2		
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF2, rl5
+ MASK, MASK,                                    // movb    rl3, #2
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF4, rl3
+ MASK, MASK, XXXX, XXXX,                        // extp    #206h, #1			+24
+ MASK, MASK, XXXX, XXXX,                        // movb    rl2, TVERBR			+28
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF7, rl2
+ MASK, MASK, XXXX, XXXX,                        // movb    rl1, TVKUP           +36
+ MASK, MASK, XXXX, XXXX,                        // movb    ram_TVKUP, rl1
+ MASK, MASK                                     // rets
+};
+
+unsigned int needle_TVKUP_len = sizeof(needle_TVKUP);
+
  
 unsigned char needle_CWKONFZ1[] =
 {

@@ -65,6 +65,7 @@ int show_pukans=0;
 int show_kfkhfm=0;
 int show_diss=0;
 int show_cwkonfz1=0;
+int show_tvkup=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -77,7 +78,8 @@ OPTS_ENTRY opts_table[] = {
 	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                    },
 	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n"                             },
 	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                   },
-	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n\n"                            },
+	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                              },
+	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n\n"                       },
 	
 	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n\n"                        },
 	
@@ -281,10 +283,10 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 			if(seedkey_patch == OPTION_SET) 
 			{
-				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
+				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n\n");
 				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, needle_6_len, 0 );
 				if(addr != NULL) {
-					printf("Found at offset=0x%x. Patch at +(0x64) +100, 0x04 (ret=0, login failed) goes to 0x14 (ret=1, login success) \n",(int)(addr-rom_load_addr) );
+					printf("found at offset=0x%x. Patch at +(0x64) +100, 0x04 (ret=0, login failed) goes to 0x14 (ret=1, login success) \n",(int)(addr-rom_load_addr) );
 					// disassemble needle found in rom
 					if(show_diss) { c167x_diss(addr-rom_load_addr, addr, needle_6_len); }
 					// do the work of patching...
@@ -299,6 +301,39 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
+			if(show_tvkup == OPTION_SET) 
+			{
+				int seg, val;
+				unsigned char *tmp_adr;
+				
+				printf("\n>>> Scanning for TVKUP [Delay time for clutch pedal {B_kupplv} ]\n");
+				addr = search( fh, (unsigned char *)&needle_TVKUP, (unsigned char *)&mask_TVKUP, needle_TVKUP_len, 0 );
+				if(addr != NULL) {
+					printf("found at GGEGAS() function at offset=0x%x. ",(int)(addr-rom_load_addr) );
+					seg = get16((unsigned char *)addr+20);
+					seg -= 2;
+					val = get16((unsigned char *)addr+32);
+					unsigned long str_adr = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+					printf("TVKUP @ ADR:%#8x ", str_adr);
+					str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					printf("(%#8x )\n", str_adr);
+					str_adr              += rom_load_addr;
+					tmp_adr               = (unsigned char *)str_adr;				
+					val                   = *tmp_adr;
+					
+					// disassemble needle found in rom
+					if(show_diss) { 
+						printf("\nDumping ...\n");
+						c167x_diss(addr-rom_load_addr, addr, needle_TVKUP_len+20); 
+					}
+
+					printf("\nTVKUP: 0x%-2.2x (0.%d s delay)\n",val,val*50);
+
+				} else {
+					printf("not found\n");
+				}
+			}
+
 			if(show_cwkonfz1 == OPTION_SET) 
 			{
 				char s_bin[64] = { "0 0 0 0 0 0 0 0" };
@@ -309,7 +344,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n>>> Scanning for CWKONFZ1 [Codeword for configuration of vehicle]\n");
 				addr = search( fh, (unsigned char *)&needle_CWKONFZ1, (unsigned char *)&mask_CWKONFZ1, needle_CWKONFZ1_len, 0 );
 				if(addr != NULL) {
-					printf("\nfound at file offset=0x%x ",(int)(addr-rom_load_addr) );
+					printf("\nfound at offset=0x%x ",(int)(addr-rom_load_addr) );
 					val = get16((unsigned char *)addr+2);
 					cwkonfz1_adr  = ((dpp1_value-1)*SEGMENT_SIZE);
 					cwkonfz1_adr += val;
@@ -348,7 +383,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 					}
 					
 				} else {
-					printf("Not found.\n");
+					printf("not found.\n");
 					
 				}
 			}				
