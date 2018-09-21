@@ -88,34 +88,37 @@
    Pulsation correction dependent on intake air temperature: '-PUKANS' - identify and dump
    its location.
    
-
 Usage: me7romtool.exe <options> ...
 
- -romfile  : Try to identify map in the firmware. You *must* specify a romfile! 
- -outfile  : Optional filename for saving romfiles after they have been modified (overrides default name.
+ -romfile  : Try to identify map in the firmware. You *must* specify a romfile!
+ -outfile  : Optional filename for saving romfiles after they have been modified (overrides default name)
  -force    : If a checksummed file needs saving overwrite it anyway even if it already exists.
 
  -KFAGK    : Try to identify and show KFAGK exhaust valve opening table in the firmware.
  -KFPED    : Try to identify and show KFPED/KFPEDR pedal torque request tables.
  -KFKHFM   : Try to identify and show KFKHFM MAF Sensor correction table.
  -PUKANS   : Try to identify and show PUKANS Air Temperature correction table.
- 
+
+ -CWKONFZ1 : Try to identify and show CWKONFZ1 Codeword for vehicle configuration.
+
  -rhfm     : Read and extract hfm from romfile, optional dump filename to override default write name.
- -whfm     : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.   
+ -whfm     : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
  -ihfm     : Try to identify mlhfm table in specified romfile.
- 
  -maps     : Try to identify map in the firmware (Experimental!).
- 
  -seedkey  : Try to identify seedkey function and patch login so any login password works.
+
  -fixsums  : Try to correct checksums, if corrected it saves appending '_corrected.bin'.
 
+ -noinfo   : Disable rom information report scanning (on as default).
  -hex      : Also show non formatted raw hex values in map table output.
- -adr      : Also show non formatted raw hex values in map table output. 
+ -adr      : Also show non formatted raw hex values in map table output.
  -dbg      : Show -phy (on as default), -hex and -adr in map table output.
- -diss     : Show C167 disassembly traces of discovered needles to aid in debugging (Experimental!). 
+ -diss     : Show C167 diassembly traces of discovered needles to aid in debugging (Experimental!).
  -nophy    : Override default behaviour and dont show formatted values in map table output.
 
  ?         : Show this help.
+
+
 
 
 Q. How does this work?
