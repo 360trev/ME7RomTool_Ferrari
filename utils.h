@@ -125,7 +125,9 @@ unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNee
 unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *lo_addr, int lo_bits, unsigned char *hi_addr, int hi_bits, unsigned char *segment, int table_index);
 unsigned long get_addr16_of_from_rom(unsigned char *rom_start_addr, unsigned dynamic_romsize, unsigned char *addr, unsigned char *segment, int table_index);
 
+void dump_bin(char *dst, int val, int numbits);
 char matchString(char * test, char * pWildText, char bCaseSensitive);
+void c167x_diss(unsigned char *rom_start, uint8_t *buf, int len);
 
 void hexdump(uint8_t *buf, int len, const char *end);
 void hexdump_le_table(uint8_t *buf, int len, const char *end);

@@ -72,7 +72,7 @@ TABLE_DEF KFAGK_table = {
 	.y_axis = {
 		.field_name = "Y-axis",			// field name
 		.nwidth    = UBYTE,				// field type
-		.conv      = "1.3333", 			// conversion value
+		.conv      = "1.333333", 		// conversion value
 		.desc      = "%", 				// conversion description
 		.fmt_PHY   = " %-5.0f ",     	// PHY: x axis data formatting for conversion to human readable
 		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
@@ -280,6 +280,108 @@ TABLE_DEF XXXXB_table = {
 		.fmt_PHY   = "%8.0f ", 			// PHY: cell data formatting for conversion to human readable
 		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
 		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = " ",		// conversion name
+	}
+};
+
+
+
+
+TABLE_DEF KFKHFM_table = {
+	// basic table information
+	.table_name = "KFKHFM", .table_desc = "MAF Sensor correction by Load and RPM (Correction map for HFM)", 
+
+	// table data byte widths
+	.x_num_nwidth  = UBYTE, .y_num_nwidth  = UBYTE,		// number of x/y item fields width
+  
+	.x_axis_nwidth = UBYTE, 
+	.y_axis_nwidth = UBYTE,		// x/y axis widths
+	.cell_nwidth   = UBYTE,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "0.025",     		// conversion value for huamn readable
+		.desc      = "Upm",  			// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = " ", 				// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "1.333333",		// conversion value
+		.desc      = "%", 				// conversion description
+		.fmt_PHY   = " %-6.2f",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",		// ADR: x axis data formatting for physical addresses
+		.conv_name = " ",  	// conversion name	
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "1.0", 			// conversion value
+		.desc      = " ", 				// conversion description
+		.fmt_PHY   = "%8.0f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = " ",				// conversion name
+	}
+};
+
+
+
+TABLE_DEF PUKANS_table = {
+	// basic table information
+	.table_name = "PUKANS", .table_desc = "Pulsation correction dependent on intake air temperature.", 
+
+	// table data byte widths
+	.x_num_nwidth  = UBYTE, .y_num_nwidth  = 0,		// number of x/y item fields width
+  
+	.x_axis_nwidth = UBYTE, 
+	.y_axis_nwidth = 0,								// x/y axis widths
+	.cell_nwidth   = UBYTE,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "1.0", 	  		// conversion value for huamn readable
+		.desc      = "Grad C",			// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = " ", 				// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "1.0",   			// conversion value
+		.desc      = " ", 				// conversion description
+		.fmt_PHY   = " %-5.0f ",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = " ",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "0.0078125", 		// conversion value
+		.otype     = 0x2a,				// conversion type (override default / to use *)
+		.desc      = " ", 				// conversion description
+		.fmt_PHY   = "%8.4f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%#6x ",         // ADR: cell data formatting for physical addresses
 		.conv_name = " ",		// conversion name
 	}
 };

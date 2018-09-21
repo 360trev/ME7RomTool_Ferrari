@@ -196,7 +196,7 @@ unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNee
 		// skip past the last searched point and carry on trying to find matches in entire buffer..
 		i += search_result + needle_len;
 	}
-	printf("No match found");	
+//	printf("No match found");	
 	return 0;
 }
 
@@ -290,63 +290,6 @@ void hexdump(uint8_t *buf, int len, const char *end)
 {
     while(len--) printf("%02x%s", *buf++, len?" ":"");
     printf("%s", end);
-}
-
-void hexdump_le(uint8_t *buf, int len, const char *end)
-{
-	uint8_t chA;
-	uint8_t chB;
-	uint8_t chC;
-	uint8_t chD;
-	uint32_t i=0;
-		
-    while(len--) 
-	{
-	if(len > 4) {			
-			chA = *buf++;
-			chB = *buf++;
-			
-			chD = *buf++;
-			chC = *buf++;
-
-here:		switch(chA)
-			{
-				case 0x08:
-				case 0xa8:
-				case 0x0d:
-				case 0x88:
-				case 0x48:
-				case 0x50:
-				case 0x7c:
-				case 0x9d:
-				case 0xfd:
-				{
-					printf("a=%02X b=%02X\nc=%02X d=%02X",chA, chB, chD, chC); 
-					
-					if(len > 4) {
-						chC = *buf++;
-						chD = *buf++;
-						printf(" c=%02X,d=%02X#\n",chC, chD); 
-
-					}
-					break;
-				}
-
-				case 0xf2:
-				{
-					printf("a=%02X b=%02X d=%02X c=%02X\n",chA, chB, chD, chC); 
-				} break;
-				
-				default:
-				{
-					printf("a=%02X b=%02X c=%02X D=%02X\n",chA, chB, chD, chC); 
-					if(chA == 0xDA) { printf("\n"); }
-				} break;
-			}
-
-		}
-	}
-//	exit(0);
 }
 
 #endif
@@ -616,6 +559,17 @@ void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset)
           }
     }
     printf("\n");
+}
+
+void dump_bin(char *dst, int val, int numbits)
+{
+    int mask = (1 << numbits);
+    while( numbits--) {
+        mask >>= 1;
+        *dst++ = (val & mask) ? '1':'0';
+		*dst++ = ' ';
+    }
+    *dst = 0;
 }
 
 int CheckFileExist( char *filename )

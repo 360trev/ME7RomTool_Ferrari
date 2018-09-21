@@ -44,9 +44,18 @@ extern const unsigned char meinfo_needle[];
 extern const unsigned char meinfo_mask[]; 
 extern unsigned int meinfo_needle_len;
 
+
 extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;
 extern const unsigned char mask_1[];
+
+extern const unsigned char needle_KFKHFM[];
+extern unsigned int needle_KFKHFM_len;
+extern const unsigned char mask_KFKHFM[];
+
+extern unsigned char needle_CWKONFZ1[];
+extern unsigned int needle_CWKONFZ1_len;
+extern unsigned char mask_CWKONFZ1[];
 
 extern const unsigned char needle_2[];
 extern unsigned int needle_2_len;

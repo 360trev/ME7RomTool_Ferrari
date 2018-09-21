@@ -54,12 +54,17 @@ int valves=0;
 int pedal=0;
 //int find_dpp=1;
 int find_mlhfm=0;
+int find_kfkhfm=0;
 int full_debug=0;
 int show_hex=0;
 int show_adr=0;
 int show_phy=1;
 int show_help=0;
 int show_rominfo=1;
+int show_pukans=0;
+int show_kfkhfm=0;
+int show_diss=0;
+int show_cwkonfz1=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -69,9 +74,12 @@ OPTS_ENTRY opts_table[] = {
 	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY, "Optional filename for saving romfiles after they have been modified (overrides default name)\n"   },
 	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL,  "If a checksummed file needs saving overwrite it anyway even if it already exists.\n\n"            },
 
-//	{ "-dppx",    &find_dpp,          OPTION_SET,   0,          OPTIONAL,  "Try to identify DPPx register settings to help with disassembly. (on as default)\n"               },
 	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                    },
-	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n\n"                           },
+	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n"                             },
+	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                   },
+	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n\n"                            },
+	
+	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n\n"                        },
 	
 	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
 	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"            },
@@ -81,10 +89,11 @@ OPTS_ENTRY opts_table[] = {
 
 	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL,  "Try to correct checksums, if corrected it saves appending '_corrected.bin'.\n\n"                  },
 
-	{ "-noinfo",  &show_rominfo,      OPTION_CLR,   0,          OPTIONAL,  "Disable rom information report scanning (on as default).\n"                                    },
+	{ "-noinfo",  &show_rominfo,      OPTION_CLR,   0,          OPTIONAL,  "Disable rom information report scanning (on as default).\n"                                       },
 	{ "-hex",     &show_hex,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
 	{ "-adr",     &show_adr,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
 	{ "-dbg",     &full_debug,        OPTION_SET,   0,          OPTIONAL,  "Show -phy (on as default), -hex and -adr in map table output.\n"                                  },
+	{ "-diss",    &show_diss,         OPTION_SET,   0,          OPTIONAL,  "Show C167 diassembly traces of discovered needles to aid in debugging (Experimental!).\n"         },
 	{ "-nophy",   &show_phy,          OPTION_CLR,   0,          OPTIONAL,  "Override default behaviour and dont show formatted values in map table output.\n\n"               },
 	
 	{ "?",        &show_help,         OPTION_SET,   0,          OPTIONAL,  "Show this help.\n\n"                     },
@@ -101,7 +110,7 @@ int main(int argc, char *argv[])
 {
     int ok,required;
     int i=0,j, result;
-	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.5\n",__DATE__,__TIME__);
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.52\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
 	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Android devices ;)\n\n");
 	
@@ -170,9 +179,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 	ImageHandle f;
 	ImageHandle *fh = &f;
 	int load_result;
-	int val;
-//	int save_result;
-//	int segment_offset;
+	int val, dump_len;
 	unsigned char *addr;
 	unsigned char *rom_load_addr;
 	unsigned int byte_offset, entries;
@@ -252,11 +259,17 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				addr = search( fh, (unsigned char *)&needle_5, (unsigned char *)&mask_5, needle_5_len, 0 );
 				if(addr != NULL) {
 					seedkey_patch = 2;		// since we discovered this, set this to 2 to skip unrequired secondary check
-					printf("Found at offset=0x%x. ",(int)(addr-rom_load_addr) );
+					printf("Found at offset=0x%x. Patch at +(0x5d) +93, 0x04 (ret=0, login failed) goes to 0x14 (ret=1, login success) \n",(int)(addr-rom_load_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-rom_load_addr, addr, needle_5_len+4); }
 					// do the work of patching...
 					printf("Applying patch so any login seed is successful... ");
 					addr[0x5d] = 0x14; 
-					printf("Patched!\n");
+					printf("Patched! \n");
+					if(show_diss) { 
+						printf("Dumping after patching to always ret 1 (login success)...\n");
+						c167x_diss(addr-rom_load_addr, addr, needle_5_len+4); 
+					}
 				}
 				printf("\n");
 			} 
@@ -271,14 +284,79 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n>>> Scanning for SecurityAccessBypass() Variant #2 Checking sub-routine [allow any login seed to pass] \n");
 				addr = search( fh, (unsigned char *)&needle_6, (unsigned char *)&mask_6, needle_6_len, 0 );
 				if(addr != NULL) {
-					printf("Found at offset=0x%x. ",(int)(addr-rom_load_addr) );
+					printf("Found at offset=0x%x. Patch at +(0x64) +100, 0x04 (ret=0, login failed) goes to 0x14 (ret=1, login success) \n",(int)(addr-rom_load_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-rom_load_addr, addr, needle_6_len); }
 					// do the work of patching...
 					printf("Applying patch so any login seed is successful... ");
 					addr[0x64] = 0x14; 	// very simple patch to always return TRUE...
 					printf("Patched!\n");
+					if(show_diss) { 
+						printf("Dumping after patching to always ret 1 (login success)...\n");
+						c167x_diss(addr-rom_load_addr, addr, needle_6_len+4); 
+					}
 				}
 				printf("\n\n");
 			}
+
+			if(show_cwkonfz1 == OPTION_SET) 
+			{
+				char s_bin[64] = { "0 0 0 0 0 0 0 0" };
+				unsigned char *cwkonfz1_adr;
+				unsigned long val_adr;
+				unsigned char cwkonfz1;
+				
+				printf("\n>>> Scanning for CWKONFZ1 [Codeword for configuration of vehicle]\n");
+				addr = search( fh, (unsigned char *)&needle_CWKONFZ1, (unsigned char *)&mask_CWKONFZ1, needle_CWKONFZ1_len, 0 );
+				if(addr != NULL) {
+					printf("\nfound at file offset=0x%x ",(int)(addr-rom_load_addr) );
+					val = get16((unsigned char *)addr+2);
+					cwkonfz1_adr  = ((dpp1_value-1)*SEGMENT_SIZE);
+					cwkonfz1_adr += val;
+					val_adr       = (unsigned long)cwkonfz1_adr;		// derive phyiscal address from offset and segment
+					val_adr      &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					
+					printf("CWKONFZ1 @ ADR:%#x\n\n", cwkonfz1_adr );
+//					printf("val_adr=%#x\n\n",(long)val_adr );
+					if(show_diss) { 
+						printf("Dumping ...\n");
+						c167x_diss(addr-rom_load_addr, addr, needle_CWKONFZ1_len+4); 
+					}
+					
+					cwkonfz1 = (unsigned char)*(rom_load_addr+val_adr);
+					dump_bin(s_bin, cwkonfz1, 8 );
+
+					printf("               7 6 5 4 3 2 1 0  bits\n");
+					printf("               ---------------\n");
+					printf("CWKONFZ1: %#-2.2X %s\n", (unsigned char)cwkonfz1, s_bin );
+//					printf("               0 1 0 0 0 0 1 0  (0x%#-2.2X as binary)\n",cwkonfz1 );
+					printf("               | | | | | | | |\n");
+					printf("               | | | | | | | +--- b_autget : Condition automatic gearbox\n");
+					printf("               | | | | | | +----- b_mt     : Condition manual gearbox\n");
+					printf("               | | | | | +------- b_cvt    : Condition continuously variable transmission\n");
+					printf("               | | | | +--------- b_f1getr : Condition F1-gearbox (electronic clutch control)\n");
+					printf("               | | | +-----------          : Condition not defined for Ferrari's\n");
+					printf("               | | +-------------          : Condition not defined for Ferrari's\n");
+					printf("               | +--------------- b_asrfz  : Condition for ASR in the automobile\n");
+					printf("               +----------------- b_4wd    : Condition 4 wheel drive\n\n");
+					
+					printf("This ROM is configured for : ");
+					if(s_bin[8] == '1') { 
+						printf("F1-AMT Gearbox with a Transmission Control Unit.\n"); 
+					} else {
+						printf("H-Gate Manual gearbox.\n"); 
+					}
+					
+				} else {
+					printf("Not found.\n");
+					
+				}
+			}				
+			// check for display of pukans table
+			check_pukans(fh, show_pukans);
+
+			// check for display of kfkhfm table
+			check_kfkhfm(fh, show_kfkhfm);
 
 //-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 		/*
@@ -291,13 +369,17 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			printf("\n-[ Exhaust Valve KFAGK Table ]---------------------------------------------------------------------\n\n");
 			{		
 				printf(">>> Scanning for KFAGK Table #1 Checking sub-routine Variant #1 [manages exhaust valve/flap opening] \n");
-				addr = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, KFAGK_needle_len, 0 );
+				dump_len = KFAGK_needle_len+4;
+				addr     = search( fh, (unsigned char *)&KFAGK_needle, (unsigned char *)&KFAGK_mask, KFAGK_needle_len, 0 );
 				if(addr == NULL) {
 					printf("\n>>> Scanning for KFAGK Table #1 Checking sub-routine Variant #2 [manages exhaust valve/flap opening] \n");
-					addr = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, KFAGK_needle2_len, 0 );
+					dump_len = KFAGK_needle2_len+4;
+					addr     = search( fh, (unsigned char *)&KFAGK_needle2, (unsigned char *)&KFAGK_mask2, KFAGK_needle2_len, 0 );
 				}
 				if(addr != NULL) {
 					printf("Found at offset=0x%x \n",(int)(addr-rom_load_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-rom_load_addr, addr, dump_len); }
 					// dump KFAGK table
 					dump_table(addr, rom_load_addr, get16((unsigned char *)addr + 2), get16((unsigned char *)addr + 6), &KFAGK_table, 0);						
 				}
@@ -316,7 +398,9 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf(">>> Scanning for KFPED/KFPEDR Table #1 Checking sub-routine Variant #1 [manages throttle pedal torque requests] \n");
 				addr = search( fh, (unsigned char *)&KFPED_needle, (unsigned char *)&KFPED_mask, KFPED_needle_len, 0 );
 				if(addr != NULL) {
-					printf("Found at offset=0x%x\n\n",(int)(addr-rom_load_addr));
+					printf("Found at offset=0x%x KFPEDR @+14, KFPED @ +36\n\n",(int)(addr-rom_load_addr));
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-rom_load_addr, addr, KFPED_needle_len+4); }
 					// dump KPEDR table
 					dump_table(addr, rom_load_addr, get16((unsigned char *)addr + 14), dpp1_value-1, &KPEDR_table, 0);
 					// dump KPED table (found table, rom, val, segment, table def)
@@ -359,7 +443,9 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				if(disabled_maps_1==1)
 				{
 					int current_offset=0;
-					int x,y1, i=0, j=0;
+					int x,y1, j=0;
+					
+					i=0;
 					while(j++ < MAX_TABLE_SEARCHES)
 					{
 						// search for signature for X-Axis (1 row) table..
@@ -371,6 +457,9 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 						// if we find a match lets dump it!
 						if(addr != NULL) {
 							printf("\n[Map #%d] 1D X-Axis  : Map function found at: offset=0x%x ",(i++)+1, (int)(addr-rom_load_addr) );
+//							// disassemble needle found in rom
+//							if(show_diss) { printf("\n"); c167x_diss(addr-rom_load_addr, addr, mapfinder_needle_len); }
+
 							unsigned long val          = get16((unsigned char *)addr + 2);	// from rom routine extract value (offset in rom to table)
 							unsigned long seg          = get16((unsigned char *)addr + 6);	// and segment (required to regenerate physical address from segment)
 							unsigned long map_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
@@ -417,7 +506,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 					unsigned int x_num, y_num;
 					unsigned int map_table_y_num_adr;
 					unsigned long val, seg;
-					
+
 					while(1)
 					{
 						// search for signature for X/Y-Axis (multirow/column) table..

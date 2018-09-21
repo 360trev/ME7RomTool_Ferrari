@@ -27,6 +27,7 @@ extern int full_debug;
 extern int show_hex;
 extern int show_adr;
 extern int show_phy;
+extern int show_diss;
 
 //get_nwidth
 unsigned long get_nwidth(unsigned char *s, int nwidth)
@@ -35,6 +36,8 @@ unsigned long get_nwidth(unsigned char *s, int nwidth)
 	
 	switch(nwidth)
 	{
+		case 0:		// no axis...
+			break;			
 		case 1:		// 8-bit support
 			val = (unsigned long)*(s);
 			break;
@@ -60,7 +63,7 @@ void show_entry_def(ENTRY_DEF *entry, int nwidth)
 	printf("\n    %s:\n",entry->field_name);  
 	printf("      Unit:                    %s\n",entry->desc);
 	printf("      Conversion name:         %s\n",entry->conv_name);
-	snprintf(conv_formula, 32, "f(phys) = 0.0 + %3.2f * phys", strtod(entry->conv,NULL) );
+	snprintf(conv_formula, 32, "f(phys) = 0.0 + %3.6f * phys", strtod(entry->conv,NULL) );
 	printf("      Conversion formula:      %s\n",conv_formula);
 	printf("      Data type:               ");
 	switch(nwidth)
@@ -85,7 +88,7 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 	table_start2               &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 	table_start2              += offset_addr;
 	
-	double double_cell_value;
+	double double_cell_value, conv_value;
 	int    i,x_pos,y_pos;
 	int    entry;
 	int    integer_cell_value;
@@ -122,7 +125,7 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 			table_data_offset        += (y_num*td->y_axis_nwidth);		// y axis header data
 
 			cell_data_start           = table_start + table_data_offset;
-			printf("Defaulting to implide cell_data start address at %p\n", cell_data_start);
+//			printf("Defaulting to implide cell_data start address at %p\n", cell_data_start);
 		} else {
 			table_data_offset  = 0;
 			x_num_data_start          = table_start + table_data_offset;
@@ -144,7 +147,7 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 //			printf("Y_AXIS start address: %p\n", y_axis_header_data_start - offset_addr);
 
 			cell_data_start           = table_start2 ;
-			printf("Overriding cell_data start address to %p\n", cell_data_start);
+//			printf("Overriding cell_data start address to %p\n", cell_data_start);
 			
 		}
 
@@ -210,64 +213,107 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 						printf("---------");
 					}
 
-					for(y_pos=0;y_pos <y_num;y_pos++) 
+					if(y_num == 0) 		// this means there this is a 1-axis table, we therefore only need to show 1 row
 					{
 #if 1
-						// get y_axis header data
-						unsigned char *adr = y_axis_header_data_start + (y_pos*td->y_axis_nwidth);
-						y_axis_hdr_value_raw = get_nwidth( adr, td->y_axis_nwidth );		//**FIXED**
-						y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
-
 						if(show_phy==1)
 						{
-							printf("\n ");
-							printf(td->y_axis.fmt_PHY, (double)y_axis_hdr_value_fmt );
-							printf("    PHY| ");
-							for(x_pos=0;x_pos<x_num;x_pos++) 
-							{
-								// get cell data
-								entry = get_nwidth( (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth ), td->cell_nwidth ); 	//**FIXED**
-								// show floating point formatted value
+							printf("\n            PHY| ");
+							for(i=x_num;i<x_num*2;i++) {
+								entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
 								double_cell_value = (double)entry;
-								double_cell_value = (double)double_cell_value / (strtod(td->cell.conv,NULL));
+								conv_value        = (double)strtod(td->cell.conv,NULL);
+								
+								switch(td->cell.otype) {
+									case '*':	double_cell_value = (double)double_cell_value * (double)conv_value; break;
+									case '/':
+									default: 	double_cell_value = (double)double_cell_value / (double)conv_value; break;
+								}
 								printf(td->cell.fmt_PHY,   (double)double_cell_value );	// show values directly out of the table
 							}
-						}
+						}					
 
 						if(show_hex==1)
 						{
-							// get y_axis formatting and display it
-							y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
-							printf("\n  ");
-							printf("%-#8.4x ", get_nwidth( (int)adr, td->cell_nwidth ) );						//**FIXED**
-							printf(" HEX| ");
-							for(x_pos=0;x_pos<x_num;x_pos++) 
-							{
-								cell_adr = (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth );	// get cell address
-								entry    = get_nwidth( cell_adr, td->cell_nwidth );										//**FIXED**// get cell data
-								printf(td->cell.fmt_HEX,(int)entry);						// show values directly out of the table
+							printf("\n            HEX| ");
+							for(i=x_num;i<x_num*2;i++) {
+								entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
+								printf(td->cell.fmt_HEX, entry );						// show raw hex
 							}
 						}
-
 						if(show_adr==1)
 						{
-							// get y_axis formatting and display it
-							y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
-							printf("\n  ");
-							printf("%-#9.5x", (int)(adr - (unsigned char *)(offset_addr))+seg_start );
-							printf(" ADR| ");
-							for(x_pos=0;x_pos<x_num;x_pos++) 
-							{	
-								cell_adr = (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth );	// get cell address
-								entry    = get_nwidth( cell_adr, td->cell_nwidth );									//**FIXED**	// get cell data
-								printf("0x%x ", cell_adr - offset_addr + seg_start );			// show address
+							printf("\n            ADR| ");
+							for(i=x_num;i<x_num*2;i++) {
+								cell_adr = x_axis_header_data_start+(i*td->x_axis_nwidth);
+								entry = get_nwidth(adr, td->x_axis_nwidth);	//**FIXED**
+								printf(td->cell.fmt_ADR, cell_adr - offset_addr + seg_start );						// show raw hex
 							}
-						} 
-						
-						if(line > 1)
-							printf("\n");					
+						}
+#endif
+
+					}
+					else 
+					{
+						for(y_pos=0;y_pos <y_num;y_pos++) 
+						{
+#if 1
+							// get y_axis header data
+							unsigned char *adr = y_axis_header_data_start + (y_pos*td->y_axis_nwidth);
+							y_axis_hdr_value_raw = get_nwidth( adr, td->y_axis_nwidth );		//**FIXED**
+							y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
+
+							if(show_phy==1)
+							{
+								printf("\n ");
+								printf(td->y_axis.fmt_PHY, (double)y_axis_hdr_value_fmt );
+								printf("    PHY| ");
+								for(x_pos=0;x_pos<x_num;x_pos++) 
+								{
+									// get cell data
+									entry = get_nwidth( (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth ), td->cell_nwidth ); 	//**FIXED**
+									// show floating point formatted value
+									double_cell_value = (double)entry;
+									double_cell_value = (double)double_cell_value / (strtod(td->cell.conv,NULL));
+									printf(td->cell.fmt_PHY,   (double)double_cell_value );	// show values directly out of the table
+								}
+							}
+
+							if(show_hex==1)
+							{
+								// get y_axis formatting and display it
+								y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
+								printf("\n  ");
+								printf("%-#8.4x ", get_nwidth( (int)adr, td->cell_nwidth ) );						//**FIXED**
+								printf(" HEX| ");
+								for(x_pos=0;x_pos<x_num;x_pos++) 
+								{
+									cell_adr = (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth );	// get cell address
+									entry    = get_nwidth( cell_adr, td->cell_nwidth );										//**FIXED**// get cell data
+									printf(td->cell.fmt_HEX,(int)entry);						// show values directly out of the table
+								}
+							}
+
+							if(show_adr==1)
+							{
+								// get y_axis formatting and display it
+								y_axis_hdr_value_fmt = y_axis_hdr_value_raw/(strtod(td->y_axis.conv,NULL));	
+								printf("\n  ");
+								printf("%-#9.5x", (int)(adr - (unsigned char *)(offset_addr))+seg_start );
+								printf(" ADR| ");
+								for(x_pos=0;x_pos<x_num;x_pos++) 
+								{	
+									cell_adr = (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth );	// get cell address
+									entry    = get_nwidth( cell_adr, td->cell_nwidth );									//**FIXED**	// get cell data
+									printf("0x%x ", cell_adr - offset_addr + seg_start );			// show address
+								}
+							} 
+							
+							if(line > 1)
+								printf("\n");					
 #endif						
-					}					
+						}					
+					}
 
 		printf("\n\n");
 		show_entry_def(&td->cell,   td->cell_nwidth);
@@ -275,4 +321,106 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 		show_entry_def(&td->y_axis, td->y_axis_nwidth);
 		printf("\n\n");
 		return 0;
+}
+
+
+int find_dump_table_dppx(unsigned char *rom_load_addr, int rom_len, unsigned char *needle, unsigned char *needle_mask, unsigned int needle_len, int table_offset, int segment, TABLE_DEF *table_fmt)
+{
+	int current_offset = 0, new_offset = 0;
+	int table_adr, found;
+	unsigned char *addr;
+	unsigned char *map_table_adr;
+				
+	found = 0;
+	while(1) {
+		// search for signature
+		current_offset = search_offset(rom_load_addr+new_offset, rom_len-new_offset, (unsigned char *)needle, (unsigned char *)needle_mask, needle_len);
+		if(current_offset == 0) break;
+				
+		// if we find a match lets dump it!
+		if(current_offset != NULL) {
+			found++;
+			// calculate its physical address in memory
+			addr = rom_load_addr+current_offset+new_offset;
+			// show its physical address in rom 
+			printf("Function byte-sequence found @ %#x\n\n",addr-rom_load_addr);
+			// disassemble needle found in rom
+			if(show_diss) {
+				c167x_diss(addr-rom_load_addr, addr, needle_len+44);
+			}
+
+			// now lets extract offset from needle to where table is located
+			table_adr = get16((unsigned char *)addr + table_offset);
+			// now lets show the table formatted correctly
+			dump_table(addr, rom_load_addr, table_adr, segment, table_fmt, 0);
+
+			// search for next match...
+			new_offset += current_offset+needle_len;
+		}
+	}
+	printf("\n");
+	return found;
+}
+
+#include "inst_c16x.h"
+
+int find_dump_table_seg(unsigned char *rom_load_addr, int rom_len, unsigned char *needle, unsigned char *needle_mask, unsigned int needle_len, int table_offset, int segment_offset, TABLE_DEF *table_fmt)
+{
+	int current_offset = 0, new_offset = 0;
+	int table_adr, found;
+	int segm_adr;
+	unsigned char opcode, found_op;
+	unsigned char *addr;
+	unsigned char *map_table_adr;
+				
+	found = 0;
+	while(1) {
+		// search for signature
+		current_offset = search_offset(rom_load_addr+new_offset, rom_len-new_offset, (unsigned char *)needle, (unsigned char *)needle_mask, needle_len);
+		if(current_offset == 0) break;
+				
+		// if we find a match lets dump it!
+		if(current_offset != NULL) {
+			found++;
+			// calculate its physical address in memory
+			addr = rom_load_addr+current_offset+new_offset;
+			// show its physical address in rom 
+			printf("Function byte-sequence found @ %#x, needle offset is +%d bytes, seg offset is +%d bytes\n\n",addr-rom_load_addr, table_offset, segment_offset);			
+			table_adr = get16((unsigned char *)addr + table_offset);
+			
+			opcode    = *(unsigned char *)((addr + segment_offset) - 2);
+			found_op  = 0xE6;
+			
+			if(opcode != found_op) {
+				printf("Segment opcode not found...\n\n");
+				segm_adr = 0xffff;
+				return 0;
+				
+			} else {
+				segm_adr  = get16((unsigned char *)addr + segment_offset);			
+				if(segm_adr  > 0x240) { 
+					printf("rom_start : %p\n",rom_load_addr);
+					printf("rom_end   : %p\n",rom_load_addr+rom_len);
+					printf("table_adr : %p\n",table_adr);
+					printf("opcode    : 0x%2X (%s) != 0x%2X\n",opcode, inst_set[opcode].name, found_op );
+					printf("segm_adr  : %p for offset +%d\n\N",segm_adr,segment_offset);
+					printf("Invalid segment!! Likely a false positive detection at %p!",addr-rom_load_addr);
+					found = 0;
+					return found;
+				} else {
+					// disassemble needle found in rom
+					if(show_diss) {
+						c167x_diss(addr-rom_load_addr, addr, needle_len+44);
+					}
+
+					// now lets show the table formatted correctly
+					dump_table(addr, rom_load_addr, table_adr, segm_adr, table_fmt, 0);		
+				}
+			}
+			
+			// search for next match...
+			new_offset += current_offset+needle_len;
+		}
+	}
+	return found;
 }

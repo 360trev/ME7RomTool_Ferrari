@@ -20,6 +20,7 @@
    IN THE SOFTWARE.
 */
 #include "rominfo.h"
+#include "utils.h"
 
 static char vmecuhn_str[] = { "VMECUHN [Vehicle Manufacturer ECU Hardware Number SKU]" };
 static char ssecuhn_str[] = { "SSECUHN [Bosch Hardware Number]" };
@@ -29,6 +30,7 @@ static char dif_str[]     = { "DIF"     };
 static char brif_str[]    = { "BRIF"    };
 static char engid_str[]   = { "OTHERID" };
 static char dummy_str[]   = { "TESTID"  };
+extern int show_diss;
 
 int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsigned char *offset_addr)
 {
@@ -49,6 +51,11 @@ int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsig
 			printf("\nfound table at offset=%p.\n\n",(void *)struct_adr ); fflush(0);
 
 			p = (unsigned char *)offset_addr + struct_adr;
+
+			if(show_diss) {
+				c167x_diss(addr-offset_addr, addr, 64);
+			}
+
 //			printf("\np at =%p.\n\n",(void*)p ); fflush(0);
 
 					int idx = 1, matches=0;

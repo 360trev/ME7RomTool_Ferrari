@@ -8,6 +8,12 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="inst_c16x.h"/>
+    <File Name="inst_c16x.c"/>
+    <File Name="pukans.h"/>
+    <File Name="pukans.c"/>
+    <File Name="kfkhfm.h"/>
+    <File Name="kfkhfm.c"/>
     <File Name="rominfo.h"/>
     <File Name="rominfo.c"/>
     <File Name="mlhfm.h"/>

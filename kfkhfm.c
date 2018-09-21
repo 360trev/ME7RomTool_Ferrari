@@ -19,17 +19,26 @@
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
    IN THE SOFTWARE.
 */
-#ifndef _TABLE_SPEC_SUPPORT_H
-#define _TABLE_SPEC_SUPPORT_H
+#include "kfkhfm.h"
+#include "table_spec.h"
 #include "show_tables.h"
 
-extern TABLE_DEF KPED_table;
-extern TABLE_DEF KPEDR_table;
-extern TABLE_DEF KFAGK_table;
-extern TABLE_DEF KFKHFM_table;
-extern TABLE_DEF PUKANS_table;
+extern unsigned dpp1_value;
 
-extern TABLE_DEF XXXX_table;
-extern TABLE_DEF XXXXB_table;
+int check_kfkhfm(ImageHandle *fh, int skip)
+{
+	int found = 0;
+	/*
+	 * search: *** Find KFKHFM Table by searching for correct function code byte sequence ***
+	 */
+	if(skip == 0) return found;		
 
-#endif
+	printf("\n-[ MAF Sensor Correction KFKHFM ]-----------------------------------------------------------\n\n");
+	printf(">>> Scanning for KFKHFM Table Lookup code sequence... \n");
+	found = find_dump_table_dppx( fh->d.p, fh->len, &needle_KFKHFM, &mask_KFKHFM, needle_KFKHFM_len, +2, dpp1_value-1, &KFKHFM_table);
+
+	if(found == 0) { printf("Sequence not found\n"); }
+	if(found > 1)  { printf("**** Developer Warning****: False positive detected. >1 match found. Check needle is unique!\n"); }
+
+	return found;
+}

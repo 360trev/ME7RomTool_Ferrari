@@ -43,13 +43,11 @@
    means any login password works to grant full access over OBD-II. (e.g access to 
    eeprom and flash writing).
 
-
-   Identify DPPx Register Values: '-dppx'
    The dppx registers are values used by the cpu to determine physical addresses
    such as where main system ram is located. By correctly setting the DPPx registers
    it will help using IDA on the given rom image. Since they are different between
-   different rom's this feature will help you to quickly determine what they should be!
-
+   different rom's this feature will help you to quickly determine what they should be.
+   This feature is enabled as default.
 
    MLHFM Table Swapping Features: '-rhfm' - Read & save it
    This is currently Ferrari specific but it basically identifies the
@@ -83,38 +81,38 @@
    formatted. This one shows rpm vs throttle position and what happens to exhaust valves.
 
    Throttle Pedal Torque Table : '-KFPED' - identify and dump its location
-   Throttle pedal charateristics and reversing pedal torque tables.
+   Throttle pedal charateristics and KFPEDR reversing pedal torque tables.
+
+   MAF Sensor Air Temperature correction table, '-KFKHFM' - identify and dump its location
+   
+   Pulsation correction dependent on intake air temperature: '-PUKANS' - identify and dump
+   its location.
+   
 
 Usage: me7romtool.exe <options> ...
 
- -romfile  : Try to identify map in the firmware. You *must* specify a romfile!
- 
- -outfile  : Optional filename for saving romfiles after they have been modified (overrides default name)
-
+ -romfile  : Try to identify map in the firmware. You *must* specify a romfile! 
+ -outfile  : Optional filename for saving romfiles after they have been modified (overrides default name.
  -force    : If a checksummed file needs saving overwrite it anyway even if it already exists.
 
  -KFAGK    : Try to identify and show KFAGK exhaust valve opening table in the firmware.
- 
  -KFPED    : Try to identify and show KFPED/KFPEDR pedal torque request tables.
+ -KFKHFM   : Try to identify and show KFKHFM MAF Sensor correction table.
+ -PUKANS   : Try to identify and show PUKANS Air Temperature correction table.
  
  -rhfm     : Read and extract hfm from romfile, optional dump filename to override default write name.
-
- -whfm     : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.
-   
+ -whfm     : Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.   
  -ihfm     : Try to identify mlhfm table in specified romfile.
  
  -maps     : Try to identify map in the firmware (Experimental!).
  
  -seedkey  : Try to identify seedkey function and patch login so any login password works.
-
  -fixsums  : Try to correct checksums, if corrected it saves appending '_corrected.bin'.
 
  -hex      : Also show non formatted raw hex values in map table output.
-
- -adr      : Also show non formatted raw hex values in map table output.
- 
+ -adr      : Also show non formatted raw hex values in map table output. 
  -dbg      : Show -phy (on as default), -hex and -adr in map table output.
- 
+ -diss     : Show C167 disassembly traces of discovered needles to aid in debugging (Experimental!). 
  -nophy    : Override default behaviour and dont show formatted values in map table output.
 
  ?         : Show this help.

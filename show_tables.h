@@ -37,6 +37,7 @@ typedef struct ENTRY_DEF {
 		char *field_name;	 // name of the entry field
 		int  nwidth;		 // field byte width
 		char *conv;          // conversion value for huamn readable, e.g. 655.35
+		unsigned char otype; // operation type. e.g. "*" or "/"
 		char *desc;          // conversion description, e.g. "% PED"
 		char *fmt_PHY;       // PHY: data formatting for conversion to human readable
 		char *fmt_HEX;       // HEX: data formatting for raw hex values
@@ -65,5 +66,8 @@ typedef struct TABLE_DEF {
 
 extern TABLE_DEF XXXX_table;
 extern int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val, unsigned long seg, TABLE_DEF *td, unsigned long cell_table_override_adr);
+
+extern int find_dump_table_dppx(unsigned char *rom_load_addr, int rom_len, unsigned char *needle, unsigned char *needle_mask, unsigned int needle_len, int table_offset, int segment, TABLE_DEF *table_fmt);
+extern int find_dump_table_seg( unsigned char *rom_load_addr, int rom_len, unsigned char *needle, unsigned char *needle_mask, unsigned int needle_len, int table_offset, int segment_offset, TABLE_DEF *table_fmt);
 
 #endif

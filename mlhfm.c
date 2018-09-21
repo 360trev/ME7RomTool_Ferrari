@@ -20,12 +20,14 @@
    IN THE SOFTWARE.
 */
 #include "mlhfm.h"
+#include "table_spec.h"
 
-int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *filename_hfm, unsigned long dynamic_ROM_FILESIZE, unsigned char *offset_addr)
+int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *filename_hfm, unsigned long dynamic_ROM_FILESIZE, unsigned char *rom_load_addr)
 {
 	unsigned short offset,entries;
 	int save_result;
-	int load_hfm_result;
+	unsigned short val, seg;
+	int load_hfm_result,found;
 	ImageHandle f_hfm;
 	ImageHandle *fh_hfm = &f_hfm;
 	char ml_filename[MAX_FILENAME];
@@ -36,12 +38,11 @@ int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *
 			 */
 	if (find_mlhfm != 0)
 	{
-			printf("-[ AirFlow Meter MLHFM ]-----------------------------------------------------------\n\n");
-
+			printf("-[ AirFlow Meter MLHFM ]----------------------------------------------------------------\n\n");
 			printf(">>> Scanning for full MLHFM Linearization Table Lookup code sequence... \n");
 			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, needle_1_len, 0 );
 			if(addr == NULL) {
-				printf("\nhfm sequence not found\n\n");
+				printf("\nSequence not found\n\n");
 			} else {
 
 				/* this offset is the machine code for the check against last entry in HFM table
@@ -112,9 +113,9 @@ int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *
 							memcpy(fh->d.p + MAP_FILE_OFFSET + offset, fh_hfm->d.p, fh_hfm->len);
 
 							// now that we've merged MLHFM, force a checksum re-correction (note: his will automatically re-save!)
-							correct_checksums == OPTION_SET;
+							correct_checksums = OPTION_SET;
 							// do checksum correction and autosave it.
-							fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, offset_addr);
+							fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, rom_load_addr);
  
 							printf("\nAll done.\n");
 						}

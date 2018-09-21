@@ -26,6 +26,7 @@
 extern int correct_checksums;	// 0 or 1
 extern int force_write;			// 0 or 1
 extern char *save_name;			// filename
+extern int show_diss;
 
 /*
  * Calculate the Bosch Motronic ME71 checksum for the given range
@@ -73,10 +74,13 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				int crc32_table_lo;
 				unsigned long crc32_table_addr;
 				
-				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 Checking sub-routine [calculates crc32 from polynomial table] \n");
+				printf(">>> Scanning for CRC32_ChecksumCalc() Variant #1 [calculates crc32 polynomial table] \n");
 				addr = search( fh, (unsigned char *)&crc32_needle, (unsigned char *)&crc32_mask, crc32_needle_len, 0 );
 				if(addr != NULL) {
 					printf("Found at offset=0x%x. ",(int)(addr-offset_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-offset_addr, addr, crc32_needle_len+4); }
+					
 					crc32_table_lo   = (get16((unsigned char *)addr + 38));	
 					crc32_table_hi    = (get16((unsigned char *)addr + 42));	
 					crc32_table_addr  = (unsigned long)(crc32_table_hi << 16 | crc32_table_lo);
@@ -86,8 +90,10 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 
 					printf("\nstatic uint32_t crc32_table_addr[%d] = {\n", 256);
 					hexdump_le32_table(offset_addr + crc32_table_addr, 1024, "};\n");					
+				} else {
+					printf("This rom doesn't use CRC32's or typical signature wasn't found.");
 				}
-				printf("\n\n");
+				printf("\n");
 			}
 
 			//-[ MAINROM <Number of Entries> ] -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------			
@@ -102,6 +108,8 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				printf("\nmain checksum byte sequence for number of entries not found\nGiving up.\n");
 			} else {
 				printf("\nmain checksum byte sequence #1 found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_2b_len+4); }
 				
 				int entries_byte = *(addr+27);	// offset 27 into needle_2b is the compare instruction for the number of entries, lets extract it and convert to entries
 				switch(entries_byte) {
@@ -124,11 +132,14 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 			 */
 #if 0
 			printf("\n>>> Scanning for Main ROM Checksum sub-routine #2c [to extract Start/End regions] ");
-			addr = search( fh, (unsigned char *)&needle_2v2, (unsigned char *)&mask_2v2, sizeof(needle_2v2), 0 );
+			addr = search( fh, (unsigned char *)&needle_2v2, (unsigned char *)&mask_2v2, needle_2v2_len, 0 );
 			if(addr == NULL) {
 				printf("\nmain checksum byte sequence not found\nGiving up.\n");
 			} else {
 				printf("\nmain checksum byte sequence #2c found at offset=0x%x.\n",(int)(addr-offset_addr) );
+				// disassemble needle found in rom
+				if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_2v2_len+4); }
+
 				final_sum = 0;
 				for(i=0;i < num_entries;i++) 
 				{
@@ -165,6 +176,9 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				printf("\nmain checksum byte sequence not found\nGiving up.\n");
 			} else {
 				printf("\nmain checksum byte sequence #2 found at offset=0x%x.\n",(int)(addr-offset_addr) );fflush(0);
+				// disassemble needle found in rom
+				if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_2_len+4); }
+
 				final_sum = 0;
 				for(i=0;i < num_entries;i++) 
 				{
@@ -207,6 +221,9 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 					printf("\nmain checksum byte sequence #3 variant #B not found\nTrying different variant.\n");
 				} else {
 					printf("\nmain checksum byte sequence #3 variant #B block found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_3b_len+4); }
+
 					printf("\nStored Main ROM Block Checksum: ");		
 					checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+40+00, 16, addr+44+00, 16, (int)addr+36, 0);		// start
 					printf("0x%lx",(long unsigned int)checksum_norm );		
@@ -231,8 +248,8 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				int bad_main=0;
 
 				printf("\nmain checksum byte sequence #3 block found at > offset=%p.\n",(long)(addr-offset_addr) );
-//				checksum_norm = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 0);		// start
-//				checksum_comp = get_addr_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, 16, addr+18+00, 16, (int)addr+10, 4);		// start
+				// disassemble needle found in rom
+				if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_3_len+4); }
 
 				adr_chksum_norm = (unsigned char *)get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, addr+10, 0);
 				adr_chksum_comp = (unsigned char *)get_addr16_of_from_rom(offset_addr, dynamic_ROM_FILESIZE, addr+14+00, addr+10, 4);
@@ -281,6 +298,9 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				addr = search( fh, (unsigned char *)&needle_4b, (unsigned char *)&mask_4b, needle_4b_len, 0 );
 				if(addr != NULL) {
 					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_4b_len+4); }
+
 					get_offset_addr = ((unsigned char *)addr + 42);
 				} else {
 
@@ -289,6 +309,8 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 					addr = search( fh, (unsigned char *)&needle_4c, (unsigned char *)&mask_4c, needle_4c_len, 0 );
 					if(addr != NULL) {
 						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+						// disassemble needle found in rom
+						if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_4c_len+4); }
 						get_offset_addr = ((unsigned char *)addr + 44);
 					}
 				}
@@ -318,6 +340,9 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 				addr = search( fh, (unsigned char *)&needle_4, (unsigned char *)&mask_4, needle_4_len, 0 );
 				if(addr != NULL) {
 					printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+					// disassemble needle found in rom
+					if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_4_len+4); }
+
 					lo_num_bits = 32;
 					hi_num_bits = 0;
 					seg_addr    = addr+58;
@@ -332,6 +357,8 @@ int fix_checksums(ImageHandle *fh, unsigned char *addr, char *filename_rom, unsi
 					addr = search( fh, (unsigned char *)&needle_4aa, (unsigned char *)&mask_4aa, needle_4aa_len, 0 );
 					if(addr != NULL) {
 						printf("Found at offset=0x%x.\n",(int)(addr-offset_addr) );
+						// disassemble needle found in rom
+						if(show_diss) { c167x_diss(addr-offset_addr, addr, needle_4aa_len+4); }
 						
 						lo_num_bits = 16;
 						hi_num_bits = 16;
