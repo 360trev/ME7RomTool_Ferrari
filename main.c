@@ -66,6 +66,7 @@ int show_kfkhfm=0;
 int show_diss=0;
 int show_cwkonfz1=0;
 int show_tvkup=0;
+int show_lrstpza=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -80,6 +81,7 @@ OPTS_ENTRY opts_table[] = {
 	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                   },
 	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                              },
 	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n\n"                       },
+	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n\n"                },
 	
 	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n\n"                        },
 	
@@ -301,6 +303,40 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
+			if(show_lrstpza)
+			{
+				int seg, val;
+				unsigned char *tmp_adr;
+				
+				printf("\n>>> Scanning for LRSTPZA [Period duration of the LRS forced amplitude]\n");
+				addr = search( fh, (unsigned char *)&needle_LRSTPZA, (unsigned char *)&mask_LRSTPZA, needle_LRSTPZA_len, 0 );
+				if(addr != NULL) {
+					printf("found    LRS() function at offset=0x%x. ",(int)(addr-rom_load_addr) );
+					seg  = dpp1_value; 
+					seg -= 1;
+					val  = get16((unsigned char *)addr+4);
+//					printf("seg=%-4.4x, val=%-4.4x ",seg,val);
+					unsigned long str_adr = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
+					printf("LRSTPZA @ ADR:%#8x ", str_adr);
+					str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+					printf("(%#8x )\n", str_adr);
+					str_adr              += rom_load_addr;
+					tmp_adr               = (unsigned char *)str_adr;				
+					val                   = get16(tmp_adr);
+
+					// disassemble needle found in rom
+					if(show_diss) { 
+						printf("\nDumping ...\n");
+						c167x_diss(addr-rom_load_addr, addr, needle_LRSTPZA_len+20); 
+					}
+
+					printf("\nLRSTPZA: 0x%-4.4x (0.%d s)\n",val,val*100);
+
+				} else {
+					printf("not found\n");
+				}
+			}
+
 			if(show_tvkup == OPTION_SET) 
 			{
 				int seg, val;
@@ -309,12 +345,13 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n>>> Scanning for TVKUP [Delay time for clutch pedal {B_kupplv} ]\n");
 				addr = search( fh, (unsigned char *)&needle_TVKUP, (unsigned char *)&mask_TVKUP, needle_TVKUP_len, 0 );
 				if(addr != NULL) {
-					printf("found at GGEGAS() function at offset=0x%x. ",(int)(addr-rom_load_addr) );
+					printf("found GGEGAS() function at offset=0x%x. ",(int)(addr-rom_load_addr) );
 					seg = get16((unsigned char *)addr+20);
 					seg -= 2;
 					val = get16((unsigned char *)addr+32);
+//					printf("seg=%-4.4x, val=%-4.4x ",seg,val);
 					unsigned long str_adr = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-					printf("TVKUP @ ADR:%#8x ", str_adr);
+					printf("TVKUP   @ ADR:%#8x ", str_adr);
 					str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 					printf("(%#8x )\n", str_adr);
 					str_adr              += rom_load_addr;

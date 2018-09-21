@@ -48,6 +48,10 @@ extern unsigned char needle_TVKUP[];
 extern unsigned char mask_TVKUP[];
 extern unsigned int needle_TVKUP_len;
 
+extern unsigned char needle_LRSTPZA[];
+extern unsigned char mask_LRSTPZA[];
+extern unsigned int needle_LRSTPZA_len;
+
 extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;
 extern const unsigned char mask_1[];

@@ -43,14 +43,14 @@
 unsigned char needle_TVKUP[] =
 {
  0xE1, 0x28,                                    // movb    rl4, #2
- 0xF7, 0xF8, XXXX, XXXX,                        // movb    byte_381CF3, rl4
+ 0xF7, 0xF8, XXXX, XXXX,                        // movb    byte_XXXX, rl4
  0xE1, 0x2A,                                    // movb    rl5, #2
- 0xF7, 0xFA, XXXX, XXXX,                        // movb    byte_381CF2, rl5
+ 0xF7, 0xFA, XXXX, XXXX,                        // movb    byte_XXXX, rl5
  0xE1, 0x26,                                    // movb    rl3, #2
- 0xF7, 0xF6, XXXX, XXXX,                        // movb    byte_381CF4, rl3
- 0xD7, 0x40, XXXX, XXXX,                        // extp    #206h, #1
+ 0xF7, 0xF6, XXXX, XXXX,                        // movb    byte_XXXX, rl3
+ 0xD7, 0x40, XXXX, XXXX,                        // extp    #XXXXh, #1
  0xF3, 0xF4, XXXX, XXXX,                        // movb    rl2, TVERBR
- 0xF7, 0xF4, XXXX, XXXX,                        // movb    byte_381CF7, rl2
+ 0xF7, 0xF4, XXXX, XXXX,                        // movb    byte_XXXX, rl2
  0xF3, 0xF2, XXXX, XXXX,                        // movb    rl1, TVKUP
  0xF7, 0xF2, XXXX, XXXX,                        // movb    ram_TVKUP, rl1
  0xDB, 0x00                                     // rets
@@ -59,20 +59,49 @@ unsigned char needle_TVKUP[] =
 unsigned char mask_TVKUP[] =
 {
  MASK, MASK,                                    // movb    rl4, #2
- MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF3, rl4
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_XXXX, rl4
  MASK, MASK,                                    // movb    rl5, #2		
- MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF2, rl5
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_XXXX, rl5
  MASK, MASK,                                    // movb    rl3, #2
- MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF4, rl3
- MASK, MASK, XXXX, XXXX,                        // extp    #206h, #1			+24
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_XXXX, rl3
+ MASK, MASK, XXXX, XXXX,                        // extp    #XXXXh, #1			+24
  MASK, MASK, XXXX, XXXX,                        // movb    rl2, TVERBR			+28
- MASK, MASK, XXXX, XXXX,                        // movb    byte_381CF7, rl2
+ MASK, MASK, XXXX, XXXX,                        // movb    byte_XXXX, rl2
  MASK, MASK, XXXX, XXXX,                        // movb    rl1, TVKUP           +36
  MASK, MASK, XXXX, XXXX,                        // movb    ram_TVKUP, rl1
  MASK, MASK                                     // rets
 };
 
 unsigned int needle_TVKUP_len = sizeof(needle_TVKUP);
+
+
+unsigned char needle_LRSTPZA[] =
+{
+ 0x0D, 0x1D,
+ 0xF2, 0xF4, XXXX, XXXX,                        // mov     r4, LRSTPZA
+ 0x7C, 0x14,                                    // shr     r4, #1
+ 0x42, 0xF4, XXXX, XXXX,                        // cmp     r4, word_XXXX
+ 0x8D, 0x06,                                    // jmpr    cc_C, loc_XXXX
+ 0xC2, 0xF4, XXXX, XXXX,                        // movbz   r4, byte_XXXX
+ 0x5C, 0x54,                                    // shl     r4, #5
+ 0xF6, 0xF4, XXXX, XXXX,                        // mov     word_XXXX, r4
+ 0x0D, 0x06                                     // jmpr    cc_UC, loc_XXXX
+};
+
+unsigned char mask_LRSTPZA[] =
+{
+ MASK, MASK,
+ MASK, MASK, XXXX, XXXX,                        // mov     r4, LRSTPZA
+ MASK, MASK,                                    // shr     r4, #1
+ MASK, MASK, XXXX, XXXX,                        // cmp     r4, word_XXXX
+ MASK, MASK,                                    // jmpr    cc_C, loc_XXXX
+ MASK, MASK, XXXX, XXXX,                        // movbz   r4, byte_XXXX
+ MASK, MASK,                                    // shl     r4, #5
+ MASK, MASK, XXXX, XXXX,                        // mov     word_XXXX, r4
+ MASK, MASK	   								    // jmpr    cc_UC, loc_XXXX
+};
+
+unsigned int needle_LRSTPZA_len = sizeof(needle_LRSTPZA);
 
  
 unsigned char needle_CWKONFZ1[] =
