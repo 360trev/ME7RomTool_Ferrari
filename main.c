@@ -80,9 +80,8 @@ OPTS_ENTRY opts_table[] = {
 	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n"                             },
 	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                   },
 	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                              },
-	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n\n"                       },
-	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n\n"                },
-	
+	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n"                         },
+	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n"                  },	
 	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n\n"                        },
 	
 	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
@@ -106,14 +105,14 @@ OPTS_ENTRY opts_table[] = {
 int show_usage(char *argv[], int argc)
 {
 	printf("Usage: %s <options> ...\n\n",argv[0]);
-	show_cli_usage(argc, argv, &opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
+	show_cli_usage(argc, argv, (OPTS_ENTRY *)&opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    int ok,required;
-    int i=0,j, result;
+    int ok;
+    int i=0, result;
 	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.52\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
 	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Android devices ;)\n\n");
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 	 */	
     for (i=0 ; i < argc; i++) 
 	{
-		result = parse_cli_options(argc, argv,i, &opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
+		result = parse_cli_options(argc, argv,i, (OPTS_ENTRY *)&opts_table, sizeof(opts_table)/sizeof(OPTS_ENTRY));
 		if(result == 1) { exit(0); }
 	}
 
@@ -303,6 +302,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				printf("\n\n");
 			}
 
+//-[ LRSTPZA [Period duration of the LRS forced amplitude] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 			if(show_lrstpza)
 			{
 				int seg, val;
@@ -337,6 +337,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				}
 			}
 
+//-[ TVKUP [Delay time for clutch pedal {B_kupplv} ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 			if(show_tvkup == OPTION_SET) 
 			{
 				int seg, val;
@@ -371,6 +372,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				}
 			}
 
+//-[ CWKONFZ1 [Codeword for configuration of vehicle] ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 			if(show_cwkonfz1 == OPTION_SET) 
 			{
 				char s_bin[64] = { "0 0 0 0 0 0 0 0" };
@@ -396,7 +398,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 					}
 					
 					cwkonfz1 = (unsigned char)*(rom_load_addr+val_adr);
-					dump_bin(s_bin, cwkonfz1, 8 );
+					dump_bin(s_bin, cwkonfz1, 8 );	// show string formatted as binary
 
 					printf("               7 6 5 4 3 2 1 0  bits\n");
 					printf("               ---------------\n");

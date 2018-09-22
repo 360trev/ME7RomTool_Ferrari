@@ -146,7 +146,7 @@ int memcmp_mask2(const void *ptr1, const void *ptr2, const void *mask, size_t le
 
 unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset)
 {
-	int i,j;
+	int i;
 	int search_result;
 	unsigned char *start_adr;
 //	unsigned int start_len;

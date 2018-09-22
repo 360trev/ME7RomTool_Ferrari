@@ -119,6 +119,9 @@ int ifree_file(struct ImageHandle *ih);
 int save_file(const char *filename, const uint8_t *filebuf, size_t filelen);
 uint8_t *load_file(const char *filename, size_t *filelen);
 
+void show_cli_usage(int argc, char *argv[], OPTS_ENTRY table[], int entrysize);
+int parse_cli_options(int argc, char *argv[],int i, OPTS_ENTRY table[], int entrysize);
+
 unsigned char *search(ImageHandle *fh, unsigned char *pNeedle, unsigned char *pMask, int needle_len, int offset);
 int search_image(const struct ImageHandle *ih, int start, const void *needle, const void *mask, int len, int align);
 unsigned char *search_offset(unsigned char *buf, int buflen, unsigned char *pNeedle, unsigned char *pMask, int needle_len);
