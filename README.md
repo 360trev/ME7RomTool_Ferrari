@@ -104,9 +104,10 @@ Usage: me7romtool.exe <options> ...
  -KFKHFM   : Try to identify and show KFKHFM MAF Sensor correction table.
  
  -PUKANS   : Try to identify and show PUKANS Air Temperature correction table.
- 
 
  -CWKONFZ1 : Try to identify and show CWKONFZ1 Codeword for vehicle configuration.
+
+ -LAMFA    : Try to identify and show LAMFA Driver Requested Lambda table.
  
 
  -rhfm     : Read and extract hfm from romfile, optional dump filename to override default write name.
