@@ -67,6 +67,7 @@ int show_diss=0;
 int show_cwkonfz1=0;
 int show_tvkup=0;
 int show_lrstpza=0;
+int show_lamfa=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -82,7 +83,8 @@ OPTS_ENTRY opts_table[] = {
 	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                              },
 	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n"                         },
 	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n"                  },	
-	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n\n"                        },
+	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n"                          },
+	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n\n"                                },
 	
 	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
 	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"            },
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
 {
     int ok;
     int i=0, result;
-	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.52\n",__DATE__,__TIME__);
+	printf("Ferrari 360 ME7.3H4 Rom Tool. *BETA TEST* Last Built: %s %s v1.54\n",__DATE__,__TIME__);
 	printf("by 360trev.  Needle lookup function borrowed from nyet (Thanks man!) from\nthe ME7sum tool development (see github). \n\n");
 	printf("..Now fixed and working on 64-bit hosts, Linux, Apple and Android devices ;)\n\n");
 	
@@ -431,6 +433,9 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 			// check for display of kfkhfm table
 			check_kfkhfm(fh, show_kfkhfm);
+
+			// check for display of lamfa table
+			check_lamfa(fh, show_lamfa);
 
 //-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 		/*

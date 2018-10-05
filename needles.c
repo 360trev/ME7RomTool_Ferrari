@@ -495,6 +495,59 @@ const unsigned char mask_KFKHFM[] =
 
 unsigned int needle_KFKHFM_len = sizeof(needle_KFKHFM);
 
+const unsigned char needle_LAMFA[] = 
+{
+ 0x88, 0x90,                                   // mov     [-r0], r9
+ 0x88, 0x80,                                   // mov     [-r0], r8
+ 0xF2, 0xF4, XXXX, XXXX,                       // mov     r4, mrfa_w      ; mrfa_w : Relatives Fahrerwunschmoment aus FGR und Pedal [MDFAW CAN ESVW FUEDK KWPDATR LAMFAW MDKOL]
+ 0x88, 0x40,                                   // mov     [-r0], r4
+ 0xC2, 0xF5, XXXX, XXXX,                       // movbz   r5, nmot        ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ 0x88, 0x50,                                   // mov     [-r0], r5
+ 0xE6, 0xF4, XXXX, XXXX,                       // mov     r4, #LAMFA_CELLS 
+ 0xE6, 0xF5, XXXX, XXXX,                       // mov     r5, #206h
+ 0x88, 0x50,                                   // mov     [-r0], r5
+ 0x88, 0x40,                                   // mov     [-r0], r4
+ 0xE6, 0xF4, XXXX, XXXX,                       // mov     r4, #LAMFA_Y_AXIS
+ 0xE6, 0xF5, XXXX, XXXX,                       // mov     r5, #206h
+ 0x88, 0x50,                                   // mov     [-r0], r5
+ 0x88, 0x40,                                   // mov     [-r0], r4
+ 0xD7, 0x40, XXXX, XXXX,                       // extp    #206h, #1
+ 0xC2, 0xFC, XXXX, XXXX,                       // movbz   r12, LAMFA_X_NUM   ; LAMFA : Lambda Fahrerwunsch [LAMFAW]
+ 0xE6, 0xFD, XXXX, XXXX,                       // mov     r13, #LAMFA_X_AXIS ; LAMFA : X_AXIS 
+ 0xE6, 0xFE, XXXX, XXXX,                       // mov     r14, #206h
+ 0xD7, 0x40, XXXX, XXXX,                       // extp    #206h, #1
+ 0xC2, 0xFF, XXXX, XXXX,                       // movbz   r15, LAMFA_Y_NUM
+ 0xDA, XXXX, XXXX, XXXX                        // calls   82h, Lookup_Map
+};
+
+const unsigned char mask_LAMFA[] = 
+{
+ MASK, MASK,                                   // mov     [-r0], r9
+ MASK, MASK,                                   // mov     [-r0], r8
+ MASK, MASK, XXXX, XXXX,                       // mov     r4, mrfa_w      ; mrfa_w : Relatives Fahrerwunschmoment aus FGR und Pedal [MDFAW CAN ESVW FUEDK KWPDATR LAMFAW MDKOL]
+ MASK, MASK,                                   // mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                       // movbz   r5, nmot        ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ MASK, MASK,                                   // mov     [-r0], r5
+ MASK, MASK, XXXX, XXXX,                       // mov     r4, #unk_81B89C ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                       // mov     r5, #206h
+ MASK, MASK,                                   // mov     [-r0], r5
+ MASK, MASK,                                   // mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                       // mov     r4, #unk_81B888 ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                       // mov     r5, #206h
+ MASK, MASK,                                   // mov     [-r0], r5
+ MASK, MASK,                                   // mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                       // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,                       // movbz   r12, LAMFA_X_NUM   ; LAMFA : Lambda Fahrerwunsch [LAMFAW]
+ MASK, MASK, XXXX, XXXX,                       // mov     r13, #LAMFA_X_AXIS ; LAMFA : X_AXIS 
+ MASK, MASK, XXXX, XXXX,                       // mov     r14, #206h
+ MASK, MASK, XXXX, XXXX,                       // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,                       // movbz   r15, LAMFA_Y_NUM
+ MASK, XXXX, XXXX, XXXX                        // calls   82h, Lookup_Map
+};
+
+unsigned int needle_LAMFA_len = sizeof(needle_LAMFA);
+
+
 
 const unsigned char kwp2000_ecu_needle[] = 
 {

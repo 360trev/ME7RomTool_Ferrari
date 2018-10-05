@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="lamfa.h"/>
+    <File Name="lamfa.c"/>
     <File Name="inst_c16x.h"/>
     <File Name="inst_c16x.c"/>
     <File Name="pukans.h"/>

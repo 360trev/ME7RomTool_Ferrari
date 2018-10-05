@@ -60,6 +60,10 @@ extern const unsigned char needle_KFKHFM[];
 extern unsigned int needle_KFKHFM_len;
 extern const unsigned char mask_KFKHFM[];
 
+extern const unsigned char needle_LAMFA[];
+extern unsigned int needle_LAMFA_len;
+extern const unsigned char mask_LAMFA[];
+
 extern unsigned char needle_CWKONFZ1[];
 extern unsigned int needle_CWKONFZ1_len;
 extern unsigned char mask_CWKONFZ1[];

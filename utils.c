@@ -490,7 +490,10 @@ char matchString(char * test, char * pWildText, char bCaseSensitive)  // By defa
         return bMatch;
 }
 
-unsigned short get16(unsigned char *s) { return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); }
+unsigned short get16(unsigned char *s) {
+	if(s == 0) return 0;
+	return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); 
+}
 unsigned short get16le(unsigned char *s) { return (unsigned short)( ((s[0] <<  8)) | ((s[1]                                   )) ); }
 
 unsigned long  get32(unsigned char *s) { return (unsigned long )( ((s[3] << 24)) | ((s[2] <<  16)) |((s[1] <<  8)) |  ((s[0])) ); }
@@ -703,13 +706,13 @@ unsigned long get_addr_from_rom(unsigned char *rom_start_addr, unsigned dynamic_
 
 	if(hi_addr ==0)
 	{
-//		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+		printf("\n\tlo:0x%x.L (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 	} else {
 		if(lo_addr ==0) 
 		{
-//			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
+			printf("\n\thi:0x%x (seg: 0x%x phy:0x%x) : ",(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_hi_addr+table_index) );
 		} else {
-//		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
+		printf("\n\tlo:0x%x.W hi:0x%x.W (seg: 0x%x phy:0x%x) : ",(unsigned int)var_lo_offset+table_index,(unsigned int)var_hi_offset+table_index,(int)segment_offset, (int)(var_lo_addr+table_index) );
 		// re-create 32-bit unsigned long from hi and low words
 		var_final_address = (unsigned long )(((var_hi_value <<  16)) | var_lo_value );
 		}
