@@ -22,12 +22,14 @@
 #include "mlhfm.h"
 #include "table_spec.h"
 
+extern int show_diss;
+
 int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *filename_hfm, unsigned long dynamic_ROM_FILESIZE, unsigned char *rom_load_addr)
 {
 	unsigned short offset,entries;
-	int save_result;
+	int save_result,seq_found=0;
 	unsigned short val, seg;
-	int load_hfm_result,found;
+	int load_hfm_result,found,opskip;
 	ImageHandle f_hfm;
 	ImageHandle *fh_hfm = &f_hfm;
 	char ml_filename[MAX_FILENAME];
@@ -39,25 +41,47 @@ int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *
 	if (find_mlhfm != 0)
 	{
 			printf("-[ AirFlow Meter MLHFM ]----------------------------------------------------------------\n\n");
-			printf(">>> Scanning for full MLHFM Linearization Table Lookup code sequence... \n");
+			printf(">>> Scanning for full MLHFM Linearization Table Lookup code sequence... ");
 			addr = search( fh, (unsigned char *)&needle_1, (unsigned char *)&mask_1, needle_1_len, 0 );
-			if(addr == NULL) {
+			if(addr != NULL) {
+				seq_found = 1;
+				opskip = 14;
+				entries = get16(addr+4); /* using endian conversion, get XXXX offset from 'cmp r12 #XXXXh' : part of GGHFM_lookup(); */
+				if(entries > MAX_DHFM_ENTRIES) { printf("unusual entries size, defaulting to 512"); entries=DEFAULT_DHFM_ENTRIES; };
+			}
+			else {
 				printf("\nSequence not found\n\n");
-			} else {
+				seq_found = 0;
+				printf(">>> Scanning for full MLHFM Linearization Table Lookup code sequence - Variant #2... ");
+				addr = search( fh, (unsigned char *)&needle_mlhfm, (unsigned char *)&mask_mlhfm, needle_mlhfm_len, 0 );
+				if(addr != NULL) {
+					printf("\nSequence Found @ %#x\n", addr);
+					entries=DEFAULT_DHFM_ENTRIES;
+					if(show_diss) {
+						c167x_diss(addr-rom_load_addr, addr, 64);
+					}
+					seq_found=1;
+					opskip=10;
+				} else {
+					printf("\nSequence not found\n\n");				
+					seq_found = 0;
+				}
 
+			}
+		
+			if(seq_found == 1)
+			{
 				/* this offset is the machine code for the check against last entry in HFM table
 				 * if we extract it we know how many entries are in the table. 
 				 */ 
-				entries = get16(addr+4); /* using endian conversion, get XXXX offset from 'cmp r12 #XXXXh' : part of GGHFM_lookup(); */
 				/* sanity check for MAX_ENTRIES that we expect to see.. */
 				if(entries != 0)
 				{
-					if(entries > MAX_DHFM_ENTRIES) { printf("unusual entries size, defaulting to 512"); entries=DEFAULT_DHFM_ENTRIES; };
 					
 					/* this offset refers to the MAP storage for HFM linearization table
 					 * if we extract it we know precisly where our HFM  table is located in the firmware dump
                      */					
-					offset = get16(addr+14); /* using endian conversion, get XXXX offset from 'mov r5, [r4 + XXXX]' : part of GGHFM_lookup(); */
+					offset = get16(addr+opskip); /* using endian conversion, get XXXX offset from 'mov r5, [r4 + XXXX]' : part of GGHFM_lookup(); */
 
 					/* lets show the sequence we looked for and found
 					 * in hex (this is the machine code sequence for the GGHFM_DHFM_Lookup() function in the firmware image

@@ -56,6 +56,10 @@ extern const unsigned char needle_1[];
 extern unsigned int needle_1_len;
 extern const unsigned char mask_1[];
 
+extern const unsigned char needle_mlhfm[];
+extern unsigned int needle_mlhfm_len;
+extern const unsigned char mask_mlhfm[];
+
 extern const unsigned char needle_KFKHFM[];
 extern unsigned int needle_KFKHFM_len;
 extern const unsigned char mask_KFKHFM[];

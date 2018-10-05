@@ -437,6 +437,46 @@ const unsigned char mask_1[] = {
  MASK, MASK, XXXX, XXXX      // mov   r5, [r4 + 4300]
 };
 
+const unsigned char needle_mlhfm[] = {
+ 0xF2, 0xF4, XXXX, XXXX,                     //  mov     r4, base_adr
+ 0x7C, 0x14,                                 //  shr     r4, #1
+ 0x5C, 0x14,                                 //  shl     r4, #1
+ 0xD4, 0x54, XXXX, XXXX,                     //  mov     r5, [r4+MLHFM]  ; Table to linearise the Hot Wire MAF output
+ 0xF2, 0xFA, XXXX, XXXX,                     //  mov     r10, hfm_var1
+ 0xF2, 0xFB, XXXX, XXXX,                     //  mov     r11, hfm_var2
+ 0x00, 0xA5,                                 //  add     r10, r5
+ 0x12, 0xFB, XXXX, XXXX,                     //  addc    r11, hfm_offset
+};
+// 0x9D, 0x03,                                 //  jmpr    cc_NC, not_end_of_table
+// 0xE6, 0xFA, 0xFF, 0xFF,                      //  mov     r10, #0FFFFh
+// 0xF0, 0xBA,                                 //  mov     r11, r10
+// 0xF6, 0xFA, XXXX, XXXX,                     //  mov     hfm_var1, r10
+// 0xF6, 0xFB, XXXX, XXXX,                     //  mov     hfm_var2, r11
+// 0x24, 0x8F, XXXX, XXXX,                     // sub     hfm_var3, ONES
+// 0xDB, 0x00                                  // rets
+//};
+
+unsigned int needle_mlhfm_len = sizeof(needle_mlhfm);
+
+const unsigned char mask_mlhfm[] = { 
+ MASK, MASK, XXXX, XXXX,                     //  mov     r4, base_adr
+ MASK, MASK,                                 //  shr     r4, #1
+ MASK, MASK,                                 //  shl     r4, #1
+ MASK, MASK, XXXX, XXXX,                     //  mov     r5, [r4+MLHFM]  ; Table to linearise the Hot Wire MAF output
+ MASK, MASK, XXXX, XXXX,                     //  mov     r10, hfm_var1
+ MASK, MASK, XXXX, XXXX,                     //  mov     r11, hfm_var2
+ MASK, MASK,                                 //  add     r10, r5
+ MASK, MASK, XXXX, XXXX,                     //  addc    r11, hfm_offset
+ MASK, MASK,                                 //  jmpr    cc_NC, not_end_of_table
+ MASK, MASK, MASK, MASK,                     //  mov     r10, #0FFFFh
+ MASK, MASK,                                 //  mov     r11, r10
+ MASK, MASK, XXXX, XXXX,                     //  mov     hfm_var1, r10
+ MASK, MASK, XXXX, XXXX,                     //  mov     hfm_var2, r11
+ MASK, MASK, XXXX, XXXX,                     // sub     hfm_var3, ONES
+ MASK, MASK                                  // rets
+};
+
+
 #if 0
 const unsigned char needle_KFKHFM[] = 
 {
