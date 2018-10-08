@@ -38,6 +38,8 @@
 #include "fixsums.h"
 #include "find_dppx.h"
 #include "mlhfm.h"
+#include "krkte.h"
+#include "eskonf.h"
 #include "rominfo.h"
 
 // this globals will be eliminated later (fixme)
@@ -68,6 +70,8 @@ int show_cwkonfz1=0;
 int show_tvkup=0;
 int show_lrstpza=0;
 int show_lamfa=0;
+int show_krkte=0;
+int show_eskonf=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -84,7 +88,9 @@ OPTS_ENTRY opts_table[] = {
 	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n"                         },
 	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n"                  },	
 	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n"                          },
-	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n\n"                                },
+	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n"                                  },
+	{ "-ESKONF",  &show_eskonf,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show ESKONF Output Stage Configurations for left and right banks.\n"          },
+	{ "-KRKTE",   &show_krkte,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KRKTE Conv. of relative fuel mass rk into effective injection time te.\n\n"},
 	
 	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
 	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"            },
@@ -436,6 +442,12 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 
 			// check for display of lamfa table
 			check_lamfa(fh, show_lamfa);
+
+			// check for display of krkte
+			check_krkte(fh, show_krkte);
+
+			// check for display of eskonf
+			check_eskonf(fh, show_eskonf);
 
 //-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 		/*

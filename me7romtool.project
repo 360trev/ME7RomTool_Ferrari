@@ -8,6 +8,10 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="eskonf.h"/>
+    <File Name="eskonf.c"/>
+    <File Name="krkte.h"/>
+    <File Name="krkte.c"/>
     <File Name="lamfa.h"/>
     <File Name="lamfa.c"/>
     <File Name="inst_c16x.h"/>

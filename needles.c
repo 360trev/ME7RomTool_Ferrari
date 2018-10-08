@@ -103,6 +103,40 @@ unsigned char mask_LRSTPZA[] =
 
 unsigned int needle_LRSTPZA_len = sizeof(needle_LRSTPZA);
 
+
+unsigned char needle_ESKONF[] =
+{
+// 0x9A, 0x23, XXXX, XXXX,                            // jnb     word_FD46.14, Get_ESKONF_L
+ 0xE6, 0xF4, XXXX, XXXX,                            // mov     r4, #prokon_tbl_1
+ 0xF6, 0xF4, XXXX, XXXX,                            // mov     dekon_v, r4
+ 0xE6, 0xF5, XXXX, XXXX,                            // mov     r5, #ESKONF_R   ; ESKONF_R : Undefined [DEKON]
+ 0xF6, 0xF5, XXXX, XXXX,                            // mov     ram_ESKONF_p, r5
+ 0xDB, 0x00,                                        // rets
+ 0xE6, 0xF4, XXXX, XXXX,                            // mov     r4, #prokon_tbl_2
+ 0xF6, 0xF4, XXXX, XXXX,                            // mov     dekon_v, r4
+ 0xE6, 0xF5, XXXX, XXXX,                            // mov     r5, #ESKONF_L   ; ESKONF_L : Undefined [DEKON]
+ 0xF6, 0xF5, XXXX, XXXX,                            // mov     ram_ESKONF_p, r5
+ 0xDB, 0x00                                         // rets
+};
+
+unsigned char mask_ESKONF[] =
+{
+// MASK, MASK, XXXX, XXXX,                            // jnb     word_FD46.14, Get_ESKONF_L
+ MASK, MASK, XXXX, XXXX,                            // mov     r4, #prokon_tbl_1
+ MASK, MASK, XXXX, XXXX,                            // mov     dekon_v, r4
+ MASK, MASK, XXXX, XXXX,                            // mov     r5, #ESKONF_R   ; ESKONF_R : Undefined [DEKON]
+ MASK, MASK, XXXX, XXXX,                            // mov     ram_ESKONF_p, r5
+ MASK, MASK,                                        // rets
+ MASK, MASK, XXXX, XXXX,                            // mov     r4, #prokon_tbl_2
+ MASK, MASK, XXXX, XXXX,                            // mov     dekon_v, r4
+ MASK, MASK, XXXX, XXXX,                            // mov     r5, #ESKONF_L   ; ESKONF_L : Undefined [DEKON]
+ MASK, MASK, XXXX, XXXX,                            // mov     ram_ESKONF_p, r5
+ MASK, MASK                                         // rets
+};
+
+unsigned int needle_ESKONF_len = sizeof(needle_ESKONF);
+ 
+ 
  
 unsigned char needle_CWKONFZ1[] =
 {
@@ -534,6 +568,59 @@ const unsigned char mask_KFKHFM[] =
 };
 
 unsigned int needle_KFKHFM_len = sizeof(needle_KFKHFM);
+
+const unsigned char needle_KRKTE[] = 
+{
+ 0xF6, 0xF5, XXXX, XXXX,                      // mov     dpus_w, r5      ; dpus_w : Delta Druck Umgebung Saugrohr [AES DTESK]
+ 0xD7, 0x40, XXXX, XXXX,                      // extp    #206h, #1
+ 0xC2, 0xF4, XXXX, XXXX,                      // movbz   r4, KRKTE       ; KRKTE : Umrechnung relative Kraftstoffmasse rk in effektive Einspritzzeit te [AES]
+ 0x88, 0x40,                                  // mov     [-r0], r4
+ 0x88, 0x50,                                  // mov     [-r0], r5
+ 0xE6, 0xF4, XXXX, XXXX,                      // mov     r4, #FRLFSDP_CELLS ; Probable Lookup Table
+ 0xE6, 0xF5, XXXX, XXXX,                      // mov     r5, #206h
+ 0x88, 0x50,                                  // mov     [-r0], r5
+ 0x88, 0x40,                                  // mov     [-r0], r4
+ 0xD7, 0x40, XXXX, XXXX,                      // extp    #206h, #1
+ 0xF2, 0xFC, XXXX, XXXX,                      // mov     r12, FRLFSDP    ; FRLFSDP : Einspritzkorrektur bei RLFS [AES]
+ 0xE6, 0xFD, XXXX, XXXX,                      // mov     r13, #FRLFSDP_X_AXIS ; Probable Lookup Table
+ 0xE6, 0xFE, XXXX, XXXX,                      // mov     r14, #206h
+ 0xDA, 0x82, XXXX, XXXX,                      // calls   82h, Lookup_Double_Map
+ 0x08, 0x06,                                  // add     r0, #6
+ 0x98, 0x20,                                  // mov     r2, [r0+]
+ 0x1B, 0x42,                                  // mulu    r4, r2
+ 0xF2, 0xF5, 0x0E, 0xFE,                      // mov     r5, MDL
+ 0x00, 0x55,                                  // add     r5, r5
+ 0xF2, 0xF5, 0x0C, 0xFE,                      // mov     r5, MDH
+ 0x10, 0x55                                   // addc    r5, r5
+};
+
+const unsigned char mask_KRKTE[] = 
+{
+ MASK, MASK, XXXX, XXXX,                      // mov     dpus_w, r5      ; dpus_w : Delta Druck Umgebung Saugrohr [AES DTESK]
+ MASK, MASK, XXXX, XXXX,                      // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,                      // movbz   r4, KRKTE       ; KRKTE : Umrechnung relative Kraftstoffmasse rk in effektive Einspritzzeit te [AES]
+ MASK, MASK,                                  // mov     [-r0], r4
+ MASK, MASK,                                  // mov     [-r0], r5
+ MASK, MASK, XXXX, XXXX,                      // mov     r4, #FRLFSDP_CELLS ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                      // mov     r5, #206h
+ MASK, MASK,                                  // mov     [-r0], r5
+ MASK, MASK,                                  // mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                      // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,                      // mov     r12, FRLFSDP    ; FRLFSDP : Einspritzkorrektur bei RLFS [AES]
+ MASK, MASK, XXXX, XXXX,                      // mov     r13, #FRLFSDP_X_AXIS ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                      // mov     r14, #206h
+ MASK, MASK, XXXX, XXXX,                      // calls   82h, Lookup_Double_Map
+ MASK, MASK,                                  // add     r0, #6
+ MASK, MASK,                                  // mov     r2, [r0+]
+ MASK, MASK,                                  // mulu    r4, r2
+ MASK, MASK, MASK, MASK,                      // mov     r5, MDL
+ MASK, MASK,                                  // add     r5, r5
+ MASK, MASK, MASK, MASK,                      // mov     r5, MDH
+ MASK, MASK                                   // addc    r5, r5
+};
+
+unsigned int needle_KRKTE_len = sizeof(needle_KRKTE);
+
 
 const unsigned char needle_LAMFA[] = 
 {
