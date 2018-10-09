@@ -52,6 +52,26 @@ int search_rom(int mode, char *filename_rom, char *filename_hfm);
 // shared library externs
 typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);
 
+typedef struct BITFMT_TABLE {
+	char *name;
+	char *b7;
+	char *b7_desc;
+	char *b6;
+	char *b6_desc;
+	char *b5;
+	char *b5_desc;
+	char *b4;
+	char *b4_desc;
+	char *b3;
+	char *b3_desc;
+	char *b2;
+	char *b2_desc;
+	char *b1;
+	char *b1_desc;
+	char *b0;
+	char *b0_desc;
+} BITFMT_TABLE;
+
 typedef struct OPTS_ENTRY {
 	char *option_name;
 	int *option_var;

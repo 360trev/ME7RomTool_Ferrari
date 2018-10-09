@@ -135,12 +135,156 @@ unsigned char mask_ESKONF[] =
 };
 
 unsigned int needle_ESKONF_len = sizeof(needle_ESKONF);
- 
+
+
+/*                       hi            lo
+					  ---------     ---------
+	0x1    = bit  1   0000 0000 	0000 0001
+	0x2    = bit  2   0000 0000 	0000 0010
+	0x4    = bit  3   0000 0000 	0000 0100
+	0x8    = bit  4   0000 0000 	0000 1000
+
+	0x10   = bit  5   0000 0000 	0001 0000
+	0x20   = bit  6   0000 0000 	0010 0000
+	0x40   = bit  7   0000 0000 	0100 0000
+	0x80   = bit  8   0000 0000 	1000 0000
+
+	0x100  = bit  9   0000 0001 	0000 0000
+	0x200  = bit 10   0000 0010 	0000 0000
+	0x400  = bit 11   0000 0100 	0000 0000
+	0x800  = bit 12   0000 1000 	0000 0000
+
+	0x1000 = bit 13   0001 0000 	0000 0000
+	0x2000 = bit 14   0010 0000 	0000 0000
+	0x4000 = bit 15   0100 0000 	0000 0000
+	0x8000 = bit 16   1000 0000 	0000 0000
+
+*/ 
+#if 0
+unsigned int needle_PROKON_len = sizeof(needle_PROKON);
+{
+	// bits for CWKONFZ1
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	69 81                                   andb    rl4, #1			// bitmask for B_4wd
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 63                             bmov    word_FD00.3, USR0
+
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	69 82                                   andb    rl4, #2			// bitmask for B_mt
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 66                             bmov    word_FD02.6, USR0
+
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	69 84                                   andb    rl4, #4			// bitmask for B_cvt
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 64                             bmov    word_FD00.4, USR0
+
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	67 F8 08 00                             andb    rl4, #8			// bitmask for B_f1getr
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 68                             bmov    word_FD00.8, USR0
+
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	67 F8 40 00                             andb    rl4, #40h		// bitmask for b_asrfz
+	3A 88 88 36                             bmovn   USR0, Z			
+	4A 88 00 62                             bmov    word_FD00.2, USR0
+
+	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
+	67 F8 80 00                             andb    rl4, #80h 		// bitmask for b_
+	3A 88 88 36                             bmovn   USR0, Z	
+	4A 88 00 60                             bmov    word_FD00.0, USR0
+
+
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	69 81                                   andb    rl4, #1
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 64                             bmov    word_FD02.4, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	69 82                                   andb    rl4, #2
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 62                             bmov    word_FD02.2, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	69 84                                   andb    rl4, #4
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 6E                             bmov    word_FD00.14, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	67 F8 08 00                             andb    rl4, #8
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 60                             bmov    word_FD02.0, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	67 F8 10 00                             andb    rl4, #10h
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 65                             bmov    word_FD02.5, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	67 F8 20 00                             andb    rl4, #20h ; ' '
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 63                             bmov    word_FD02.3, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	67 F8 40 00                             andb    rl4, #40h ; '@'
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 6F                             bmov    word_FD00.15, USR0
+
+	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+	67 F8 80 00                             andb    rl4, #80h ; 'Ç'
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 61                             bmov    word_FD02.1, USR0
+
+	F3 F8 24 00                             movb    rl4, CWTF       ; CWTF : Codewort fnr Konfiguration Temperaturfnhler [PROKON]
+	69 81                                   andb    rl4, #1
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 6A                             bmov    word_FD02.10, USR0
+
+	D7 40 06 02                             extp    #206h, #1
+	F3 F8 91 01                             movb    rl4, CWTKAT     ; CWTKAT :  [PROKON]
+	69 81                                   andb    rl4, #1
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 6B                             bmov    word_FD02.11, USR0
+
+	F3 F8 1C 00                             movb    rl4, CWERFIL    ; CWERFIL : Codewort zur Auswahl Filtervar. fnr die Ausgabe von AS.-Fehler an das Scan Tool [PROKON]
+	F7 F8 00 8A                             movb    cw_erfil, rl4   ; cw_erfil : Status Codewort Filtervariante fnr Ausgabe der AS-Fehler an GST [PROKON DTIP TCSORT]
+	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+	69 A1                                   andb    rl5, #1
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 6B                             bmov    word_FD00.11, USR0
+
+	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+	69 A2                                   andb    rl5, #2
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 6C                             bmov    word_FD00.12, USR0
+	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+	69 A4                                   andb    rl5, #4
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 69                             bmov    word_FD02.9, USR0
+
+	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+	69 A1                                   andb    rl5, #1
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 6C                             bmov    word_FD02.12, USR0
+	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+	69 A2                                   andb    rl5, #2
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 01 6D                             bmov    word_FD02.13, USR0
+
+	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+	69 A4                                   andb    rl5, #4
+	3A 88 88 36                             bmovn   USR0, Z
+	4A 88 00 61                             bmov    word_FD00.1, USR0
+	C2 F4 18 00                             movbz   r4, CDSWE       ; CDSWE : Codewort DSWE abschalten (EURO-Codierung), CD..=0 -> keine Diagnose [PROKON]
+
+};
+#endif
  
  
 unsigned char needle_CWKONFZ1[] =
 {
- 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONFZ1
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONFZ1				<---- CWKONFZ1
  0x69, 0x81,                          // andb    rl4, #1
  0x3A, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
  0x4A, 0x88, XXXX, XXXX,              // bmov    CWKONFZ1_0.3, USR0
@@ -160,23 +304,137 @@ unsigned char needle_CWKONFZ1[] =
  0x3A, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
  0x4A, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.8, USR0
 
-};
-
-#if 0
  0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONFZ1
  0x67, 0xF8, 0x40, 0x00,              // andb    rl4, #40h
- 0x3A, 0x88, 0x88, 0x36,              // bmovn   USR0, Z
- 0x4A, 0x88, 0x00, 0x62,              // bmov    CWKONFZ1_0.2, USR0
+ 0x3A, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.2, USR0
 
  0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONFZ1
  0x67, 0xF8, 0x80, 0x00,              // andb    rl4, #80h
- 0x3A, 0x88, 0x88, 0x36,              // bmovn   USR0, Z
- 0x4A, 0x88, 0x00, 0x60,              // bmov    CWKONFZ1_0.0, USR0
+ 0x3A, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.0, USR0
 
- 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS
+//----------------------------------------------------------------------------------------------------------------------------------
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
  0x69, 0x81,                          // andb    rl4, #1
- 0x3A, 0x88, 0x88, 0x36,              // bmovn   USR0, Z
- 0x4A, 0x88, 0x01, 0x64,              // bmov    CWKONNLS_0.4, USR0
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.4, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x69, 0x82,                          // andb    rl4, #2
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.2, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x69, 0x84,                          // andb    rl4, #4
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.14, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x67, 0xF8, 0x08, 0x00,              // andb    rl4, #8
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.0, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x67, 0xF8, 0x10, 0x00,              // andb    rl4, #10h
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.5, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x67, 0xF8, 0x20, 0x00,              // andb    rl4, #20h ; ' '
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.3, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x67, 0xF8, 0x40, 0x00,              // andb    rl4, #40h ; '@'
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.15, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ 0x67, 0xF8, 0x80, 0x00,              // andb    rl4, #80h ; 'Ç'
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.1, USR0
+
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWTF       ; CWTF : Codewort fnr Konfiguration Temperaturfnhler [PROKON]
+ 0x69, 0x81,                          // andb    rl4, #1
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.10, USR0
+};
+#if 0
+
+ 0xD7, 0x40, XXXX, XXXX,              // extp    #206h, #1
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWTKAT     ; CWTKAT :  [PROKON]
+ 0x69, 0x81,                          // andb    rl4, #1
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.11, USR0
+#endif
+
+unsigned char needle_CWKONABG[] =
+{
+ 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWERFIL    ; CWERFIL : Codewort zur Auswahl Filtervar. fnr die Ausgabe von AS.-Fehler an das Scan Tool [PROKON]
+ 0xF7, 0xF8, XXXX, XXXX,              // movb    cw_erfil, rl4   ; cw_erfil : Status Codewort Filtervariante fnr Ausgabe der AS-Fehler an GST [PROKON DTIP TCSORT]
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ 0x69, 0xA1,                          // andb    rl5, #1
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.11, USR0
+
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ 0x69, 0xA2,                          // andb    rl5, #2
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.12, USR0
+
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ 0x69, 0xA4,                          // andb    rl5, #4
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.9, USR0
+
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ 0x69, 0xA1,                          // andb    rl5, #1
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.12, USR0
+};
+
+unsigned char mask_CWKONABG[] =
+{
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWERFIL    ; CWERFIL : Codewort zur Auswahl Filtervar. fnr die Ausgabe von AS.-Fehler an das Scan Tool [PROKON]
+ MASK, MASK, XXXX, XXXX,              // movb    cw_erfil, rl4   ; cw_erfil : Status Codewort Filtervariante fnr Ausgabe der AS-Fehler an GST [PROKON DTIP TCSORT]
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.11, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #2
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.12, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #4
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.9, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ MASK, MASK,                          // andb    rl5, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.12, USR0
+};
+
+unsigned int needle_CWKONABG_len = sizeof(needle_CWKONABG);
+
+
+
+#if 0
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ 0x69, 0xA2,                          // andb    rl5, #2
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.13, USR0
+
+ 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ 0x69, 0xA4,                          // andb    rl5, #4
+ 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
+ 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.1, USR0
+ 0xC2, 0xF4, XXXX, XXXX               // movbz   r4, CDSWE       ; CDSWE : Codewort DSWE abschalten (EURO-Codierung), CD..=0 -> keine Diagnose [PROKON]
+
 };
 #endif
 
@@ -204,18 +462,97 @@ unsigned char mask_CWKONFZ1[] =
 
  MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONFZ1
  MASK, MASK, MASK, MASK,              // andb    rl4, #40h
- MASK, MASK, MASK, MASK,              // bmovn   USR0, Z
- MASK, MASK, MASK, MASK,              // bmov    CWKONFZ1_0.2, USR0
+ MASK, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.8, USR0
 
  MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONFZ1
  MASK, MASK, MASK, MASK,              // andb    rl4, #80h
- MASK, MASK, MASK, MASK,              // bmovn   USR0, Z
- MASK, MASK, MASK, MASK,              // bmov    CWKONFZ1_0.0, USR0
+ MASK, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.8, USR0
 
- MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
  MASK, MASK,                          // andb    rl4, #1
- MASK, MASK, MASK, MASK,              // bmovn   USR0, Z
- MASK, MASK, MASK, MASK,		 	  // bmov    CWKONNLS_0.4, USR0
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.4, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK,                          // andb    rl4, #2
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.2, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK,                          // andb    rl4, #4
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.14, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK, MASK, MASK,              // andb    rl4, #8
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.0, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK, MASK, MASK,              // andb    rl4, #10h
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.5, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK, MASK, MASK,              // andb    rl4, #20h ; ' '
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.3, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK, MASK, MASK,               // andb    rl4, #40h ; '@'
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.15, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
+ MASK, MASK, MASK, MASK,             // andb    rl4, #80h ; 'Ç'
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.1, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWTF       ; CWTF : Codewort fnr Konfiguration Temperaturfnhler [PROKON]
+ MASK, MASK,                          // andb    rl4, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.10, USR0
+
+ MASK, MASK, XXXX, XXXX,              // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWTKAT     ; CWTKAT :  [PROKON]
+ MASK, MASK,                          // andb    rl4, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.11, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl4, CWERFIL    ; CWERFIL : Codewort zur Auswahl Filtervar. fnr die Ausgabe von AS.-Fehler an das Scan Tool [PROKON]
+ MASK, MASK, XXXX, XXXX,              // movb    cw_erfil, rl4   ; cw_erfil : Status Codewort Filtervariante fnr Ausgabe der AS-Fehler an GST [PROKON DTIP TCSORT]
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.11, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #2
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.12, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
+ MASK, MASK,                          // andb    rl5, #4
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.9, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ MASK, MASK,                          // andb    rl5, #1
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.12, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ MASK, MASK,                           // andb    rl5, #2
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD02.13, USR0
+
+ MASK, MASK, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
+ MASK, MASK,                          // andb    rl5, #4
+ MASK, MASK, XXXX, XXXX,              // bmovn   USR0, Z
+ MASK, MASK, XXXX, XXXX,              // bmov    word_FD00.1, USR0
+ MASK, MASK, XXXX, XXXX               // movbz   r4, CDSWE       ; CDSWE : Codewort DSWE abschalten (EURO-Codierung), CD..=0 -> keine Diagnose [PROKON]
 
 };
 
@@ -384,6 +721,97 @@ const unsigned char meinfo_mask[] = {
 // MASK, MASK,  		                                // rets
 };
 
+ 
+ 
+ 
+unsigned char needle_NWS[] =
+{ 
+ 0xE6, 0xFC, XXXX, XXXX,                     // mov     r12, #KFNWWL    ; +2 Val : Map fur Kennfeld Nockenwellensteuerung im Warmlauf
+ 0xE6, 0xFD, XXXX, XXXX,                     // mov     r13, #206h      ; +4 Seg : 
+ 0xC2, 0xFE, XXXX, XXXX,                     // movbz   r14, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ 0xC2, 0xFF, XXXX, XXXX,                     // movbz   r15, rlsnwtm    ; rlsnwtm : rel.Sollfnllung zur Adressierung von KFNWS gewichtet mit tmot [NWS]
+ 0xDA, XXXX, XXXX, XXXX,                     // calls   82h, Lookup_map ; References a lookupM table
+ 0xF7, 0xF8, XXXX, XXXX,                     // movb    nwskf, rl4      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ 0x0D, XXXX,                                 // jmpr    cc_UC, nws_func
+ 0xE6, 0xFC, XXXX, XXXX,                     // mov     r12, #KFNW      ; Map fur Kennfeld Nockenwellensteuerung 
+ 0xE6, 0xFD, XXXX, XXXX,                     // mov     r13, #206h
+ 0xC2, 0xFE, XXXX, XXXX,                     // movbz   r14, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ 0xC2, 0xFF, XXXX, XXXX,                     // movbz   r15, rlsnwtm    ; rlsnwtm : rel.Sollfnllung zur Adressierung von KFNWS gewichtet mit tmot [NWS]
+ 0xDA, XXXX, XXXX, XXXX,                     // calls   82h, Lookup_map ; References a lookupM table
+ 0xF7, 0xF8, XXXX, XXXX,                     // movb    nwskf, rl4      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ 0xF3, 0xF8, XXXX, XXXX,                     // movb    rl4, nwskf      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ 0xD7, 0x40, XXXX, XXXX,                     // extp    #206h, #1
+ 0x43, 0xF8, XXXX, XXXX                      // cmpb    rl4, NWSOS      ; NWSOS : Nockenwellensteuerung obere Schaltschwelle [NWS]
+};
+
+unsigned char mask_NWS[] =
+{ 
+ MASK, MASK, XXXX, XXXX,                     // mov     r12, #KFNWWL    ; Map fur Kennfeld Nockenwellensteuerung im Warmlauf
+ MASK, MASK, XXXX, XXXX,                     // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,                     // movbz   r14, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,                     // movbz   r15, rlsnwtm    ; rlsnwtm : rel.Sollfnllung zur Adressierung von KFNWS gewichtet mit tmot [NWS]
+ MASK, XXXX, XXXX, XXXX,                     // calls   82h, Lookup_map ; References a lookupM table
+ MASK, MASK, XXXX, XXXX,                     // movb    nwskf, rl4      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ MASK, XXXX,                                 // jmpr    cc_UC, nws_func
+ MASK, MASK, XXXX, XXXX,                     // mov     r12, #KFNW      ; Map fur Kennfeld Nockenwellensteuerung 
+ MASK, MASK, XXXX, XXXX,                     // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,                     // movbz   r14, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,                     // movbz   r15, rlsnwtm    ; rlsnwtm : rel.Sollfnllung zur Adressierung von KFNWS gewichtet mit tmot [NWS]
+ MASK, XXXX, XXXX, XXXX,                     // calls   82h, Lookup_map ; References a lookupM table
+ MASK, MASK, XXXX, XXXX,                     // movb    nwskf, rl4      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ MASK, MASK, XXXX, XXXX,                     // movb    rl4, nwskf      ; nwskf : Ergebniss der KFNW-Interpolation [NWS]
+ MASK, MASK, XXXX, XXXX,                     // extp    #206h, #1
+ MASK, MASK, XXXX, XXXX,                     // cmpb    rl4, NWSOS      ; NWSOS : Nockenwellensteuerung obere Schaltschwelle [NWS]
+};
+
+unsigned int needle_NWS_len = sizeof(needle_NWS);
+ 
+
+unsigned char needle_PROKON[] =
+{
+ 0x4A, 0x88, XXXX, XXXX,                      // bmov    word_FD02.14, USR0
+ 0xF3, 0xF8, XXXX, XXXX,                      // movb    rl4, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ 0x43, 0xF8, XXXX, XXXX,                      // cmpb    rl4, NSWO1      ; NSWO1 : Drehzahlschwelle 1 Umschaltg. zur Rechenzeitersparnis [PROKON]
+ 0xFD, 0x02,                                  // jmpr    cc_ULE, loc_xxxxx
+ 0x6F, 0x88,                                  // bset    USR0
+ 0x0D, 0x01,                                  // jmpr    cc_UC, loc_xxxxx
+ 0x6E, 0x88,                                  // bclr    USR0
+ 0x4A, 0x88, XXXX, XXXX,                      // bmov    word_FD02.7, USR0
+ 0xF3, 0xF8, XXXX, XXXX,                      // movb    rl4, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ 0x43, 0xF8, XXXX, XXXX,                      // cmpb    rl4, NSWO2      ; NSWO2 : Drehzahlschwelle 2 Umschaltg. zur Rechenzeitersparnis [PROKON]
+ 0xFD, 0x02,                                  // jmpr    cc_ULE, loc_xxxxx
+ 0x6F, 0x88,                                  // bset    USR0
+ 0x0D, 0x01                                   // jmpr    cc_UC, loc_xxxxx
+};
+
+unsigned char mask_PROKON[] =
+{ 
+ MASK, MASK, XXXX, XXXX,                      // bmov    word_FD02.14, USR0
+ MASK, MASK, XXXX, XXXX,                      // movb    rl4, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,                      // cmpb    rl4, NSWO1      ; NSWO1 : Drehzahlschwelle 1 Umschaltg. zur Rechenzeitersparnis [PROKON]
+ MASK, MASK,                                  // jmpr    cc_ULE, loc_xxxxx
+ MASK, MASK,                                  // bset    USR0
+ MASK, MASK,                                  // jmpr    cc_UC, loc_xxxxx
+ MASK, MASK,                                  // bclr    USR0
+ MASK, MASK, XXXX, XXXX,                      // bmov    word_FD02.7, USR0
+ MASK, MASK, XXXX, XXXX,                      // movb    rl4, nmot       ; nmot : Motordrehzahl [BGNMOT ACIFI ADVE AEVABU AGK ARMD ATEV ATM BBFGR BBSAWE BBSTT BGAGR BGMSZS BGPU BGTABST BGTEMPK BGTEV DECJ DFFT DFFTK DFPM DKATLRS DKRNT DKRS DLSU DMDDLU DMDFON DMDLU DMDLUA DMDMIL DMDSTP DMDUE DNWS DTKAT DVFZ ESGRU ESNST ESSTT ESUK ESUKAS ESVW ESWL F1MD FUEDK FUEREG GGDPG GGDVE GGHFM GGKS GGLSU GGPED GK KOS KRDY KRKE KRRA KWP2000F KWPIOC LAKH LAMBTS LAMFAW LLRBB LLRNS LLRRM LRA LRAEB LRS LRSEB LRSHK LRSKA MDBAS MDFUE MDKOL MDMAX MDVERB MDZUL NWS PROKON RKTI RUNTIME SLS SSTB STADAP SU TEB UFNC VMAXMD WANWKW WFS ZUE ZUESZ ZWGRU ZWMIN ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,                      // cmpb    rl4, NSWO2      ; NSWO2 : Drehzahlschwelle 2 Umschaltg. zur Rechenzeitersparnis [PROKON]
+ MASK, MASK,                                  // jmpr    cc_ULE, loc_xxxxx
+ MASK, MASK,                                  // bset    USR0
+ MASK, MASK                                   // jmpr    cc_UC, loc_xxxxx
+};
+ 
+unsigned int needle_PROKON_len = sizeof(needle_PROKON);
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
 //
 // this is the needle (masked) for the GGHFM_Lookup() function

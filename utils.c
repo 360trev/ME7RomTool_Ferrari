@@ -564,6 +564,22 @@ void show_hex_dump(const void *adrs, unsigned long nbytes, void *offset)
     printf("\n");
 }
 
+void dump_bitfmt_table(BITFMT_TABLE *p, unsigned char value, char *s_bin)
+{
+	printf("                   7 6 5 4 3 2 1 0  bits\n");
+	printf("                   ---------------\n");
+	printf("%-12.12s %#-2.2X  %s\n", p->name, (unsigned char)value, s_bin );
+	printf("                   | | | | | | | |\n");
+	printf("                   | | | | | | | +--- %-9.9s   : %s\n", p->b7, p->b7_desc);
+	printf("                   | | | | | | +----- %-9.9s   : %s\n", p->b6, p->b6_desc);
+	printf("                   | | | | | +------- %-9.9s   : %s\n", p->b5, p->b5_desc);
+	printf("                   | | | | +--------- %-9.9s   : %s\n", p->b4, p->b4_desc);
+	printf("                   | | | +----------- %-9.9s   : %s\n", p->b3, p->b3_desc);
+	printf("                   | | +------------- %-9.9s   : %s\n", p->b2, p->b2_desc);
+	printf("                   | +--------------- %-9.9s   : %s\n", p->b1, p->b1_desc);
+	printf("                   +----------------- %-9.9s   : %s\n\n", p->b0, p->b0_desc);
+}
+
 void dump_bin(char *dst, int val, int numbits)
 {
     int mask = (1 << numbits);

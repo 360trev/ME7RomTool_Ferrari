@@ -67,47 +67,59 @@ int show_pukans=0;
 int show_kfkhfm=0;
 int show_diss=0;
 int show_cwkonfz1=0;
+int show_cwkonls=0;
+int show_cwkonabg=0;
+int show_kfnw=0;
+int show_kfnwwl=0;
 int show_tvkup=0;
 int show_lrstpza=0;
 int show_lamfa=0;
 int show_krkte=0;
 int show_eskonf=0;
+int show_nswo1=0;
+int show_nswo2=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
 OPTS_ENTRY opts_table[] = {
 //	  option      field to set        value to set  argument   req'd or not
-	{ "-romfile", &got_romfile,       OPTION_SET,   &rom_name,  MANDATORY, "Try to identify map in the firmware. You *must* specify a romfile!\n"                             },
-	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY, "Optional filename for saving romfiles after they have been modified (overrides default name)\n"   },
-	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL,  "If a checksummed file needs saving overwrite it anyway even if it already exists.\n\n"            },
+	{ "-romfile", &got_romfile,       OPTION_SET,   &rom_name,  MANDATORY, "Try to identify map in the firmware. You *must* specify a romfile!\n"                               },
+	{ "-outfile", &got_outfile,       OPTION_SET,   &save_name, MANDATORY, "Optional filename for saving romfiles after they have been modified (overrides default name)\n"     },
+	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL,  "If a checksummed file needs saving overwrite it anyway even if it already exists.\n\n"              },
 
-	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                    },
-	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n"                             },
-	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                   },
-	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                              },
-	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n"                         },
-	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n"                  },	
-	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n"                          },
-	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n"                                  },
-	{ "-ESKONF",  &show_eskonf,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show ESKONF Output Stage Configurations for left and right banks.\n"          },
+	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                      },
+	{ "-KFPED",   &pedal,             OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED/KFPEDR pedal torque request tables.\n"                               },
+	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                     },
+	{ "-PUKANS",  &show_pukans,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show PUKANS Air Temperature correction table.\n"                                },
+	{ "-TVKUP",   &show_tvkup,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show TVKUP Delay time for B_kupplv (clutch pedal).\n"                           },
+	{ "-LRSTPZA", &show_lrstpza,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LRSTPZA Period duration of the LRS forced amplitude.\n"                    },	
+	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n"                                    },
+	{ "-KFNW",    &show_kfnw,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNW Characteristic map for variable camshaft control table.\n"            },
+	{ "-KFNWWL",  &show_kfnwwl,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNWWL Characteristic map for variable camshaft control during warm-up.\n" },
+	{ "-NSWO1",   &show_nswo1,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show NSWO1 Speed threshold 1 switching speed for calculating time savings.\n"   },
+	{ "-NSWO2",   &show_nswo2,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show NSWO2 Speed threshold 2 switching speed for calculating time savings.\n"   },
+	{ "-CWKONABG",&show_cwkonabg,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONLS Codeword for conﬁguration of exhaust emission treatment.\n"        },
+	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n"                            },
+	{ "-CWKONLS", &show_cwkonls,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONABG Codeword for conﬁguration of lambda sensors .\n"                  },
+	{ "-ESKONF",  &show_eskonf,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show ESKONF Output Stage Configurations for left and right banks.\n"            },
 	{ "-KRKTE",   &show_krkte,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KRKTE Conv. of relative fuel mass rk into effective injection time te.\n\n"},
 	
-	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"      },
-	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"            },
-	{ "-ihfm",    &find_mlhfm,        HFM_IDENTIFY, &hfm_name,  OPTIONAL,  "Try to identify mlhfm table in specified romfile.\n"                                              },
-	{ "-maps",    &find_x_axis_maps,  OPTION_SET,   0,          OPTIONAL,  "Try to identify map in the firmware (Experimental!).\n"                                           },
-	{ "-seedkey", &seedkey_patch,     OPTION_SET,   0,          OPTIONAL,  "Try to identify seedkey function and patch login so any login password works.\n\n"                },
+	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"        },
+	{ "-whfm",    &find_mlhfm,        HFM_WRITING,  &hfm_name,  MANDATORY, "Write hfm into specified romfile. A Mandatory <hfm bin filename> must be specified.\n"              },
+	{ "-ihfm",    &find_mlhfm,        HFM_IDENTIFY, &hfm_name,  OPTIONAL,  "Try to identify mlhfm table in specified romfile.\n"                                                },
+	{ "-maps",    &find_x_axis_maps,  OPTION_SET,   0,          OPTIONAL,  "Try to identify map in the firmware (Experimental!).\n"                                             },
+	{ "-seedkey", &seedkey_patch,     OPTION_SET,   0,          OPTIONAL,  "Try to identify seedkey function and patch login so any login password works.\n\n"                  },
 
-	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL,  "Try to correct checksums, if corrected it saves appending '_corrected.bin'.\n\n"                  },
+	{ "-fixsums", &correct_checksums, OPTION_SET,   0,          OPTIONAL,  "Try to correct checksums, if corrected it saves appending '_corrected.bin'.\n\n"                    },
 
-	{ "-noinfo",  &show_rominfo,      OPTION_CLR,   0,          OPTIONAL,  "Disable rom information report scanning (on as default).\n"                                       },
-	{ "-hex",     &show_hex,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
-	{ "-adr",     &show_adr,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                    },
-	{ "-dbg",     &full_debug,        OPTION_SET,   0,          OPTIONAL,  "Show -phy (on as default), -hex and -adr in map table output.\n"                                  },
-	{ "-diss",    &show_diss,         OPTION_SET,   0,          OPTIONAL,  "Show C167 diassembly traces of discovered needles to aid in debugging (Experimental!).\n"         },
-	{ "-nophy",   &show_phy,          OPTION_CLR,   0,          OPTIONAL,  "Override default behaviour and dont show formatted values in map table output.\n\n"               },
+	{ "-noinfo",  &show_rominfo,      OPTION_CLR,   0,          OPTIONAL,  "Disable rom information report scanning (on as default).\n"                                         },
+	{ "-hex",     &show_hex,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                      },
+	{ "-adr",     &show_adr,          OPTION_SET,   0,          OPTIONAL,  "Also show non formatted raw hex values in map table output.\n"                                      },
+	{ "-dbg",     &full_debug,        OPTION_SET,   0,          OPTIONAL,  "Show -phy (on as default), -hex and -adr in map table output.\n"                                    },
+	{ "-diss",    &show_diss,         OPTION_SET,   0,          OPTIONAL,  "Show C167 diassembly traces of discovered needles to aid in debugging (Experimental!).\n"           },
+	{ "-nophy",   &show_phy,          OPTION_CLR,   0,          OPTIONAL,  "Override default behaviour and dont show formatted values in map table output.\n\n"                 },
 	
-	{ "?",        &show_help,         OPTION_SET,   0,          OPTIONAL,  "Show this help.\n\n"                     },
+	{ "?",        &show_help,         OPTION_SET,   0,          OPTIONAL,  "Show this help.\n\n"                                                                                },
 };
 	
 int show_usage(char *argv[], int argc)
@@ -380,74 +392,31 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 				}
 			}
 
-//-[ CWKONFZ1 [Codeword for configuration of vehicle] ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
-			if(show_cwkonfz1 == OPTION_SET) 
-			{
-				char s_bin[64] = { "0 0 0 0 0 0 0 0" };
-				unsigned char *cwkonfz1_adr;
-				unsigned long val_adr;
-				unsigned char cwkonfz1;
-				
-				printf("\n>>> Scanning for CWKONFZ1 [Codeword for configuration of vehicle]\n");
-				addr = search( fh, (unsigned char *)&needle_CWKONFZ1, (unsigned char *)&mask_CWKONFZ1, needle_CWKONFZ1_len, 0 );
-				if(addr != NULL) {
-					printf("\nfound at offset=0x%x ",(int)(addr-rom_load_addr) );
-					val = get16((unsigned char *)addr+2);
-					cwkonfz1_adr  = ((dpp1_value-1)*SEGMENT_SIZE);
-					cwkonfz1_adr += val;
-					val_adr       = (unsigned long)cwkonfz1_adr;		// derive phyiscal address from offset and segment
-					val_adr      &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-					
-					printf("CWKONFZ1 @ ADR:%#x\n\n", cwkonfz1_adr );
-//					printf("val_adr=%#x\n\n",(long)val_adr );
-					if(show_diss) { 
-						printf("Dumping ...\n");
-						c167x_diss(addr-rom_load_addr, addr, needle_CWKONFZ1_len+4); 
-					}
-					
-					cwkonfz1 = (unsigned char)*(rom_load_addr+val_adr);
-					dump_bin(s_bin, cwkonfz1, 8 );	// show string formatted as binary
+			// check for display of cwkonfz1 - configuration of vehicle
+			check_cwkonfz(fh, show_cwkonfz1);
+			// check for display of cwkonls  - conﬁguration lambda sensor
+			check_cwkonls(fh, show_cwkonls);
+			// check for display of cwkonabg - configuration of exhaust emissions treatment
+			check_cwkonabg(fh, show_cwkonabg);
 
-					printf("               7 6 5 4 3 2 1 0  bits\n");
-					printf("               ---------------\n");
-					printf("CWKONFZ1: %#-2.2X %s\n", (unsigned char)cwkonfz1, s_bin );
-//					printf("               0 1 0 0 0 0 1 0  (0x%#-2.2X as binary)\n",cwkonfz1 );
-					printf("               | | | | | | | |\n");
-					printf("               | | | | | | | +--- b_autget : Condition automatic gearbox\n");
-					printf("               | | | | | | +----- b_mt     : Condition manual gearbox\n");
-					printf("               | | | | | +------- b_cvt    : Condition continuously variable transmission\n");
-					printf("               | | | | +--------- b_f1getr : Condition F1-gearbox (electronic clutch control)\n");
-					printf("               | | | +-----------          : Condition not defined for Ferrari's\n");
-					printf("               | | +-------------          : Condition not defined for Ferrari's\n");
-					printf("               | +--------------- b_asrfz  : Condition for ASR in the automobile\n");
-					printf("               +----------------- b_4wd    : Condition 4 wheel drive\n\n");
-					
-					printf("This ROM is configured for : ");
-					if(s_bin[8] == '1') { 
-						printf("F1-AMT Gearbox with a Transmission Control Unit.\n"); 
-					} else {
-						printf("H-Gate Manual gearbox.\n"); 
-					}
-					
-				} else {
-					printf("not found.\n");
-					
-				}
-			}				
 			// check for display of pukans table
 			check_pukans(fh, show_pukans);
-
 			// check for display of kfkhfm table
 			check_kfkhfm(fh, show_kfkhfm);
-
 			// check for display of lamfa table
 			check_lamfa(fh, show_lamfa);
+			// check for display of kfnw table - variable camshaft control
+			check_kfnw(fh, show_kfnw,   1);
+			check_kfnw(fh, show_kfnwwl, 0);
 
 			// check for display of krkte
 			check_krkte(fh, show_krkte);
-
 			// check for display of eskonf
 			check_eskonf(fh, show_eskonf);
+
+			// check for display of nswo
+			check_nswo(fh, show_nswo1,  1);
+			check_nswo(fh, show_nswo2,  2);
 
 //-[ KFAGK Table : Exhaust Valve Opening #1 ] ---------------------------------------------------------------------------------------------------------------------------------------------------------
 		/*

@@ -76,6 +76,18 @@ extern unsigned char needle_CWKONFZ1[];
 extern unsigned int needle_CWKONFZ1_len;
 extern unsigned char mask_CWKONFZ1[];
 
+extern unsigned char needle_CWKONABG[];
+extern unsigned int needle_CWKONABG_len;
+extern unsigned char mask_CWKONABG[];
+
+extern unsigned char needle_NWS[];
+extern unsigned int needle_NWS_len;
+extern unsigned char mask_NWS[];
+
+extern unsigned char needle_PROKON[];
+extern unsigned int needle_PROKON_len;
+extern unsigned char mask_PROKON[];
+
 extern unsigned char needle_ESKONF[];
 extern unsigned int needle_ESKONF_len;
 extern unsigned char mask_ESKONF[];

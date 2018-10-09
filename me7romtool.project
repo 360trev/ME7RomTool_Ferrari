@@ -8,6 +8,16 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="nswo.h"/>
+    <File Name="nswo.c"/>
+    <File Name="kfnw.h"/>
+    <File Name="kfnw.c"/>
+    <File Name="cwkonabg.h"/>
+    <File Name="cwkonabg.c"/>
+    <File Name="cwkonls.h"/>
+    <File Name="cwkonls.c"/>
+    <File Name="cwkonfz1.h"/>
+    <File Name="cwkonfz1.c"/>
     <File Name="eskonf.h"/>
     <File Name="eskonf.c"/>
     <File Name="krkte.h"/>

@@ -125,7 +125,7 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 			table_data_offset        += (y_num*td->y_axis_nwidth);		// y axis header data
 
 			cell_data_start           = table_start + table_data_offset;
-			printf("Defaulting to implide cell_data start address at %p\n", cell_data_start);
+//			printf("Defaulting to implide cell_data start address at %p\n", cell_data_start);
 
 		} else {
 			table_data_offset  = 0;
