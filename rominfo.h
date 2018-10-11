@@ -54,6 +54,7 @@
  * 
  */
 extern unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
+extern int check_rominfo(ImageHandle *fh, int skip);
 extern int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsigned char *offset_addr);
 
 #endif

@@ -31,6 +31,8 @@ extern TABLE_DEF PUKANS_table;
 extern TABLE_DEF LAMFA_table;
 extern TABLE_DEF KFNW_table;
 extern TABLE_DEF KFNWWL_table;
+extern TABLE_DEF KFZW_table;
+extern TABLE_DEF KFZW2_table;
 
 extern TABLE_DEF XXXX_table;
 extern TABLE_DEF XXXXB_table;

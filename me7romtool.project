@@ -8,6 +8,20 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="multimap.h"/>
+    <File Name="multimap.c"/>
+    <File Name="kfped.h"/>
+    <File Name="kfped.c"/>
+    <File Name="kfagk.h"/>
+    <File Name="kfagk.c"/>
+    <File Name="seedkey.h"/>
+    <File Name="seedkey.c"/>
+    <File Name="lrstpza.h"/>
+    <File Name="lrstpza.c"/>
+    <File Name="tvkup.h"/>
+    <File Name="tvkup.c"/>
+    <File Name="kfzw.h"/>
+    <File Name="kfzw.c"/>
     <File Name="nswo.h"/>
     <File Name="nswo.c"/>
     <File Name="kfnw.h"/>

@@ -84,6 +84,18 @@ extern unsigned char needle_NWS[];
 extern unsigned int needle_NWS_len;
 extern unsigned char mask_NWS[];
 
+extern unsigned char needle_ZWGRU[];
+extern unsigned int needle_ZWGRU_len;
+extern unsigned char mask_ZWGRU[];
+
+extern unsigned char needle_BBSAWE[];
+extern unsigned int needle_BBSAWE_len;
+extern unsigned char mask_BBSAWE[];
+	
+extern unsigned char needle_SSTB[];
+extern unsigned int needle_SSTB_len;
+extern unsigned char mask_SSTB[];
+
 extern unsigned char needle_PROKON[];
 extern unsigned int needle_PROKON_len;
 extern unsigned char mask_PROKON[];

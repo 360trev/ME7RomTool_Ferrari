@@ -22,6 +22,37 @@
 #include "find_dppx.h"
 #include "needles.h"
 
+extern unsigned dpp0_value;
+extern unsigned dpp1_value;
+extern unsigned dpp2_value;
+extern unsigned dpp3_value;
+extern int show_diss;
+
+int check_dppx(ImageHandle *fh, int skip)
+{
+	unsigned char *addr;
+	unsigned char *rom_load_addr = fh->d.p;
+	int found = 0;
+	if(skip == 0) return found;		
+
+	printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
+
+	printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
+	addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, needle_dpp_len, 0 );
+	if(addr == NULL) {
+		printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
+		exit(0);	// force quit program
+
+	} else {
+		printf("\nmain rom dppX byte sequence #1 found at offset=0x%x.\n",(int)(addr-rom_load_addr) );
+		// do the work of dppx extraction...
+		dpp0_value = extract_dppx(addr,0);
+		dpp1_value = extract_dppx(addr,1);
+		dpp2_value = extract_dppx(addr,2);
+		dpp3_value = extract_dppx(addr,3);
+	}
+}
+
 unsigned long extract_dppx(unsigned char *addr, int i)
 {
 	unsigned long value;

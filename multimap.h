@@ -19,11 +19,16 @@
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
    IN THE SOFTWARE.
 */
-#ifndef _LAMFA_SUPPORT_H
-#define _LAMFA_SUPPORT_H
+#ifndef _MULTIMAP_SUPPORT_H
+#define _MULTIMAP_SUPPORT_H
 #include "utils.h"
 #include "needles.h"
 
-int check_lamfa(ImageHandle *fh, int skip);
+int check_multimap(ImageHandle *fh, int skip);
+
+extern unsigned long dynamic_ROM_FILESIZE;
+
+#define MAX_TABLE_SEARCHES    	 4000
+#define MAX_SEARCH_BACK_BYTES    3500
 
 #endif

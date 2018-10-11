@@ -804,14 +804,299 @@ unsigned char mask_PROKON[] =
 unsigned int needle_PROKON_len = sizeof(needle_PROKON);
  
  
+unsigned char needle_SSTB[] = 
+{
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_8100F4
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, rl
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da 
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_srl08dmub, r4 ; esst_srl08dmub :  [SSTB DMDDLU DMDLU DMDLUA DMDSTP]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_8100C2
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, nmot    
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_snm12feub ; esst_snm12feub :  [SSTB BGMSZS FUEDK MDFUE]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm12feub, r4 ; esst_snm12feub :  [SSTB BGMSZS FUEDK MDFUE]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_8100B5
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, nmot
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_snm12esub ; esst_snm12esub :  [SSTB ESWL ZWWL]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm12esub, r4 ; esst_snm12esub :  [SSTB ESWL ZWWL]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_810106
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, rl         ; rl : relative Luftfnllung 
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_srl12esub ; esst_srl12esub :  [SSTB ESWL]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_srl12esub, r4 ; esst_srl12esub :  [SSTB ESWL]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #Y_AXIS_12_CELLS
+	0xF2, 0xFD, XXXX, XXXX,    // mov     r13, anztib_w   ; anztib_w : ti-EinspritzzShler mit Begrenzung [ESNST ESWL MDFUE SSTB]
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_san12esuw ; esst_san12esuw :  [SSTB ESNST]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, sub_7642
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_san12esuw, r4 ; esst_san12esuw :  [SSTB ESNST]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #Y_AXIS_CELLS
+	0xF2, 0xFD, XXXX, XXXX,    // mov     r13, nmot_w     ; nmot_w :
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_snm16opuw ; esst_snm16opuw :  [SSTB MDBAS MDMAX]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, sub_7642
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm16opuw, r4 ; esst_snm16opuw :  [SSTB MDBAS MDMAX]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_8100A3
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, nmot       ; nmot 
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm08opub, r4 ; esst_snm08opub :  [SSTB MDKOL MDZUL]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_810162
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, wped       ; wped : Normierter Fahrpedalwinkel [GGPED ADVE BGDVE DFFT KOS MDKOL MDZUL NMAXMD RUNTIME SSTB]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_swp08opub, r4 ; esst_swp08opub :  [SSTB MDZUL]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #Y_AXIS_UPM16_NUM <--------------------------------------------- *This is Y_AXIS fields for swp08opub (as referenced by KFZW table!)
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, nmot       ; nmot 
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	0xDA, XXXX, XXXX, XXXX,     // calls   0, rom_cpy_lookup
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm16zuub, r4 ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #KFZW_Y_AXIS
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, rl         ;
+	0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_srl12zuub, r4 ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #byte_81008A
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, nmot       ;
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_snm06lsub, r4 ; esst_snm06lsub :  [SSTB LRS]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #byte_8100ED
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, rl         
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_srl06lsub, r4 ; esst_srl06lsub :  [SSTB LRS]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_810064
+	0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, kstaa      ; kstaa : Aktueller Startmengenadaptionsfaktor [STADAP ESNST ESSTT SSTB]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da 
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_sks06esub, r4 ; esst_sks06esub :  [SSTB ESNST]
+	0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #unk_812B12
+	0xF2, 0xFD, XXXX, XXXX,    // mov     r13, mkfanb_w   ; mkfanb_w : Kupplungsmoment aus begrenztem Fahrerwunsch [MDFAW SSTB]
+	0xDA, XXXX, XXXX, XXXX,    // calls   0, sub_7590
+
+	0xF6, 0xF4, XXXX, XXXX,    // mov     esst_smk206mdsw, r4 ; esst_smk206mdsw :  [SSTB MDFAW]
+	0xF3, 0xF8, XXXX, XXXX,    // movb    rl4, gangi      ; gangi : Ist-Gang [BBGANG AGK ARMD BBFGR BBSAWE F1MD FGRAUS FGRMD KOS KWPDATR LLRBB MDFAW MDMIN MDWAN NMAXMD SSTB ZWMIN]
+	0x3D, XXXX,                // jmpr    cc_NZ, loc_82B184
+
+	0xF6, 0x8E, XXXX, XXXX,    // mov     esst_sga08mdub, ZEROS ; esst_sga08mdub :  [SSTB MDFAW NMAXMD]
+	0xDB, 0x00                 // rets
+};
+
+unsigned char mask_SSTB[] = 
+{
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SRL08DMUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, rl
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da 
+	MASK, MASK, XXXX, XXXX,    // mov     esst_srl08dmub, r4 ; esst_srl08dmub :  [SSTB DMDDLU DMDLU DMDLUA DMDSTP]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM12FEUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, nmot    
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_snm12feub ; esst_snm12feub :  [SSTB BGMSZS FUEDK MDFUE]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm12feub, r4 ; esst_snm12feub :  [SSTB BGMSZS FUEDK MDFUE]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM12ESUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, nmot
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_snm12esub ; esst_snm12esub :  [SSTB ESWL ZWWL]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm12esub, r4 ; esst_snm12esub :  [SSTB ESWL ZWWL]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SRL12ESUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, rl         ; rl : relative Luftfnllung 
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_srl12esub ; esst_srl12esub :  [SSTB ESWL]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+	MASK, MASK, XXXX, XXXX,    // mov     esst_srl12esub, r4 ; esst_srl12esub :  [SSTB ESWL]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SAN12ESUW
+	MASK, MASK, XXXX, XXXX,    // mov     r13, anztib_w   ; anztib_w : ti-EinspritzzShler mit Begrenzung [ESNST ESWL MDFUE SSTB]
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_san12esuw ; esst_san12esuw :  [SSTB ESNST]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, sub_7642
+	MASK, MASK, XXXX, XXXX,    // mov     esst_san12esuw, r4 ; esst_san12esuw :  [SSTB ESNST]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM16OPUW
+	MASK, MASK, XXXX, XXXX,    // mov     r13, nmot_w     ; nmot_w :
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_snm16opuw ; esst_snm16opuw :  [SSTB MDBAS MDMAX]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, sub_7642
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm16opuw, r4 ; esst_snm16opuw :  [SSTB MDBAS MDMAX]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM08OPUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, nmot       ; nmot 
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm08opub, r4 ; esst_snm08opub :  [SSTB MDKOL MDZUL]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SWP08OPUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, wped       ; wped : Normierter Fahrpedalwinkel [GGPED ADVE BGDVE DFFT KOS MDKOL MDZUL NMAXMD RUNTIME SSTB]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+	MASK, MASK, XXXX, XXXX,    // mov     esst_swp08opub, r4 ; esst_swp08opub :  [SSTB MDZUL]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM16ZUUB <--------------------------------------------- *This is Y_AXIS fields for SNM16ZUUB (as referenced by KFZW table!)
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, nmot       ; nmot 
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm16zuub, r4 ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SRL12ZUUB <--------------------------------------------- *This is X_AXIS fild for SRL12ZUBB (as referenced by KFZW table!)
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, rl         ;
+	MASK, MASK, XXXX, XXXX,    // mov     r14, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+	MASK, MASK, XXXX, XXXX,    // mov     esst_srl12zuub, r4 ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SNM06LSUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, nmot       ;
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+	MASK, MASK, XXXX, XXXX,    // mov     esst_snm06lsub, r4 ; esst_snm06lsub :  [SSTB LRS]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SRL06LSUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, rl         
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da ; 1D Lookup Word Arguments usually CTS related
+	MASK, MASK, XXXX, XXXX,    // mov     esst_srl06lsub, r4 ; esst_srl06lsub :  [SSTB LRS]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SKS06ESUB
+	MASK, MASK, XXXX, XXXX,    // movbz   r13, kstaa      ; kstaa : Aktueller Startmengenadaptionsfaktor [STADAP ESNST ESSTT SSTB]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, WLookup1D_CTS_74da 
+	MASK, MASK, XXXX, XXXX,    // mov     esst_sks06esub, r4 ; esst_sks06esub :  [SSTB ESNST]
+
+	MASK, MASK, XXXX, XXXX,    // mov     r12, #SMK206MDSW
+	MASK, MASK, XXXX, XXXX,    // mov     r13, mkfanb_w   ; mkfanb_w : Kupplungsmoment aus begrenztem Fahrerwunsch [MDFAW SSTB]
+	MASK, XXXX, XXXX, XXXX,    // calls   0, sub_7590
+	MASK, MASK, XXXX, XXXX,    // mov     esst_smk206mdsw, r4 ; esst_smk206mdsw :  [SSTB MDFAW]
+
+	MASK, MASK, XXXX, XXXX,    // movb    rl4, gangi      ; gangi : Ist-Gang [BBGANG AGK ARMD BBFGR BBSAWE F1MD FGRAUS FGRMD KOS KWPDATR LLRBB MDFAW MDMIN MDWAN NMAXMD SSTB ZWMIN]
+	MASK, XXXX,                // jmpr    cc_NZ, loc_ZZZZ
+
+	MASK, MASK, XXXX, XXXX,    // mov     esst_sga08mdub, ZEROS ; esst_sga08mdub :  [SSTB MDFAW NMAXMD]
+	MASK, MASK                 // rets
+};
+ 
+unsigned int needle_SSTB_len = sizeof(needle_SSTB);
  
  
  
  
  
  
+unsigned char needle_ZWGRU[] = {
+	0x88, 0x90,                                   // mov     [-r0], r9
+	0x88, 0x70,                                   // mov     [-r0], r7
+	0x88, 0x60,                                   // mov     [-r0], r6
+	0x28, 0x02,                                   // sub     r0, #2
+	0xF3, 0xF8, XXXX, XXXX,                       // movb    rl4, fnwue
+	0x47, 0xF8, 0xFF, 0x00,                       // cmpb    rl4, #0FFh
+	0x3D, 0x10,                                   // jmpr    cc_NZ, lookup_KFZW
+	0xE6, 0xFC, XXXX, XXXX,                       // mov     r12, #KFZW2_CELLS ; KFZW2 : Znndwinkelkennfeld Variante 2 [ZWGRU]
+	0xE6, 0xFD, XXXX, XXXX,                       // mov     r13, #SRL12ZUUB
+	0xF2, 0xFE, XXXX, XXXX,                       // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	0xF2, 0xFF, XXXX, XXXX,                       // mov     r15, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	0xDA, XXXX, XXXX, XXXX,                       // calls   0, Map_Lookup2D ; 2D Lookup Word Arguments usually Spark related
+	0xF1, 0xE8,                                   // movb    rl7, rl4
+	0xF7, 0xF8, XXXX, XXXX,                       // movb    zwnws, rl4      ; zwnws : Grundznndwinkel mit Berncksichtigung von Nockenwellensteuerung [ZWGRU]
+	0xE1, 0x0C,                                   // movb    rl6, #0
+	0xEA, XXXX, XXXX, XXXX,                       // jmpa    cc_UC, loc_XXXX
+	0xF3, 0xF8, XXXX, XXXX,                       // movb    rl4, fnwue      ; fnwue ZWGRU]
+	0x3D, 0x0F,                                   // jmpr    cc_NZ, lookup_KFZW2
+	0xE6, 0xFC, XXXX, XXXX,                       // mov     r12, #KFZW_CELLS ; KFZW : Znndwinkelkennfeld [ZWGRU]
+	0xE6, 0xFD, XXXX, XXXX,                       // mov     r13, #SRL12ZUUB
+	0xF2, 0xFE, XXXX, XXXX,                       // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	0xF2, 0xFF, XXXX, XXXX,                       // mov     r15, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	0xDA, XXXX, XXXX, XXXX,                       // calls   0, Map_Lookup2D ; 2D Lookup Word Arguments usually Spark related
+	0xF1, 0xC8,                                   // movb    rl6, rl4
+	0xF7, 0xF8, XXXX, XXXX,                       // movb    zwnws, rl4      ; zwnws : Grundznndwinkel mit Berncksichtigung von Nockenwellensteuerung [ZWGRU]
+	0xE1, 0x0E                                    // movb    rl7, #0
+};
+
+unsigned char mask_ZWGRU[] = {
+	MASK, MASK,                                   // mov     [-r0], r9
+	MASK, MASK,                                   // mov     [-r0], r7
+	MASK, MASK,                                   // mov     [-r0], r6
+	MASK, MASK,                                   // sub     r0, #2
+	MASK, MASK, XXXX, XXXX,                       // movb    rl4, fnwue
+	MASK, MASK, MASK, MASK,                       // cmpb    rl4, #0FFh
+	MASK, MASK,                                   // jmpr    cc_NZ, lookup_KFZW
+	MASK, MASK, XXXX, XXXX,                       // mov     r12, #KFZW2_CELLS ; KFZW2 : Znndwinkelkennfeld Variante 2 [ZWGRU]
+	MASK, MASK, XXXX, XXXX,                       // mov     r13, #SRL12ZUUB
+	MASK, MASK, XXXX, XXXX,                       // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, MASK, XXXX, XXXX,                       // mov     r15, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, XXXX, XXXX, XXXX,                       // calls   0, Map_Lookup2D ; 2D Lookup Word Arguments usually Spark related
+	MASK, MASK,                                   // movb    rl7, rl4
+	MASK, MASK, XXXX, XXXX,                       // movb    zwnws, rl4      ; zwnws : Grundznndwinkel mit Berncksichtigung von Nockenwellensteuerung [ZWGRU]
+	MASK, MASK,                                   // movb    rl6, #0
+	MASK, XXXX, XXXX, XXXX,                       // jmpa    cc_UC, loc_XXXX
+	MASK, MASK, XXXX, XXXX,                       // movb    rl4, fnwue      ; fnwue ZWGRU]
+	MASK, MASK,                                   // jmpr    cc_NZ, lookup_KFZW2
+	MASK, MASK, XXXX, XXXX,                       // mov     r12, #KFZW_CELLS ; KFZW : Znndwinkelkennfeld [ZWGRU]
+	MASK, MASK, XXXX, XXXX,                       // mov     r13, #SRL12ZUUB
+	MASK, MASK, XXXX, XXXX,                       // mov     r14, esst_snm16zuub ; esst_snm16zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, MASK, XXXX, XXXX,                       // mov     r15, esst_srl12zuub ; esst_srl12zuub :  [SSTB ZWGRU ZWMIN]
+	MASK, XXXX, XXXX, XXXX,                       // calls   0, Map_Lookup2D ; 2D Lookup Word Arguments usually Spark related
+	MASK, MASK,                                   // movb    rl6, rl4
+	MASK, MASK, XXXX, XXXX,                       // movb    zwnws, rl4      ; zwnws : Grundznndwinkel mit Berncksichtigung von Nockenwellensteuerung [ZWGRU]
+	MASK, MASK                                    // movb    rl7, #0
+};
+
+unsigned int needle_ZWGRU_len = sizeof(needle_ZWGRU);
+
+
+unsigned char needle_BBSAWE[] = {
+ 0xF2, 0xF4, XXXX, XXXX,                    //  mov     r4, esst_snm08__ub ; esst_snm08__ub :  [SSTB BBSAWE ZUE]
+ 0x88, 0x40,                                //  mov     [-r0], r4
+ 0xF2, 0xF5, XXXX, XXXX,                    //  mov     r5, esst_stm05saub ; esst_stm05saub :  [SSTB BBSAWE]
+ 0x88, 0x50,                                //  mov     [-r0], r5
+ 0xE6, 0xFC, XXXX, XXXX,                    //  mov     r12, #KFTVSA    ; Probable Lookup Table       +14
+ 0xE6, 0xFD, XXXX, XXXX,                    //  mov     r13, #206h      ; Segment                     +18
+ 0xE6, 0xFE, XXXX, XXXX,                    //  mov     r14, #SNM08__UB ; Probable Lookup Table       +22
+ 0xE6, 0xFF, XXXX, XXXX,                    //  mov     r15, #204h      ; Segment                     +26
+ 0xDA, XXXX, XXXX, XXXX,                    //  calls   82h, Lookup_map ; References a lookupZ table
+ 0x08, 0x04,                                //  add     r0, #4
+ 0xF7, 0xF8, XXXX, XXXX,                    //  movb    byte_XXXX, rl4
+ 0xF2, 0xF4, XXXX, XXXX,                    //  mov     r4, esst_snm08__ub ; esst_snm08__ub :  [SSTB BBSAWE ZUE]
+ 0x88, 0x40,                                //  mov     [-r0], r4
+ 0xF2, 0xF5, XXXX, XXXX,                    //  mov     r5, esst_stm05saub ; esst_stm05saub :  [SSTB BBSAWE]
+ 0x88, 0x50,                                //  mov     [-r0], r5
+ 0xE6, 0xFC, XXXX, XXXX,                    //  mov     r12, #KFTVSA0   ; Probable Lookup Table       +52
+ 0xE6, 0xFD, XXXX, XXXX,                    //  mov     r13, #206h
+ 0xE6, 0xFE, XXXX, XXXX,                    //  mov     r14, #SNM08__UB ; 
+ 0xE6, 0xFF, XXXX, XXXX,                    //  mov     r15, #204h
+ 0xDA, 0x82, XXXX, XXXX,                    //  calls   82h, Lookup_map ; References a lookupZ table
+ 0x08, 0x04,                                //  add     r0, #4
+ 0xF7, 0xF8, XXXX, XXXX,                    //  movb    byte_XXXX, rl4
+ 0xDB, 0x00                                 //  rets
+};
+
+unsigned char mask_BBSAWE[] = {
+ MASK, MASK, XXXX, XXXX,                    //  mov     r4, esst_snm08__ub ; esst_snm08__ub :  [SSTB BBSAWE ZUE]
+ MASK, MASK,                                //  mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                    //  mov     r5, esst_stm05saub ; esst_stm05saub :  [SSTB BBSAWE]
+ MASK, MASK,                                //  mov     [-r0], r5
+ MASK, MASK, XXXX, XXXX,                    //  mov     r12, #KFTVSA    ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                    //  mov     r13, #206h      ; Segment
+ MASK, MASK, XXXX, XXXX,                    //  mov     r14, #SNM08__UB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                    //  mov     r15, #204h      ; Segment
+ MASK, XXXX, XXXX, XXXX,                    //  calls   82h, LookupZ_829d9c ; References a lookupZ table
+ MASK, MASK,                                //  add     r0, #4
+ MASK, MASK, XXXX, XXXX,                    //  movb    byte_3821B2, rl4
+ MASK, MASK, XXXX, XXXX,                    //  mov     r4, esst_snm08__ub ; esst_snm08__ub :  [SSTB BBSAWE ZUE]
+ MASK, MASK,                                //  mov     [-r0], r4
+ MASK, MASK, XXXX, XXXX,                    //  mov     r5, esst_stm05saub ; esst_stm05saub :  [SSTB BBSAWE]
+ MASK, MASK,                                //  mov     [-r0], r5
+ MASK, MASK, XXXX, XXXX,                    //  mov     r12, #KFTVSA0   ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                    //  mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,                    //  mov     r14, #SNM08__UB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,                    //  mov     r15, #204h
+ MASK, MASK, XXXX, XXXX,                    //  calls   82h, LookupZ_829d9c ; References a lookupZ table
+ MASK, MASK,                                //  add     r0, #4
+ MASK, MASK, XXXX, XXXX,                    //  movb    byte_3821B4, rl4
+ MASK, MASK                                 //  rets
+};
  
- 
+unsigned int needle_BBSAWE_len = sizeof(needle_BBSAWE);
  
 //
 // this is the needle (masked) for the GGHFM_Lookup() function

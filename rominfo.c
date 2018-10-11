@@ -32,6 +32,28 @@ static char engid_str[]   = { "OTHERID" };
 static char dummy_str[]   = { "TESTID"  };
 extern int show_diss;
 
+int check_rominfo(ImageHandle *fh, int skip)
+{
+	int found = 0, byte_offset;
+	char *rom_load_addr = fh->d.p;
+//	char *addr;
+	unsigned int rom_skip_bytes;
+	
+	if(skip == 0) return found;		
+	
+	printf("\n-[ Basic Firmware information ]-----------------------------------------------------------------\n\n");
+	printf(">>> Scanning for ROM String Table Byte Sequence #1 [info] \n");
+
+	rom_skip_bytes = ROM_START_OFFSET;			// start point for search in loaded rom buffer	
+	byte_offset    = search_offset( rom_load_addr+rom_skip_bytes , (fh->len)-rom_skip_bytes , (unsigned char *)&meinfo_needle, (unsigned char *)&meinfo_mask, meinfo_needle_len);
+	if(byte_offset != NULL) 
+	{
+		printf("\nfound needle at offset=%#x",(int)(rom_skip_bytes  + byte_offset));
+		// try to determine information from rom scan
+		get_rominfo(fh,  (rom_load_addr + rom_skip_bytes  + byte_offset) , byte_offset, rom_load_addr);
+	}
+}
+
 int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsigned char *offset_addr)
 {
 	int i;

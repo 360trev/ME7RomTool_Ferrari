@@ -61,6 +61,8 @@ typedef struct TABLE_DEF {
 		ENTRY_DEF cell;				// cell format entry
 } TABLE_DEF;
 
+#define FULL_OVERRIDE	1
+
 #define UBYTE 1
 #define UWORD 2
 

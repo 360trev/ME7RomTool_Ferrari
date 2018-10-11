@@ -71,7 +71,7 @@ int check_nswo(ImageHandle *fh, int skip, int mode)
 			printf("\n");
 			nswo2_val      = *(unsigned char *)(rom_load_addr + val_adr);
 			printf("NSWO2: (0x%-2.2x) %-5.1f Upm : Speed threshold 2 switching speed for calculating time savings", nswo2_val, (double)nswo2_val*40.0 );
-		}
+			}
 		
 		printf("\n");
 
