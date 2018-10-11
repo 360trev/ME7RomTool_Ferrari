@@ -490,6 +490,27 @@ char matchString(char * test, char * pWildText, char bCaseSensitive)  // By defa
         return bMatch;
 }
 
+void translate_seg(MPTR *mp, char *name, unsigned char *rom_load_addr, int seg, int val)
+{
+	unsigned long val_adr;
+	char *adr;
+	mp->name       = name;
+	mp->val        = val;
+	mp->seg        = seg;
+	adr 		   = seg*SEGMENT_SIZE+val;
+	val_adr        = (unsigned long)adr;			// derive phyiscal address from offset and segment
+	mp->rom        = (unsigned char *)val_adr;
+	val_adr       &= ~(ROM_1MB_MASK);				// convert physical address to a rom file offset we can easily work with.
+	mp->ram        = (unsigned char *)rom_load_addr + val_adr;
+	mp->off        = val_adr;
+}
+
+void show_seg(MPTR *mp)
+{
+	printf("%-8.8s @ ROM:%#x RAM:%#x File-Offset:%#x (seg=0x%-4.4X val=0x%-4.4X)\n", mp->name, mp->rom, mp->ram, mp->off, mp->seg, mp->val );
+}
+
+
 unsigned short get16(unsigned char *s) {
 	if(s == 0) return 0;
 	return (unsigned short)( ((s[1] <<  8)) | ((s[0]                                   )) ); 

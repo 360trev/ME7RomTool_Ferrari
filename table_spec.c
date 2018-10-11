@@ -622,3 +622,101 @@ TABLE_DEF KFZW2_table = { //
 		.conv_name = "rel_uw_b200",		// conversion name
 	}
 };
+
+TABLE_DEF KFTVSA_table = { //
+	// basic table information
+	.table_name = "KFTVSA",  .table_desc = "Delay time for fuel cutoff", 
+
+	// table data byte widths
+	.x_num_nwidth  = UBYTE, .y_num_nwidth  = UBYTE,		// number of x/y item fields width
+    .x_axis_nwidth = UBYTE, .y_axis_nwidth = UBYTE,		// x/y axis widths
+	.cell_nwidth   = UBYTE,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis (stm05saub)",			// field name
+		.nwidth    = UBYTE,				// field type
+		.otype     = 'd',	 			// conversion value
+		.conv      = "1.333333", 	    // conversion value for huamn readable
+		.conv2     = "48",				// additional field
+		.desc      = "Grad C",  		// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = "nmot_ub_q40",		// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis (snm08__ub)",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "0.025", 		    // conversion value for huamn readable
+		.desc      = "Upm", 			// conversion description
+		.fmt_PHY   = " %-6.0f",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = "rel_uw_q0p75",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UBYTE,				// field type
+		.otype     = '/',				// conversion type (override default / to use *)
+		.conv      = "100", 			// conversion value
+		.desc      = "secs", 			// conversion description
+		.fmt_PHY   = " %7.2f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = "rel_uw_b200",		// conversion name
+	}
+};
+
+TABLE_DEF KFTVSA0_table = { //
+	// basic table information
+	.table_name = "KFTVSA0",  .table_desc = "Delay time for fuel cutoff", 
+
+	// table data byte widths
+	.x_num_nwidth  = UBYTE, .y_num_nwidth  = UBYTE,		// number of x/y item fields width
+    .x_axis_nwidth = UBYTE, .y_axis_nwidth = UBYTE,		// x/y axis widths
+	.cell_nwidth   = UBYTE,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis (stm05saub)",			// field name
+		.nwidth    = UBYTE,				// field type
+		.otype     = 'd',	 			// conversion value
+		.conv      = "1.333333", 	    // conversion value for huamn readable
+		.conv2     = "48",				// additional field
+		.desc      = "Grad C",  		// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = "nmot_ub_q40",		// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis (snm08__ub)",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "0.025", 		    // conversion value for huamn readable
+		.desc      = "Upm", 			// conversion description
+		.fmt_PHY   = " %-6.0f",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = "rel_uw_q0p75",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UBYTE,				// field type
+		.otype     = '/',				// conversion type (override default / to use *)
+		.conv      = "100", 			// conversion value
+		.desc      = "secs", 			// conversion description
+		.fmt_PHY   = " %7.2f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = "rel_uw_b200",		// conversion name
+	}
+};

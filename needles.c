@@ -978,9 +978,107 @@ unsigned char mask_SSTB[] =
  
 unsigned int needle_SSTB_len = sizeof(needle_SSTB);
  
- 
- 
- 
+
+unsigned char needle_SSTB2[] = 
+{
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STM06__UB ; Probable Lookup Table
+ 0xE6, 0xFD, XXXX, XXXX,    // mov     r13, #206h
+ 0xC2, 0xFE, XXXX, XXXX,    // movbz   r14, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_stm06__ub, r4 ; esst_stm06__ub :  [SSTB MDFUE MDVER ZWMIN]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STM05SAUB ; Probable Lookup Table   <------------------- Y-Axis for KFTVSA
+ 0xE6, 0xFD, XXXX, XXXX,    // mov     r13, #206h
+ 0xC2, 0xFE, XXXX, XXXX,    // movbz   r14, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_stm05saub, r4 ; esst_stm05saub :  [SSTB BBSAWE]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STW06MDUB ; Probable Lookup Table
+ 0xE6, 0xFD, XXXX, XXXX,    // mov     r13, #206h
+ 0xC2, 0xFE, XXXX, XXXX,    // movbz   r14, twan       ; twan : +ltemperatur im Wandler [DUMMY MDWAN SSTB]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_stw06mdub, r4 ; esst_stw06mdub :  [SSTB MDWAN]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STS12ESUB ; Probable Lookup Table
+ 0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, tmst       ; tmst : Motorstarttemperatur [GGTFM ATM BBKHZ BBSAWE BBTEGA BGTABST DDST DKATLRS DSLSLRS DTESK ESNST ESSTT ESUK ESVW ESWL KOS LLRNS LRSEB SLS SSTB STADAP ZWMIN ZWSTT]
+ 0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_sts12esub ; esst_sts12esub :  [SSTB ESNST ESWL]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_sts12esub, r4 ; esst_sts12esub :  [SSTB ESNST ESWL]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STA06ESUB ; Probable Lookup Table
+ 0xE6, 0xFD, XXXX, XXXX,    // mov     r13, #206h
+ 0xC2, 0xFE, XXXX, XXXX,    // movbz   r14, tans       ; tans : Ansaugluft - Temperatur [GGTFA AGK ATM BBKHZ BBSTT BBTEGA BGAGR BGDVE BGTABST BGTEMPK DFFT DFPM DLLR DSLSLRS DTESK ESNST ESSTT GGHFM GGTFM HLSU KOS KWPDATR LLRNS LRAEB LRSEB MDVERB MDZUL NWS SLS SSTB SU TEB UFEING ZWSTT ZWWL]
+ 0xF2, 0xFF, XXXX, XXXX,    // mov     r15, esst_sta06esub ; esst_sta06esub :  [SSTB ESNST]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   82h, LookupE_82956c ; References a lookupE table
+#if 0
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_sta06esub, r4 ; esst_sta06esub :  [SSTB ESNST]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STM12ESUB
+ 0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ 0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_stm12esub ; esst_stm12esub :  [SSTB ESWL LAMKO ZWWL]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_stm12esub, r4 ; esst_stm12esub :  [SSTB ESWL LAMKO ZWWL]
+ 0xE6, 0xFC, XXXX, XXXX,    // mov     r12, #STA12WLUB
+ 0xC2, 0xFD, XXXX, XXXX,    // movbz   r13, tans       ; tans : Ansaugluft - Temperatur [GGTFA AGK ATM BBKHZ BBSTT BBTEGA BGAGR BGDVE BGTABST BGTEMPK DFFT DFPM DLLR DSLSLRS DTESK ESNST ESSTT GGHFM GGTFM HLSU KOS KWPDATR LLRNS LRAEB LRSEB MDVERB MDZUL NWS SLS SSTB SU TEB UFEING ZWSTT ZWWL]
+ 0xF2, 0xFE, XXXX, XXXX,    // mov     r14, esst_sta12wlub ; esst_sta12wlub :  [SSTB ZWWL]
+ 0xDA, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ 0xF6, 0xF4, XXXX, XXXX,    // mov     esst_sta12wlub, r4 ; esst_sta12wlub :  [SSTB ZWWL]
+ 0xDB, 0x00                 // rets 
+#endif
+};
+
+//stm05saub
+
+unsigned char mask_SSTB2[] = 
+{
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STM06__UB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,    // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,    // movbz   r14, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ MASK, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_stm06__ub, r4 ; esst_stm06__ub :  [SSTB MDFUE MDVER ZWMIN]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STM05SAUB ; Probable Lookup Table <---------------------------
+ MASK, MASK, XXXX, XXXX,    // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,    // movbz   r14, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ MASK, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_stm05saub, r4 ; esst_stm05saub :  [SSTB BBSAWE]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STW06MDUB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,    // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,    // movbz   r14, twan       ; twan : +ltemperatur im Wandler [DUMMY MDWAN SSTB]
+ MASK, XXXX, XXXX, XXXX,    // calls   82h, LookupO_829b88 ; References a lookupO table
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_stw06mdub, r4 ; esst_stw06mdub :  [SSTB MDWAN]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STS12ESUB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,    // movbz   r13, tmst       ; tmst : Motorstarttemperatur [GGTFM ATM BBKHZ BBSAWE BBTEGA BGTABST DDST DKATLRS DSLSLRS DTESK ESNST ESSTT ESUK ESVW ESWL KOS LLRNS LRSEB SLS SSTB STADAP ZWMIN ZWSTT]
+ MASK, MASK, XXXX, XXXX,    // mov     r14, esst_sts12esub ; esst_sts12esub :  [SSTB ESNST ESWL]
+ MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_sts12esub, r4 ; esst_sts12esub :  [SSTB ESNST ESWL]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STA06ESUB ; Probable Lookup Table
+ MASK, MASK, XXXX, XXXX,    // mov     r13, #206h
+ MASK, MASK, XXXX, XXXX,    // movbz   r14, tans       ; tans : Ansaugluft - Temperatur [GGTFA AGK ATM BBKHZ BBSTT BBTEGA BGAGR BGDVE BGTABST BGTEMPK DFFT DFPM DLLR DSLSLRS DTESK ESNST ESSTT GGHFM GGTFM HLSU KOS KWPDATR LLRNS LRAEB LRSEB MDVERB MDZUL NWS SLS SSTB SU TEB UFEING ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,    // mov     r15, esst_sta06esub ; esst_sta06esub :  [SSTB ESNST]
+ MASK, XXXX, XXXX, XXXX,    // calls   82h, LookupE_82956c ; References a lookupE table
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_sta06esub, r4 ; esst_sta06esub :  [SSTB ESNST]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STM12ESUB
+ MASK, MASK, XXXX, XXXX,    // movbz   r13, tmot       ; tmot : Motor-Temperatur [GGTFM ACIFI AGK ARMD ATM BBKHZ BBSAWE BBSTT BGDVE BGTEMPK DFFT DFFTK DFPM DLLR DLSH DMDLU DMDMIL DNWS DSLSLRS DTKAT DVFZ DWUC ESUK ESUKAS ESVW ESWL GGDPG GGKS HLSHK HLSU KHMD KOS KRDY KRRA KWPDATR LAKH LAMKO LLRBB LLRMR LLRNS LLRRM LRAEB LRS LRSEB MDBAS MDFAW MDFUE MDMIN MDRED MDVER MDVERAD MDZUL NMAXMD NWS SLS SSTB STADAP SU TEB TEBEB UFEING WANWKW ZUESZ ZWMIN ZWWL]
+ MASK, MASK, XXXX, XXXX,    // mov     r14, esst_stm12esub ; esst_stm12esub :  [SSTB ESWL LAMKO ZWWL]
+ MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_stm12esub, r4 ; esst_stm12esub :  [SSTB ESWL LAMKO ZWWL]
+ MASK, MASK, XXXX, XXXX,    // mov     r12, #STA12WLUB
+ MASK, MASK, XXXX, XXXX,    // movbz   r13, tans       ; tans : Ansaugluft - Temperatur [GGTFA AGK ATM BBKHZ BBSTT BBTEGA BGAGR BGDVE BGTABST BGTEMPK DFFT DFPM DLLR DSLSLRS DTESK ESNST ESSTT GGHFM GGTFM HLSU KOS KWPDATR LLRNS LRAEB LRSEB MDVERB MDZUL NWS SLS SSTB SU TEB UFEING ZWSTT ZWWL]
+ MASK, MASK, XXXX, XXXX,    // mov     r14, esst_sta12wlub ; esst_sta12wlub :  [SSTB ZWWL]
+ MASK, XXXX, XXXX, XXXX,    // calls   0, rom_cpy_lookup
+
+ MASK, MASK, XXXX, XXXX,    // mov     esst_sta12wlub, r4 ; esst_sta12wlub :  [SSTB ZWWL]
+ MASK, MASK                 // rets 
+};
+  
+unsigned int needle_SSTB2_len = sizeof(needle_SSTB2); 
  
  
 unsigned char needle_ZWGRU[] = {

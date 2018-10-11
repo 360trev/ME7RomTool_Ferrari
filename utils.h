@@ -47,7 +47,18 @@
 #define ROM_BASE_ADDRESS     0x800000
 #define ROM_1MB_MASK         0xFFF00000
 
+typedef struct MPTR {
+	unsigned char *name;		// name of field
+	unsigned char *rom;			// rom address
+	unsigned char *ram;			// ram address
+	unsigned char *off;			// file offset
+	int val, seg;
+} MPTR;
+
 int search_rom(int mode, char *filename_rom, char *filename_hfm);
+void translate_seg(MPTR *mp, char *name, unsigned char *rom_load_addr, int seg, int val);
+void show_seg(MPTR *mp);
+
 
 // shared library externs
 typedef uint32_t (*calc_crc32)(uint32_t crc, const void *buf, size_t size);

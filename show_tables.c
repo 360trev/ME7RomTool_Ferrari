@@ -78,12 +78,14 @@ void show_entry_def(ENTRY_DEF *entry, int nwidth)
 static unsigned char *X_AXIS_START=0;
 static unsigned char *Y_AXIS_START=0;
 static unsigned char *CELL_START=0;
+static TABLE_DEF *TBL_DEF=0;
 
-int set_table_overrides(char *x_axis, char* y_axis, char *cells)
+int set_table_overrides(char *x_axis, char* y_axis, char *cells, TABLE_DEF *td)
 {
 	X_AXIS_START = x_axis;
 	Y_AXIS_START = y_axis;
 	CELL_START   = cells;
+	TBL_DEF      = td;
 }
 
 int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val, unsigned long seg, TABLE_DEF *td, unsigned long cell_table_override_adr)
@@ -99,7 +101,7 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 	table_start2               &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 	table_start2              += offset_addr;
 	
-	double double_cell_value, conv_value;
+	double double_x_axis_value, double_cell_value, conv_value, conv2_value;
 	int    i,x_pos,y_pos;
 	int    entry;
 	int    integer_cell_value;
@@ -195,7 +197,24 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 						printf("\n            PHY| ");
 						for(i=0;i<x_num;i++) {
 							entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
-							printf(td->x_axis.fmt_PHY, entry/strtod(td->x_axis.conv,NULL) );		// convert stored table value to correct viewing format
+//							printf(td->x_axis.fmt_PHY, entry/strtod(td->x_axis.conv,NULL) );		// convert stored table value to correct viewing format
+
+								double_x_axis_value = (double)entry;
+								conv_value          = (double)strtod(td->x_axis.conv,NULL);
+								if(td->x_axis.conv2 != NULL) {
+									conv2_value       = (double)strtod(td->x_axis.conv2,NULL);									
+								}
+								
+								switch(td->x_axis.otype) {
+									case 'x':	double_x_axis_value = (double)double_x_axis_value * (double)conv_value - (double)conv2_value; 
+									break;
+									case '*':	double_x_axis_value = (double)double_x_axis_value * (double)conv_value; break;
+									case '/':
+									default: 	double_x_axis_value = (double)double_x_axis_value / (double)conv_value; break;
+								}
+								printf(td->x_axis.fmt_PHY,   (double)double_x_axis_value );	// show values directly out of the table
+
+
 						}
 						line++;
 					}
@@ -235,8 +254,12 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 								entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
 								double_cell_value = (double)entry;
 								conv_value        = (double)strtod(td->cell.conv,NULL);
+								if(td->cell.conv2 != NULL) {
+									conv2_value       = (double)strtod(td->cell.conv2,NULL);									
+								}
 								
 								switch(td->cell.otype) {
+									case 'x':	double_cell_value = (double)double_cell_value * (double)conv_value - (double)conv2_value; break;
 									case '*':	double_cell_value = (double)double_cell_value * (double)conv_value; break;
 									case '/':
 									default: 	double_cell_value = (double)double_cell_value / (double)conv_value; break;
@@ -286,8 +309,12 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 									entry = get_nwidth( (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth ), td->cell_nwidth ); 	//**FIXED**
 									double_cell_value = (double)entry;
 									conv_value        = (double)strtod(td->cell.conv,NULL);
+									if(td->cell.conv2 != NULL) {
+										conv2_value       = (double)strtod(td->cell.conv2,NULL);									
+									}
 									
 									switch(td->cell.otype) {
+										case 'x':	double_cell_value = (double)double_cell_value * (double)conv_value - (double)conv2_value; break;
 										case '*':	double_cell_value = (double)double_cell_value * (double)conv_value; break;
 										case '/':
 										default: 	double_cell_value = (double)double_cell_value / (double)conv_value; break;
@@ -346,20 +373,21 @@ int dump_table(unsigned char *adr, unsigned char *offset_addr, unsigned long val
 		return 0;
 }
 
-int dump_table2(unsigned char *adr, unsigned char *offset_addr, unsigned long val, unsigned long seg, TABLE_DEF *td, unsigned long cell_table_override_adr)
-{
-	unsigned long rom_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-	unsigned long map_table_adr= rom_adr;
-	map_table_adr             &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-	unsigned char *table_start =   offset_addr+map_table_adr;			// 2 bytes to skip x and y bytes
+//
+// table formatting right is a big mess (!) and needs a major cleanup (TO DO!!!)
+//
 
-	dump_raw_table(map_table_adr, offset_addr, td, cell_table_override_adr);
+int dump_table2(unsigned char *offset_addr, unsigned long cell_table_override_adr)
+{
+	dump_raw_table(0, offset_addr, cell_table_override_adr);
 }
 
-int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE_DEF *td, unsigned long cell_table_override_adr)
+int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, unsigned long cell_table_override_adr)
 {
 	int x,y;
 	int seg_start             = 0x800000;
+    TABLE_DEF *td=0;
+	
 //	unsigned long rom_adr      = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
 //	unsigned long map_table_adr= rom_adr;
 //	map_table_adr             &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
@@ -368,7 +396,7 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 	table_start2               &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
 	table_start2              += offset_addr;
 	
-	double double_cell_value, conv_value;
+	double double_cell_value, double_x_axis_value, conv_value, conv2_value;
 	int    i,x_pos,y_pos;
 	int    entry;
 	int    integer_cell_value;
@@ -416,6 +444,7 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 		else if(cell_table_override_adr == FULL_OVERRIDE) 
 		{
 //			printf("FULL OVERRIDE MODE\n");
+			td                        = TBL_DEF;
 		
 			table_data_offset         = 0;
 			x_num_data_start          = X_AXIS_START;
@@ -496,8 +525,39 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 						printf("    %4d ", i);
 					}
 
+
 					if(show_phy == 1)
 					{
+						//
+						// X-AXIS
+						//
+						printf("\n            PHY| ");
+						for(i=0;i<x_num;i++) {
+							entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
+//							printf(td->x_axis.fmt_PHY, entry/strtod(td->x_axis.conv,NULL) );		// convert stored table value to correct viewing format
+								double_x_axis_value = (double)entry;
+								conv_value          = (double)strtod(td->x_axis.conv,NULL);
+								if(td->x_axis.conv2 != NULL) {
+									conv2_value       = (double)strtod(td->x_axis.conv2,NULL);		
+								}
+								
+								switch(td->x_axis.otype) {
+									case 'd':	double_x_axis_value = (double)double_x_axis_value / (double)conv_value - (double)conv2_value; 		break;
+									case 'x':	double_x_axis_value = (double)double_x_axis_value * (double)conv_value - (double)conv2_value; 		break;
+									case '*':	double_x_axis_value = (double)double_x_axis_value * (double)conv_value; break;
+									case '/':
+									default: 	double_x_axis_value = (double)double_x_axis_value / (double)conv_value; break;
+								}
+								printf(td->x_axis.fmt_PHY,   (double)double_x_axis_value );	// show values directly out of the table
+						}
+						line++;
+					}
+#if 0
+					if(show_phy == 1)
+					{
+						//
+						// X-AXIS
+						//
 						printf("\n            PHY| ");
 						for(i=0;i<x_num;i++) {
 							entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
@@ -505,9 +565,13 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 						}
 						line++;
 					}
+#endif
 
 					if(show_hex == 1)
 					{
+						//
+						// X-AXIS
+						//
 						printf("\n            HEX| ");
 						for(i=0;i<x_num;i++) {
 							entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
@@ -518,6 +582,9 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 
 					if(show_adr == 1)
 					{
+						//
+						// X-AXIS
+						//
 						printf("\n            ADR| ");
 						for(i=0;i<x_num;i++) {
 							printf("0x%X ", (x_axis_header_data_start+(i*td->x_axis_nwidth ) - offset_addr + seg_start ));
@@ -534,8 +601,13 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 					if(y_num == 0) 		// this means there this is a 1-axis table, we therefore only need to show 1 row
 					{
 #if 1
+
+#if 0
 						if(show_phy==1)
 						{
+							//
+							// X-AXIS
+							//
 							printf("\n            PHY| ");
 							for(i=x_num;i<x_num*2;i++) {
 								entry = get_nwidth(x_axis_header_data_start+(i*td->x_axis_nwidth), td->x_axis_nwidth);	//**FIXED**
@@ -569,6 +641,9 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 //								printf(td->cell.fmt_ADR, cell_adr - offset_addr + seg_start );						// show raw hex
 							}
 						}
+
+#endif
+
 #endif
 
 					}
@@ -584,6 +659,8 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 
 							if(show_phy==1)
 							{
+								// cells
+#if 1
 								printf("\n ");
 								printf(td->y_axis.fmt_PHY, (double)y_axis_hdr_value_fmt );
 								printf("    PHY| ");
@@ -591,10 +668,15 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 								{
 									// get cell data
 									entry = get_nwidth( (cell_data_start + (x_pos)*(y_num*td->cell_nwidth) + y_pos*td->cell_nwidth ), td->cell_nwidth ); 	//**FIXED**
+
 									double_cell_value = (double)entry;
 									conv_value        = (double)strtod(td->cell.conv,NULL);
+//									if(td->cell.conv2 != NULL) {
+//										conv2_value       = (double)strtod(td->cell.conv2,NULL);									
+//									}
 									
 									switch(td->cell.otype) {
+//										case 'x':	double_cell_value = (double)double_cell_value * (double)conv_value - (double)conv2_value; break;
 										case '*':	double_cell_value = (double)double_cell_value * (double)conv_value; break;
 										case '/':
 										default: 	double_cell_value = (double)double_cell_value / (double)conv_value; break;
@@ -607,6 +689,7 @@ int dump_raw_table(unsigned char *table_start, unsigned char *offset_addr, TABLE
 //									double_cell_value = (double)double_cell_value / (strtod(td->cell.conv,NULL));
 //									printf(td->cell.fmt_PHY,   (double)double_cell_value );	// show values directly out of the table
 								}
+#endif
 							}
 
 							if(show_hex==1)

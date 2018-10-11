@@ -83,6 +83,8 @@ int show_eskonf=0;
 int show_nswo1=0;
 int show_kfpedr=0;
 int show_nswo2=0;
+int show_kftvsa=0;
+int show_kftvsa0=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -110,6 +112,8 @@ OPTS_ENTRY opts_table[] = {
 	{ "-CWKONFZ1",&show_cwkonfz1,     OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONFZ1 Codeword for vehicle configuration.\n"                            },
 	{ "-CWKONLS", &show_cwkonls,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show CWKONLS Codeword for configuration of lambda sensors.\n"                   },
 	{ "-ESKONF",  &show_eskonf,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show ESKONF Output Stage Configurations for left and right banks.\n"            },
+	{ "-KFTVSA",  &show_kftvsa,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFTVSA Delay time for fuel cutoff.\n"                                      },
+	{ "-KFTVSA0", &show_kftvsa0,      OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFTVSA0 Delay time for fuel cutoff.\n"                                     },
 	{ "-KRKTE",   &show_krkte,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KRKTE Conv. of relative fuel mass rk into effective injection time te.\n\n"},
 	
 	{ "-rhfm",    &find_mlhfm,        HFM_READING,  &hfm_name,  MANDATORY, "Read and extract hfm from romfile, optional dump filename to override default write name.\n"        },
@@ -274,6 +278,11 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			// check for kfed (throttle)
 			check_kfped(fh, show_kfped,  1);
 			check_kfped(fh, show_kfpedr, 2);
+
+			// check for kftvsa
+			check_kftvsa(fh, show_kftvsa, 1);
+			// check for kftvsa0
+			check_kftvsa(fh, show_kftvsa0, 2);
 			
 			// check for multimaps
 			check_multimap(fh, show_multimap);
@@ -281,6 +290,7 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			check_mlhfm(fh, addr, filename_rom, filename_hfm, dynamic_ROM_FILESIZE, rom_load_addr);
 			// do correction
 			fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, rom_load_addr);
+			
 		} else {
 			printf("File size isn't a supported firmware size. Only 512kbyte and 1Mb images supported. ");
 		}

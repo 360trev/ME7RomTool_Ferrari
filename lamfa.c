@@ -34,7 +34,22 @@ int check_lamfa(ImageHandle *fh, int skip)
 	if(skip == 0) return found;		
 
 	printf("\n-[ LAMFA Driver Requested Lambda ]-----------------------------------------------------------\n\n");
+
+	printf("AFR/Lamda limit (rule of thumb)                            Conversion\n");
+	printf("-------------------------------                            ----------\n");
+	printf("      6.0:1 AFR - Rich Burn Limit (engine fully warm)      0.41\n");
+	printf("      9.0:1 AFR - Black Smoke / Low Power                  0.61\n");
+	printf("     11.5:1 AFR - Best Rich Torque at Wide Open Throttle   0.78\n");
+	printf("     12.2:1 AFR - Safe Best Power at Wide Open Throttle    0.85\n");
+	printf("     13.3:1 AFR - Lean Best Torque                         0.90\n");
+	printf("     14.7:1 AFR - Stoichiometric AFR (Stoich)              1.00\n");
+	printf("     15.5:1 AFR - Lean Cruise, part throttle               1.05\n");
+	printf("     16.2:1 AFR - Usual Best Economy                       1.10\n");
+	printf("18.0-22.0:1 AFR - Carbureted Lean Burn Limit               1.22-1.50\n");
+	printf("22.0+ AFR - EEC / EFI Lean Burn Limit                      1.50+\n\n");
+
 	printf(">>> Scanning for LAMFA Table Lookup code sequence... \n");
+		
 	found = find_dump_table_seg( fh->d.p, fh->len, &needle_LAMFA, &mask_LAMFA, needle_LAMFA_len, +46, +42, &LAMFA_table);
 
 	if(found == 0) { printf("Sequence not found\n"); }

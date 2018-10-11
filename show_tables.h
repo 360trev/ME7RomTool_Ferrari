@@ -37,6 +37,7 @@ typedef struct ENTRY_DEF {
 		char *field_name;	 // name of the entry field
 		int  nwidth;		 // field byte width
 		char *conv;          // conversion value for huamn readable, e.g. 655.35
+		char *conv2;         // conversion value for huamn readable, e.g. 655.35
 		unsigned char otype; // operation type. e.g. "*" or "/"
 		char *desc;          // conversion description, e.g. "% PED"
 		char *fmt_PHY;       // PHY: data formatting for conversion to human readable

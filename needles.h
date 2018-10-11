@@ -96,6 +96,10 @@ extern unsigned char needle_SSTB[];
 extern unsigned int needle_SSTB_len;
 extern unsigned char mask_SSTB[];
 
+extern unsigned char needle_SSTB2[];
+extern unsigned int needle_SSTB2_len;
+extern unsigned char mask_SSTB2[];
+
 extern unsigned char needle_PROKON[];
 extern unsigned int needle_PROKON_len;
 extern unsigned char mask_PROKON[];

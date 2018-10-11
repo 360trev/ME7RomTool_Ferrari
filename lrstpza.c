@@ -28,9 +28,8 @@ extern int show_diss;
 
 int check_lrstpza(ImageHandle *fh, int skip)
 {
-	int seg, val;
-	unsigned char *tmp_adr;
-	int found = 0;
+	MPTR _lrstpza;
+	int found = 0, val;
 	unsigned char *addr;
 	unsigned char *rom_load_addr = fh->d.p;
 
@@ -39,26 +38,17 @@ int check_lrstpza(ImageHandle *fh, int skip)
 	printf("\n>>> Scanning for LRSTPZA [Period duration of the LRS forced amplitude]\n");
 	addr = search( fh, (unsigned char *)&needle_LRSTPZA, (unsigned char *)&mask_LRSTPZA, needle_LRSTPZA_len, 0 );
 	if(addr != NULL) {
-		printf("found    LRS() function at offset=0x%x. ",(int)(addr-rom_load_addr) );
-		seg  = dpp1_value; 
-		seg -= 1;
-		val  = get16((unsigned char *)addr+4);
-//		printf("seg=%-4.4x, val=%-4.4x ",seg,val);
-		unsigned long str_adr = (unsigned long)(seg*SEGMENT_SIZE)+(long int)val;	// derive phyiscal address from offset and segment
-		printf("LRSTPZA @ ADR:%#8x ", str_adr);
-		str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
-		printf("(%#8x )\n", str_adr);
-		str_adr              += rom_load_addr;
-		tmp_adr               = (unsigned char *)str_adr;				
-		val                   = get16(tmp_adr);
+		printf("found LRS() function at offset=0x%x.\n\n",(int)(addr-rom_load_addr) );
 
 		// disassemble needle found in rom
-		if(show_diss) { 
-			printf("\nDumping ...\n");
-			c167x_diss(addr-rom_load_addr, addr, needle_LRSTPZA_len+20); 
-		}
+		if(show_diss) { c167x_diss(addr-rom_load_addr, addr, needle_LRSTPZA_len+20); }
 
-		printf("\nLRSTPZA: 0x%-4.4x (0.%d s)\n",val,val*100);
+		// extract lrstpza from LRS() function in romcode using segment and offset directly from code
+		translate_seg(&_lrstpza, "LRSTPZA", rom_load_addr, dpp1_value-1 /*seg*/, get16((unsigned char *)addr+4) /*val*/);
+		show_seg(&_lrstpza);
+
+		val = *(_lrstpza.ram);	// get byte and show it...
+		printf("LRSTPZA: 0x%-2.2x (0.%d s)\n",val,val*100);
 
 	} else {
 		printf("not found\n");

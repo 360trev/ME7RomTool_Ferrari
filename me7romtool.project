@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="kftvsa.h"/>
+    <File Name="kftvsa.c"/>
     <File Name="multimap.h"/>
     <File Name="multimap.c"/>
     <File Name="kfped.h"/>

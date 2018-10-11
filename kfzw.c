@@ -31,13 +31,10 @@ int check_kfzw(ImageHandle *fh, int skip, int mode)
 	unsigned int val,seg,adr;
 	unsigned char *p;
 	unsigned char *addr_gru;
-	unsigned char *snm16zuub_adr;
-	unsigned char *srl12zuub_adr;
-	unsigned char *kfzw_adr;
-	unsigned char *kfzw2_adr;
 	unsigned char *addr;
 	unsigned long val_adr;
 	unsigned char *rom_load_addr = fh->d.p;
+	MPTR _kfzw,_kfzw2, _snm16zuub, _srl12zuub;
 
 	int found = 0;
 	/*
@@ -51,7 +48,6 @@ int check_kfzw(ImageHandle *fh, int skip, int mode)
 		printf("\n-[ KFZW2 Ignition Timing Variant #2 ]-------------------------------------------------\n");
 	}
 
-//	printf("Key: KF=Map, ZW=Ignition angle, MN=Minimum\n");
 	printf("\n>>> Scanning for SSTB() for required X-axis (SNM16ZUUB), Y-axis (SRL12ZUUB)... \n");
 	addr = search( fh, (unsigned char *)&needle_SSTB, (unsigned char *)&mask_SSTB, needle_SSTB_len, 0 );
 	if(addr != NULL) 
@@ -59,6 +55,13 @@ int check_kfzw(ImageHandle *fh, int skip, int mode)
 		printf("found at offset=0x%x. \n",(int)(addr-rom_load_addr) );
 		// disassemble needle found in rom
 		if(show_diss) { c167x_diss(addr-rom_load_addr, addr, needle_SSTB_len); }
+
+		// get offset to 'SNM16ZUUB'...
+		translate_seg(&_snm16zuub, "SNM16ZUUB", rom_load_addr,  dpp1_value-1 /*seg*/, get16((unsigned char *)addr+150)    /*val*/);
+		show_seg(&_snm16zuub); 
+		// get offset to 'SRL12ZUUB'...
+		translate_seg(&_srl12zuub, "SRL12ZUUB", rom_load_addr,  dpp1_value-1 /*seg*/, get16((unsigned char *)addr+170)    /*val*/);
+		show_seg(&_srl12zuub); 
 
 		printf("\n>>> Scanning for ZWGRU() method to search for KFZW table ... \n");
 		addr_gru = search( fh, (unsigned char *)&needle_ZWGRU, (unsigned char *)&mask_ZWGRU, needle_ZWGRU_len, 0 );
@@ -68,83 +71,25 @@ int check_kfzw(ImageHandle *fh, int skip, int mode)
 			// disassemble needle found in rom
 			if(show_diss) { c167x_diss(addr-rom_load_addr, addr_gru, needle_SSTB_len); }
 
-			// get offset to 'KFZW2' cell data...
-			val = get16((unsigned char *)addr_gru+58);
-			seg = dpp1_value-1;
-			adr = seg*SEGMENT_SIZE+val;
-//			printf("\nKFZW val=0x%-4.4x seg=%-2.2x\n", val,seg);
-			val_adr     = (unsigned long)adr;		// derive phyiscal address from offset and segment
-			val_adr      &= ~(ROM_1MB_MASK);				// convert physical address to a rom file offset we can easily work with.
-			kfzw_adr = (unsigned char *)rom_load_addr + val_adr;
-			// end get KFZW...
-			p             = kfzw_adr;
-			if(mode==1) { printf("KFZW Cells  : 0x%p\n", adr); }
-
-			// get offset to 'KFZW2' cell data...
-			val = get16((unsigned char *)addr_gru+20);		// 14, 40
-			seg = dpp1_value-1;
-			adr = seg*SEGMENT_SIZE+val;
-//			printf("\nKFZW2 val=0x%-4.4x seg=%-2.2x\n", val,seg);
-			val_adr     = (unsigned long)adr;		// derive phyiscal address from offset and segment
-			val_adr      &= ~(ROM_1MB_MASK);				// convert physical address to a rom file offset we can easily work with.
-			kfzw2_adr = (unsigned char *)rom_load_addr + val_adr;
-			// end get KFZW2...
-			p             = kfzw2_adr;
-			if(mode == 2) { printf("KFZW2 Cells : 0x%p\n", adr); }
-					 
-			// get offset to 'SNM16ZUUB'...
-			val = get16((unsigned char *)addr+150);		// 
-			seg = dpp1_value-1;
-			adr = seg*SEGMENT_SIZE+val;
-//			printf("\nSNM16ZUUB val=0x%-4.4x seg=%-2.2x\n", val,seg);
-			val_adr     = (unsigned long)adr;		// derive phyiscal address from offset and segment
-			val_adr      &= ~(ROM_1MB_MASK);				// convert physical address to a rom file offset we can easily work with.
-			snm16zuub_adr = (unsigned char *)rom_load_addr + val_adr;
-			// end get SNM16ZUUB...
-			p             = snm16zuub_adr;
-			printf("SNM16ZUUB   : 0x%p\n", adr);
-//			entries = *p++;
-//			for(i=0;i<entries;i++) {
-//				printf("%-2.2X", *p++);
-//				if(i < entries-1 ) printf(",");
-//				}
-			// get offset to 'SRL12ZUUB'...
-			val = get16((unsigned char *)addr+170);		// 
-			seg = dpp1_value-1;
-			adr = seg*SEGMENT_SIZE+val;
-//						printf("\n\nSRL12ZUUB val=0x%-4.4x seg=%-2.2x\n", val,seg);
-			val_adr     = (unsigned long)adr;		// derive phyiscal address from offset and segment
-			val_adr      &= ~(ROM_1MB_MASK);				// convert physical address to a rom file offset we can easily work with.
-			srl12zuub_adr = (unsigned char *)rom_load_addr + val_adr;
-			// end get SRL12ZUUB...
-			p             = srl12zuub_adr;
-			printf("SRL12ZUUB   : 0x%p\n", adr);
-//			entries = *p++;
-//			for(i=0;i<entries;i++) {
-//				printf("%-2.2X", *p++);
-//				if(i < entries-1 ) printf(",");
-//			}
-
-//
-//						printf("** set override ***\n");
-
 			if( mode == 1) {
-				set_table_overrides(snm16zuub_adr, srl12zuub_adr, kfzw_adr);
-				dump_table2(addr, rom_load_addr, get16((unsigned char *)addr + 58), dpp1_value-1, &KFZW_table, FULL_OVERRIDE);
+				// get offset to 'KFZW' cell data...
+				translate_seg(&_kfzw,      "KFZW",      rom_load_addr,  dpp1_value-1 /*seg*/, get16((unsigned char *)addr_gru+58) /*val*/);
+				show_seg(&_kfzw);
+				set_table_overrides( _snm16zuub.ram, _srl12zuub.ram, _kfzw.ram, &KFZW_table);
+				dump_table2(rom_load_addr, FULL_OVERRIDE);
 			}
-		
-			if( mode == 2) {
-				set_table_overrides(snm16zuub_adr, srl12zuub_adr, kfzw2_adr);
-				dump_table2(addr, rom_load_addr, get16((unsigned char *)addr + 14), dpp1_value-1, &KFZW2_table, FULL_OVERRIDE);
+			else if( mode == 2) {
+				// get offset to 'KFZW2' cell data...
+				translate_seg(&_kfzw2,     "KFZW2",     rom_load_addr,  dpp1_value-1 /*seg*/, get16((unsigned char *)addr_gru+20) /*val*/);
+				show_seg(&_kfzw2);
+				set_table_overrides( _snm16zuub.ram, _srl12zuub.ram, _kfzw2.ram, &KFZW2_table);
+				dump_table2(rom_load_addr, FULL_OVERRIDE);
 			}
-						
-			printf("***\n");
 		}
 					
 	} else {
 		printf("Not found\n");
 	}
 	printf("\n");
-
 	return 0;
 }
