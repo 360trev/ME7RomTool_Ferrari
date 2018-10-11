@@ -42,7 +42,6 @@ int check_nswo(ImageHandle *fh, int skip, int mode)
 	{
 		addr = rom_load_addr + byte_offset;
 		printf("\nfound needle at offset=%#x\n",(int)(byte_offset));
-
 		// disassemble needle found in rom
 		if(show_diss) { c167x_diss(byte_offset, rom_load_addr + byte_offset, needle_PROKON_len+16); }
 
@@ -50,15 +49,13 @@ int check_nswo(ImageHandle *fh, int skip, int mode)
 			translate_seg(&_nswo1, "NSWO1", rom_load_addr, dpp1_value-1 /*seg*/, get16((unsigned char *)addr+10) /*val*/);
 			show_seg(&_nswo1);
 			nswo1_val = *(_nswo1.ram);
-			printf("NSWO1: (0x%-2.2x) %-5.1f Upm : Speed threshold 1 switching speed for calculating time savings", nswo1_val, (double)nswo1_val*40.0 );
+			printf("NSWO1: (0x%-2.2x) %-5.1f Upm : Speed threshold 1 switching speed for calculating time savings\n", nswo1_val, (double)nswo1_val*40.0 );
 		} else if(mode == 2) {
 			translate_seg(&_nswo2, "NSWO2", rom_load_addr, dpp1_value-1 /*seg*/, get16((unsigned char *)addr+30) /*val*/);
 			show_seg(&_nswo2);
 			nswo2_val = *(_nswo2.ram);
-			printf("NSWO2: (0x%-2.2x) %-5.1f Upm : Speed threshold 2 switching speed for calculating time savings", nswo2_val, (double)nswo2_val*40.0 );
+			printf("NSWO2: (0x%-2.2x) %-5.1f Upm : Speed threshold 2 switching speed for calculating time savings\n", nswo2_val, (double)nswo2_val*40.0 );
 		}
-		printf("\n");
-
 	} else {
 		printf("Not found\n");
 	}

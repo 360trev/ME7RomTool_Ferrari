@@ -19,7 +19,7 @@
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
    IN THE SOFTWARE.
 */
-#include "kfnw.h"
+#include "kfzw.h"
 #include "table_spec.h"
 #include "show_tables.h"
 

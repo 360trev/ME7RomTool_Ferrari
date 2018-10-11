@@ -1196,6 +1196,64 @@ unsigned char mask_BBSAWE[] = {
  
 unsigned int needle_BBSAWE_len = sizeof(needle_BBSAWE);
  
+
+
+unsigned char needle_RKTI[] = {
+	0x9A, XXXX, XXXX, XXXX, // jnb     word_FD74.2, skip_fkkvs_correction
+	0xF2, 0xF4, XXXX, XXXX, // mov     r4, tevfa_w     ; tevfa_w : effektive Einspritzzeit vor Feinabgleich (word) [RKTI]
+	0xF6, 0xF4, XXXX, XXXX, // mov     tevfa_w_kge, r4 ; tevfa_w_kge :  [RKTI]
+	0x88, 0x40,             // mov     [-r0], r4
+	0xC2, 0xF5, XXXX, XXXX, // movbz   r5, nmot        ; nmot 
+	0x88, 0x50,             // mov     [-r0], r5
+	0xE6, 0xF4, XXXX, XXXX, // mov     r4, #FKKVS_CELLS ; Probable Lookup Table
+	0xE6, 0xF5, XXXX, XXXX, // mov     r5, #206h
+	0x88, 0x50,             // mov     [-r0], r5
+	0x88, 0x40,             // mov     [-r0], r4
+	0xE6, 0xF4, XXXX, XXXX, // mov     r4, #FKKVS_Y_AXIS ; Probable Lookup Table
+	0xE6, 0xF5, XXXX, XXXX, // mov     r5, #206h
+	0x88, 0x50,             // mov     [-r0], r5
+	0x88, 0x40,             // mov     [-r0], r4
+	0xD7, 0x40, XXXX, XXXX, // extp    #206h, #1
+	0xC2, 0xFC, XXXX, XXXX, // movbz   r12, FKKVS      ; FKKVS : Korrekturfaktor Kraftstoffversorgungssystem [RKTI]
+	0xE6, 0xFD, XXXX, XXXX, // mov     r13, #FKKVS_X_AXIS ; Probable Lookup Table
+	0xE6, 0xFE, XXXX, XXXX, // mov     r14, #206h
+	0xD7, 0x40, XXXX, XXXX, // extp    #206h, #1
+	0xC2, 0xFF, XXXX, XXXX, // movbz   r15, FKKVS+1    ; FKKVS : Korrekturfaktor Kraftstoffversorgungssystem [RKTI]
+	0xDA, XXXX, XXXX, XXXX, // calls   82h, Lookup_map_x8y16c16
+	0x06, 0xF0, 0x0C, 0x00, // add     r0, #0Ch
+	0xF6, 0xF4, XXXX, XXXX, // mov     ftek_w, r4      ; ftek_w : Korrekturfaktor fnr effektive Einspritzzeit [RKTI]
+	0xDB, 0x00              // rets
+};
+
+unsigned char mask_RKTI[] = {
+	MASK, XXXX, XXXX, XXXX, // jnb     word_FD74.2, skip_fkkvs_correction
+	MASK, MASK, XXXX, XXXX, // mov     r4, tevfa_w     ; tevfa_w : effektive Einspritzzeit vor Feinabgleich (word) [RKTI]
+	MASK, MASK, XXXX, XXXX, // mov     tevfa_w_kge, r4 ; tevfa_w_kge :  [RKTI]
+	MASK, MASK,             // mov     [-r0], r4
+	MASK, MASK, XXXX, XXXX, // movbz   r5, nmot        ; nmot 
+	MASK, MASK,             // mov     [-r0], r5
+	MASK, MASK, XXXX, XXXX, // mov     r4, #FKKVS_CELLS ; Probable Lookup Table +22
+	MASK, MASK, XXXX, XXXX, // mov     r5, #206h                                +26
+	MASK, MASK,             // mov     [-r0], r5
+	MASK, MASK,             // mov     [-r0], r4
+	MASK, MASK, XXXX, XXXX, // mov     r4, #FKKVS_Y_AXIS ; Probable Lookup Table
+	MASK, MASK, XXXX, XXXX, // mov     r5, #206h
+	MASK, MASK,             // mov     [-r0], r5
+	MASK, MASK,             // mov     [-r0], r4
+	MASK, MASK, XXXX, XXXX, // extp    #206h, #1
+	MASK, MASK, XXXX, XXXX, // movbz   r12, FKKVS      ; FKKVS : Korrekturfaktor Kraftstoffversorgungssystem [RKTI]
+	MASK, MASK, XXXX, XXXX, // mov     r13, #FKKVS_X_AXIS ; Probable Lookup Table
+	MASK, MASK, XXXX, XXXX, // mov     r14, #206h
+	MASK, MASK, XXXX, XXXX, // extp    #206h, #1
+	MASK, MASK, XXXX, XXXX, // movbz   r15, FKKVS+1    ; FKKVS : Korrekturfaktor Kraftstoffversorgungssystem [RKTI]
+	MASK, XXXX, XXXX, XXXX, // calls   82h, Lookup_map_x8y16c16
+	MASK, MASK, MASK, MASK, // add     r0, #0Ch
+	MASK, MASK, XXXX, XXXX, // mov     ftek_w, r4      ; ftek_w : Korrekturfaktor fnr effektive Einspritzzeit [RKTI]
+	MASK, MASK              // rets
+};
+ 
+unsigned int needle_RKTI_len = sizeof(needle_RKTI);
+ 
 //
 // this is the needle (masked) for the GGHFM_Lookup() function
 //

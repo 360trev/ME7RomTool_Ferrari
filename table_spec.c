@@ -720,3 +720,53 @@ TABLE_DEF KFTVSA0_table = { //
 		.conv_name = "rel_uw_b200",		// conversion name
 	}
 };
+
+
+TABLE_DEF FKKVS_table = {
+	// basic table information
+	.table_name = "FKKVS", .table_desc = "Correction factor fueling system", 
+
+	// table data byte widths
+	.x_num_nwidth  = UBYTE, .y_num_nwidth  = UBYTE,		// number of x/y item fields width
+  
+	.x_axis_nwidth = UBYTE, 
+	.y_axis_nwidth = UWORD,		// x/y axis widths
+	.cell_nwidth   = UWORD,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis",			// field name
+		.nwidth    = UBYTE,				// field type
+		.conv      = "0.025",     		// conversion value for huamn readable
+		.desc      = "rpm",  				// conversion description
+		.fmt_PHY   = "%8.1f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = " ", 				// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "312.5",  			// conversion value
+		.desc      = "ms injection", 	// conversion description
+		.fmt_PHY   = " %-5.1f ",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = " ",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "32768.0", 			// conversion value
+		.desc      = " ", 				// conversion description
+		.fmt_PHY   = "%8.4f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = " ",		// conversion name
+	}
+};
+
