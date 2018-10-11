@@ -86,6 +86,7 @@ int show_nswo2=0;
 int show_kftvsa=0;
 int show_kftvsa0=0;
 int show_fkkvs=0;
+int show_nmax=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -105,6 +106,7 @@ OPTS_ENTRY opts_table[] = {
 	{ "-LAMFA",   &show_lamfa,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show LAMFA Driver Requested Lambda table.\n"                                    },
 	{ "-FKKVS",   &show_fkkvs,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show FKKVS Correction factor fueling system.\n"						            },
 	{ "-KFNW",    &show_kfnw,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNW Characteristic map for variable camshaft control table.\n"            },
+	{ "-NMAX",    &show_nmax,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show NMAX rev limiter.\n"                                                       },
 	{ "-KFNWWL",  &show_kfnwwl,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNWWL Characteristic map for variable camshaft control during warm-up.\n" },
 	{ "-KFZW",    &show_kfzw,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFZW Ignition timing table.\n"         								    },
 	{ "-KFZW2",   &show_kfzw2,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFZW Ignition timing variant 2 table.\n"            						},
@@ -263,6 +265,8 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			// check for display of nswo
 			check_nswo(fh, show_nswo1,  1);
 			check_nswo(fh, show_nswo2,  2);
+
+			check_nmax(fh, show_nmax);
 
 			// check for dislay of kfzw
 			check_kfzw(fh, show_kfzw,   1);

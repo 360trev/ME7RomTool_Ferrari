@@ -1254,6 +1254,49 @@ unsigned char mask_RKTI[] = {
  
 unsigned int needle_RKTI_len = sizeof(needle_RKTI);
  
+unsigned char needle_DFFTCNV[] = {
+ 0x88, 0x90,                     // mov     [-r0], r9
+ 0x88, 0x60,                     // mov     [-r0], r6
+ 0x28, 0x02,                     // sub     r0, #2
+ 0xE6, 0xFC, 0xFF, 0x00,         // mov     r12, #0FFh
+ 0xF2, 0xFD, XXXX, XXXX,         // mov     r13, rl_w       ; rl_w : relative Luftfnllung (Word) [BGSRM BGRLG BGRLP DFFTCNV DSLSLRS FUEREG KRDY KWPDATR LRS MDBAS MDVER SSTB UFRLC VMAXMD]
+ 0xF2, 0xFE, XXXX, XXXX,         // mov     r14, rlugd_w    ; rlugd_w : Fnllung im ungedrosselten Zustand [MDMAX DFFTCNV]
+ 0xDA, XXXX, XXXX, XXXX,         // calls   0, TableScaler32by16bit_16bitRes_6c9c ; Table Scaler 32bit by 16bit Unsigned Divide - 16 bit result
+ 0xF0, 0xC4,                     // mov     r12, r4
+ 0xF2, 0xFD, XXXX, XXXX,         // mov     r13, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+ 0xF2, 0xFE, XXXX, XXXX,         // mov     r14, NMAX       ; NMAX : Drehzahlbegrenzung [NMAXMD, DFFTCNV]
+ 0xDA, XXXX, XXXX, XXXX,         // calls   0, TableScaler32by16bit_16bitRes_6c9c ; Table Scaler 32bit by 16bit Unsigned Divide - 16 bit result
+ 0xF0, 0x94,                     // mov     r9, r4
+ 0x46, 0xF9, 0xFF, 0x00,         // cmp     r9, #0FFh
+ 0xFD, 0x03,                     // jmpr    cc_ULE, loc_XXXX
+ 0xE6, 0xF4, 0xFF, 0x00,         // mov     r4, #0FFh
+ 0x0D, 0x01,                     // jmpr    cc_UC, loc_XXX
+ 0xF0, 0x49                      // mov     r4, r9
+};
+
+unsigned char mask_DFFTCNV[] = {
+ MASK, MASK,                     // mov     [-r0], r9
+ MASK, MASK,                     // mov     [-r0], r6
+ MASK, MASK,                     // sub     r0, #2
+ MASK, MASK, MASK, MASK,         // mov     r12, #0FFh
+ MASK, MASK, XXXX, XXXX,         // mov     r13, rl_w       ; rl_w : relative Luftfnllung (Word) [BGSRM BGRLG BGRLP DFFTCNV DSLSLRS FUEREG KRDY KWPDATR LRS MDBAS MDVER SSTB UFRLC VMAXMD]
+ MASK, MASK, XXXX, XXXX,         // mov     r14, rlugd_w    ; rlugd_w : Fnllung im ungedrosselten Zustand [MDMAX DFFTCNV]
+ MASK, XXXX, XXXX, XXXX,         // calls   0, TableScaler32by16bit_16bitRes_6c9c ; Table Scaler 32bit by 16bit Unsigned Divide - 16 bit result
+ MASK, MASK,                     // mov     r12, r4
+ MASK, MASK, XXXX, XXXX,         // mov     r13, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+ MASK, MASK, XXXX, XXXX,         // mov     r14, NMAX       ; NMAX : Drehzahlbegrenzung [NMAXMD, DFFTCNV]
+ MASK, XXXX, XXXX, XXXX,         // calls   0, TableScaler32by16bit_16bitRes_6c9c ; Table Scaler 32bit by 16bit Unsigned Divide - 16 bit result
+ MASK, MASK,                     // mov     r9, r4
+ MASK, MASK, MASK, MASK,         // cmp     r9, #0FFh
+ MASK, MASK,                     // jmpr    cc_ULE, loc_XXXX
+ MASK, MASK, MASK, MASK,         // mov     r4, #0FFh
+ MASK, MASK,                     // jmpr    cc_UC, loc_XXX
+ MASK, MASK                      // mov     r4, r9
+};
+
+unsigned int needle_DFFTCNV_len = sizeof(needle_DFFTCNV);
+
+ 
 //
 // this is the needle (masked) for the GGHFM_Lookup() function
 //

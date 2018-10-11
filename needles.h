@@ -88,6 +88,10 @@ extern unsigned char needle_RKTI[];
 extern unsigned int needle_RKTI_len;
 extern unsigned char mask_RKTI[];
 
+extern unsigned char needle_DFFTCNV[];
+extern unsigned int needle_DFFTCNV_len;
+extern unsigned char mask_DFFTCNV[];
+
 extern unsigned char needle_ZWGRU[];
 extern unsigned int needle_ZWGRU_len;
 extern unsigned char mask_ZWGRU[];

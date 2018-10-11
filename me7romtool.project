@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="nmax.h"/>
+    <File Name="nmax.c"/>
     <File Name="fkkvs.h"/>
     <File Name="fkkvs.c"/>
     <File Name="kftvsa.h"/>
