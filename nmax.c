@@ -50,7 +50,8 @@ int check_nmax(ImageHandle *fh, int skip)
 		translate_seg(&_nmax, "NMAX", rom_load_addr, dpp1_value-1 /*seg*/, get16((unsigned char *)addr+30) /*val*/);
 		show_seg(&_nmax);
 		
-		printf("NMAX: %-4.4d rpm limit\n", (get16(_nmax.ram))/4);
+		printf("\nNMAX:  %-4.4d rpm (u/min) limit\n", (get16(_nmax.ram))/4);
+		printf("NMAXH:  %d rpm (u/min) hysteresis for hard speed limitation\n", (get16(_nmax.ram-2))/4);
 	}
 
 	return found;
