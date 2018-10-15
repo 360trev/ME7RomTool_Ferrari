@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="kfsu.h"/>
+    <File Name="kfsu.c"/>
     <File Name="kfwdkmsn.h"/>
     <File Name="kfwdkmsn.c"/>
     <File Name="kfmsnwdk.h"/>

@@ -89,6 +89,8 @@ int show_fkkvs=0;
 int show_nmax=0;
 int show_kfmsnwdk=0;
 int show_kfwdkmsn=0;
+int show_kfsu=0;
+int show_kfsu2=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -99,6 +101,8 @@ OPTS_ENTRY opts_table[] = {
 	{ "-force",   &force_write,       OPTION_SET,   0,          OPTIONAL,  "If a checksummed file needs saving overwrite it anyway even if it already exists.\n\n"              },
 
 	{ "-KFAGK",   &valves,            OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFAGK exhaust valve opening table in the firmware.\n"                      },
+	{ "-KFSU",    &show_kfsu,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFSU Characteristic map for intake manifold changeover, flap 1\n"          },
+	{ "-KFSU2",   &show_kfsu2,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFSU2 Characteristic map for intake manifold changeover, flap 2\n"         },
 	{ "-KFPED",   &show_kfped,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPED pedal torque request tables.\n"                                      },
 	{ "-KFPEDR",  &show_kfpedr,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFPEDR pedal torque request tables during reversing.\n"                    },
 	{ "-KFKHFM",  &show_kfkhfm,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFKHFM MAF Sensor correction table.\n"                                     },
@@ -271,6 +275,9 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			check_nswo(fh, show_nswo2,  2);
 
 			check_nmax(fh, show_nmax);
+
+			check_kfsu(fh, show_kfsu,  1);
+			check_kfsu(fh, show_kfsu2, 2);
 
 			check_kfmsnwdk(fh, show_kfmsnwdk);
 			check_kfwdkmsn(fh, show_kfwdkmsn);

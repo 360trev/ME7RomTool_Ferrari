@@ -2733,3 +2733,71 @@ unsigned char mask_FUEDK[] = {
 };
 
 unsigned int needle_FUEDK_len = sizeof(needle_FUEDK);
+
+unsigned char needle_SU[] = 
+{
+	0x88, 0x90,                                  // mov     [-r0], r9
+	0x88, 0x70,                                  // mov     [-r0], r7
+	0x88, 0x60,                                  // mov     [-r0], r6
+	0xE6, 0xFC, XXXX, XXXX,                      // mov     r12, #KFSU      
+	0xE6, 0xFD, XXXX, XXXX,                      // mov     r13, #206h
+	0xC2, 0xFE, XXXX, XXXX,                      // movbz   r14, nmot       ; nmot
+	0xC2, 0xFF, XXXX, XXXX,                      // movbz   r15, rlshk      ; rlshk : Soll-Fnllung h÷henkorrigiert [FE AGK KWPDATR NWS SU]
+	0xDA, XXXX, XXXX, XXXX,                      // calls   XXh, XXXX       ; Map_Lookup
+	0xF1, 0xC8,                                  // movb    rl6, rl4
+	0xE6, 0xFC, XXXX, XXXX,                      // mov     r12, #KFSU2     
+	0xE6, 0xFD, XXXX, XXXX,                      // mov     r13, #206h
+	0xC2, 0xFE, XXXX, XXXX,                      // movbz   r14, nmot       ;
+	0xC2, 0xFF, XXXX, XXXX,                      // movbz   r15, rlshk      ; rlshk : Soll-Fnllung h÷henkorrigiert [FE AGK KWPDATR NWS SU]
+	0xDA, XXXX, XXXX, XXXX,                      // calls   XXh, XXXX       ; Map_Lookup
+	0xF1, 0xE8,                                  // movb    rl7, rl4
+	0x49, 0xC0,                                  // cmpb    rl6, #0
+	0x3D, 0x05,                                  // jmpr    cc_NZ, +5
+	0xE6, 0xF4, 0x7F, 0xFF,                      // mov     r4, #0FF7Fh
+	0x64, 0xF4, XXXX, XXXX,                      // and     word_XXXX, r4
+	0x0D, 0x06,                                  // jmpr    cc_UC, +6
+	0x49, 0xC2,                                  // cmpb    rl6, #2
+	0x3D, 0x04,                                  // jmpr    cc_NZ, +4 
+	0xE6, 0xF4, 0x80, 0x00,                      // mov     r4, #80h
+	0x74, 0xF4, XXXX, XXXX,                      // or      word_XXXX, r4
+	0x49, 0xE0,                                  // cmpb    rl7, #0
+	0x3D, 0x05,                                  // jmpr    cc_NZ, +5
+	0xE6, 0xF4, 0xFF, 0xFE,                      // mov     r4, #0FEFFh
+	0x64, 0xF4, XXXX, XXXX,                      // and     word_XXXX, r4
+	0x0D, 0x06                                   // jmpr    cc_UC, +6
+};
+
+unsigned char mask_SU[] = 
+{
+	MASK, MASK,                                  // mov     [-r0], r9
+	MASK, MASK,                                  // mov     [-r0], r7
+	MASK, MASK,                                  // mov     [-r0], r6
+	MASK, MASK, XXXX, XXXX,                      // mov     r12, #KFSU      
+	MASK, MASK, XXXX, XXXX,                      // mov     r13, #206h
+	MASK, MASK, XXXX, XXXX,                      // movbz   r14, nmot       ; nmot
+	MASK, MASK, XXXX, XXXX,                      // movbz   r15, rlshk      ; rlshk : Soll-Fnllung h÷henkorrigiert [FE AGK KWPDATR NWS SU]
+	MASK, XXXX, XXXX, XXXX,                      // calls   XXh, XXXX       ; Map_Lookup
+	MASK, MASK,                                  // movb    rl6, rl4
+	MASK, MASK, XXXX, XXXX,                      // mov     r12, #KFSU2     
+	MASK, MASK, XXXX, XXXX,                      // mov     r13, #206h
+	MASK, MASK, XXXX, XXXX,                      // movbz   r14, nmot       ;
+	MASK, MASK, XXXX, XXXX,                      // movbz   r15, rlshk      ; rlshk : Soll-Fnllung h÷henkorrigiert [FE AGK KWPDATR NWS SU]
+	MASK, XXXX, XXXX, XXXX,                      // calls   XXh, XXXX       ; Map_Lookup
+	MASK, MASK,                                  // movb    rl7, rl4
+	MASK, MASK,                                  // cmpb    rl6, #0
+	MASK, MASK,                                  // jmpr    cc_NZ, +5
+	MASK, MASK, MASK, MASK,                      // mov     r4, #0FF7Fh
+	MASK, MASK, XXXX, XXXX,                      // and     word_XXXX, r4
+	MASK, MASK,                                  // jmpr    cc_UC, +6
+	MASK, MASK,                                  // cmpb    rl6, #2
+	MASK, MASK,                                  // jmpr    cc_NZ, +4 
+	MASK, MASK, MASK, MASK,                      // mov     r4, #80h
+	MASK, MASK, XXXX, XXXX,                      // or      word_XXXX, r4
+	MASK, MASK,                                  // cmpb    rl7, #0
+	MASK, MASK,                                  // jmpr    cc_NZ, +5
+	MASK, MASK, MASK, MASK,                      // mov     r4, #0FEFFh
+	MASK, MASK, XXXX, XXXX,                      // and     word_XXXX, r4
+	MASK, MASK                                   // jmpr    cc_UC, +6
+};
+
+unsigned int needle_SU_len = sizeof(needle_SU);

@@ -88,6 +88,10 @@ extern unsigned char needle_NWS[];
 extern unsigned int needle_NWS_len;
 extern unsigned char mask_NWS[];
 
+extern unsigned char needle_SU[];
+extern unsigned int needle_SU_len;
+extern unsigned char mask_SU[];
+
 extern unsigned char needle_BGMSZS[];
 extern unsigned char mask_BGMSZS[];
 extern unsigned int needle_BGMSZS_len;
