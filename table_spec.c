@@ -770,3 +770,99 @@ TABLE_DEF FKKVS_table = {
 	}
 };
 
+
+TABLE_DEF KFWDKMSN_table = {
+	// basic table information
+	.table_name = "KFWDKMSN", .table_desc = "Map for desired throttle plate angle", 
+
+	// table data byte widths
+	.x_num_nwidth  = UWORD, .y_num_nwidth  = UWORD,		// number of x/y item fields width
+  
+	.x_axis_nwidth = UWORD, 
+	.y_axis_nwidth = UWORD,		// x/y axis widths
+	.cell_nwidth   = UWORD,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "655.35",     		// conversion value for huamn readable
+		.desc      = "%",	  			// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = "relPED_uw_b100", 	// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "4.0",   			// conversion value
+		.desc      = "U/min", 			// conversion description
+		.fmt_PHY   = " %-5.0f ",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = "nmot_uw_q0p25",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "10.0", 			// conversion value
+		.desc      = "kg/h", 			// conversion description
+		.fmt_PHY   = "%8.1f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = "rel_uw_b200",		// conversion name
+	}
+};
+
+TABLE_DEF KFMSNWDK_table = {
+	// basic table information
+	.table_name = "KFMSNWDK", .table_desc = "Map for scaled mass flow over throttle valve", 
+
+	// table data byte widths
+	.x_num_nwidth  = UWORD, .y_num_nwidth  = UWORD,		// number of x/y item fields width
+  
+	.x_axis_nwidth = UWORD, 
+	.y_axis_nwidth = UWORD,		// x/y axis widths
+	.cell_nwidth   = UWORD,								// cell width
+
+	// x-axis
+	.x_axis = {
+		.field_name = "X-axis",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "655.35",     		// conversion value for huamn readable
+		.desc      = "%",	  			// conversion description
+		.fmt_PHY   = "%8.2f ",     		// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "0x%X ",			// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "  %#6x ",			// ADR: x axis data formatting for physical addresses
+		.conv_name = "relPED_uw_b100", 	// conversion name
+	},
+	
+	// y-axis
+	.y_axis = {
+		.field_name = "Y-axis",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "4.0",   			// conversion value
+		.desc      = "U/min", 			// conversion description
+		.fmt_PHY   = " %-5.0f ",     	// PHY: x axis data formatting for conversion to human readable
+		.fmt_HEX   = "%-#8.4x ",		// HEX: x axis data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x ",		// ADR: x axis data formatting for physical addresses
+		.conv_name = "nmot_uw_q0p25",  	// conversion name
+	},
+	
+	// cells
+	.cell = {
+		.field_name = "Cells",			// field name
+		.nwidth    = UWORD,				// field type
+		.conv      = "10.0", 			// conversion value
+		.desc      = "kg/h", 			// conversion description
+		.fmt_PHY   = "%8.1f ", 			// PHY: cell data formatting for conversion to human readable
+		.fmt_HEX   = "  %#6x ",			// HEX: cell data formatting for raw hex values
+		.fmt_ADR   = "%-#9.5x",         // ADR: cell data formatting for physical addresses
+		.conv_name = "rel_uw_b200",		// conversion name
+	}
+};

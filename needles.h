@@ -80,9 +80,21 @@ extern unsigned char needle_CWKONABG[];
 extern unsigned int needle_CWKONABG_len;
 extern unsigned char mask_CWKONABG[];
 
+extern unsigned char needle_DEKON2[];
+extern unsigned int needle_DEKON2_len;
+extern unsigned char mask_DEKON2[];
+
 extern unsigned char needle_NWS[];
 extern unsigned int needle_NWS_len;
 extern unsigned char mask_NWS[];
+
+extern unsigned char needle_BGMSZS[];
+extern unsigned char mask_BGMSZS[];
+extern unsigned int needle_BGMSZS_len;
+
+extern unsigned char needle_FUEDK[];
+extern unsigned char mask_FUEDK[];
+extern unsigned int needle_FUEDK_len;
 
 extern unsigned char needle_RKTI[];
 extern unsigned int needle_RKTI_len;

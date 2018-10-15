@@ -23,23 +23,6 @@
 
 /* TODO: Replace these mask/needles with config */
    
-/* Ferrari GGHFM_Lookup() function signature we need to find and match, 
- * XXXX can change between firmware releases 
- * 
- *   This is a small snippet of machine-code extract which forms part 
- *   of the wider GGHFM_lookup() rom function. If we match this then we 
- *   have identified the method which utilizes the MLHFM table so we 
- *   just need to pull out the relevant data from the firmware such as 
- *   offset in map region to know precisely where it exists in this 
- *   specific version of the firmware image. Since the offset 'moves 
- *   around' in different versions of the rom we have to do it this way
- *   to guarentee we always match the correct byte offset. 
- * 
- *   The XXXX's are bytes which always change between different compiled 
- *   releases so we have to ignore those bytes (mask them out) during
- *   searches.
- */
-
 unsigned char needle_TVKUP[] =
 {
  0xE1, 0x28,                                    // movb    rl4, #2
@@ -135,151 +118,6 @@ unsigned char mask_ESKONF[] =
 };
 
 unsigned int needle_ESKONF_len = sizeof(needle_ESKONF);
-
-
-/*                       hi            lo
-					  ---------     ---------
-	0x1    = bit  1   0000 0000 	0000 0001
-	0x2    = bit  2   0000 0000 	0000 0010
-	0x4    = bit  3   0000 0000 	0000 0100
-	0x8    = bit  4   0000 0000 	0000 1000
-
-	0x10   = bit  5   0000 0000 	0001 0000
-	0x20   = bit  6   0000 0000 	0010 0000
-	0x40   = bit  7   0000 0000 	0100 0000
-	0x80   = bit  8   0000 0000 	1000 0000
-
-	0x100  = bit  9   0000 0001 	0000 0000
-	0x200  = bit 10   0000 0010 	0000 0000
-	0x400  = bit 11   0000 0100 	0000 0000
-	0x800  = bit 12   0000 1000 	0000 0000
-
-	0x1000 = bit 13   0001 0000 	0000 0000
-	0x2000 = bit 14   0010 0000 	0000 0000
-	0x4000 = bit 15   0100 0000 	0000 0000
-	0x8000 = bit 16   1000 0000 	0000 0000
-
-*/ 
-#if 0
-unsigned int needle_PROKON_len = sizeof(needle_PROKON);
-{
-	// bits for CWKONFZ1
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	69 81                                   andb    rl4, #1			// bitmask for B_4wd
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 63                             bmov    word_FD00.3, USR0
-
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	69 82                                   andb    rl4, #2			// bitmask for B_mt
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 66                             bmov    word_FD02.6, USR0
-
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	69 84                                   andb    rl4, #4			// bitmask for B_cvt
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 64                             bmov    word_FD00.4, USR0
-
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	67 F8 08 00                             andb    rl4, #8			// bitmask for B_f1getr
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 68                             bmov    word_FD00.8, USR0
-
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	67 F8 40 00                             andb    rl4, #40h		// bitmask for b_asrfz
-	3A 88 88 36                             bmovn   USR0, Z			
-	4A 88 00 62                             bmov    word_FD00.2, USR0
-
-	F3 F8 1F 00                             movb    rl4, CWKONFZ1   ; CWKONFZ1 : Codewort fnr Konfiguration Fahrzeug [PROKON]
-	67 F8 80 00                             andb    rl4, #80h 		// bitmask for b_
-	3A 88 88 36                             bmovn   USR0, Z	
-	4A 88 00 60                             bmov    word_FD00.0, USR0
-
-
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	69 81                                   andb    rl4, #1
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 64                             bmov    word_FD02.4, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	69 82                                   andb    rl4, #2
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 62                             bmov    word_FD02.2, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	69 84                                   andb    rl4, #4
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 6E                             bmov    word_FD00.14, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	67 F8 08 00                             andb    rl4, #8
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 60                             bmov    word_FD02.0, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	67 F8 10 00                             andb    rl4, #10h
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 65                             bmov    word_FD02.5, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	67 F8 20 00                             andb    rl4, #20h ; ' '
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 63                             bmov    word_FD02.3, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	67 F8 40 00                             andb    rl4, #40h ; '@'
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 6F                             bmov    word_FD00.15, USR0
-
-	F3 F8 20 00                             movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
-	67 F8 80 00                             andb    rl4, #80h ; 'Ç'
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 61                             bmov    word_FD02.1, USR0
-
-	F3 F8 24 00                             movb    rl4, CWTF       ; CWTF : Codewort fnr Konfiguration Temperaturfnhler [PROKON]
-	69 81                                   andb    rl4, #1
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 6A                             bmov    word_FD02.10, USR0
-
-	D7 40 06 02                             extp    #206h, #1
-	F3 F8 91 01                             movb    rl4, CWTKAT     ; CWTKAT :  [PROKON]
-	69 81                                   andb    rl4, #1
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 6B                             bmov    word_FD02.11, USR0
-
-	F3 F8 1C 00                             movb    rl4, CWERFIL    ; CWERFIL : Codewort zur Auswahl Filtervar. fnr die Ausgabe von AS.-Fehler an das Scan Tool [PROKON]
-	F7 F8 00 8A                             movb    cw_erfil, rl4   ; cw_erfil : Status Codewort Filtervariante fnr Ausgabe der AS-Fehler an GST [PROKON DTIP TCSORT]
-	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
-	69 A1                                   andb    rl5, #1
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 6B                             bmov    word_FD00.11, USR0
-
-	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
-	69 A2                                   andb    rl5, #2
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 6C                             bmov    word_FD00.12, USR0
-	F3 FA 1E 00                             movb    rl5, CWKONABG   ; CWKONABG : Codewort fnr Konfiguration Abgasbehandlung [PROKON]
-	69 A4                                   andb    rl5, #4
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 69                             bmov    word_FD02.9, USR0
-
-	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
-	69 A1                                   andb    rl5, #1
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 6C                             bmov    word_FD02.12, USR0
-	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
-	69 A2                                   andb    rl5, #2
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 01 6D                             bmov    word_FD02.13, USR0
-
-	F3 FA 25 00                             movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
-	69 A4                                   andb    rl5, #4
-	3A 88 88 36                             bmovn   USR0, Z
-	4A 88 00 61                             bmov    word_FD00.1, USR0
-	C2 F4 18 00                             movbz   r4, CDSWE       ; CDSWE : Codewort DSWE abschalten (EURO-Codierung), CD..=0 -> keine Diagnose [PROKON]
-
-};
-#endif
  
  
 unsigned char needle_CWKONFZ1[] =
@@ -314,7 +152,6 @@ unsigned char needle_CWKONFZ1[] =
  0x3A, XXXX, XXXX, XXXX,              // bmovn   USR0, Z
  0x4A, XXXX, XXXX, XXXX,              // bmov    CWKONFZ1_0.0, USR0
 
-//----------------------------------------------------------------------------------------------------------------------------------
  0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWKONLS    ; CWKONLS : Codewort fnr Konfiguration Lambda Sonden [PROKON]
  0x69, 0x81,                          // andb    rl4, #1
  0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
@@ -360,14 +197,6 @@ unsigned char needle_CWKONFZ1[] =
  0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
  0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.10, USR0
 };
-#if 0
-
- 0xD7, 0x40, XXXX, XXXX,              // extp    #206h, #1
- 0xF3, 0xF8, XXXX, XXXX,              // movb    rl4, CWTKAT     ; CWTKAT :  [PROKON]
- 0x69, 0x81,                          // andb    rl4, #1
- 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
- 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.11, USR0
-#endif
 
 unsigned char needle_CWKONABG[] =
 {
@@ -420,23 +249,6 @@ unsigned char mask_CWKONABG[] =
 };
 
 unsigned int needle_CWKONABG_len = sizeof(needle_CWKONABG);
-
-
-
-#if 0
- 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
- 0x69, 0xA2,                          // andb    rl5, #2
- 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
- 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD02.13, USR0
-
- 0xF3, 0xFA, XXXX, XXXX,              // movb    rl5, CWUHR      ; CWUHR : Codewort fnr Uhr [PROKON]
- 0x69, 0xA4,                          // andb    rl5, #4
- 0x3A, 0x88, XXXX, XXXX,              // bmovn   USR0, Z
- 0x4A, 0x88, XXXX, XXXX,              // bmov    word_FD00.1, USR0
- 0xC2, 0xF4, XXXX, XXXX               // movbz   r4, CDSWE       ; CDSWE : Codewort DSWE abschalten (EURO-Codierung), CD..=0 -> keine Diagnose [PROKON]
-
-};
-#endif
 
 unsigned char mask_CWKONFZ1[] =
 {
@@ -558,93 +370,6 @@ unsigned char mask_CWKONFZ1[] =
 
 unsigned int needle_CWKONFZ1_len = sizeof(needle_CWKONFZ1);
 
-#if 0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-69 82                                   andb    rl4, #2
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 62                             bmov    CWKONLS_0.2, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-69 84                                   andb    rl4, #4
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 00 6E                             bmov    CWKONFZ1_0.14, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-67 F8 08 00                             andb    rl4, #8
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 60                             bmov    CWKONLS_0.0, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-67 F8 10 00                             andb    rl4, #10h
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 65                             bmov    CWKONLS_0.5, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-67 F8 20 00                             andb    rl4, #20h 
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 63                             bmov    CWKONLS_0.3, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-67 F8 40 00                             andb    rl4, #40h
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 00 6F                             bmov    CWKONFZ1_0.15, USR0
-
-F3 F8 20 00                             movb    rl4, CWKONLS
-67 F8 80 00                             andb    rl4, #80h 
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 61                             bmov    CWKONLS_0.1, USR0
-
-F3 F8 24 00                             movb    rl4, CWTF
-69 81                                   andb    rl4, #1
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 6A                             bmov    CWKONLS_0.10, USR0
-
-D7 40 06 02                             extp    #206h, #1
-F3 F8 91 01                             movb    rl4, CWTKAT
-69 81                                   andb    rl4, #1
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 6B                             bmov    CWKONLS_0.11, USR0
-
-F3 F8 1C 00                             movb    rl4, CWERFIL
-F7 F8 00 8A                             movb    CWERFIL_RAM, rl4
-
-F3 FA 1E 00                             movb    rl5, CWKONABG
-69 A1                                   andb    rl5, #1
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 00 6B                             bmov    CWKONFZ1_0.11, USR0
-
-F3 FA 1E 00                             movb    rl5, CWKONABG
-69 A2                                   andb    rl5, #2
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 00 6C                             bmov    CWKONFZ1_0.12, USR0
-
-F3 FA 1E 00                             movb    rl5, CWKONABG
-69 A4                                   andb    rl5, #4
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 69                             bmov    CWKONLS_0.9, USR0
-
-F3 FA 25 00                             movb    rl5, CWUHR
-69 A1                                   andb    rl5, #1
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 6C                             bmov    CWKONLS_0.12, USR0
-
-F3 FA 25 00                             movb    rl5, CWUHR
-69 A2                                   andb    rl5, #2
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 01 6D                             bmov    CWKONLS_0.13, USR0
-
-F3 FA 25 00                             movb    rl5, CWUHR
-69 A4                                   andb    rl5, #4
-3A 88 88 36                             bmovn   USR0, Z
-4A 88 00 61                             bmov    CWKONFZ1_0.1, USR0
-
-C2 F4 18 00                             movbz   r4, CDSWE
-68 41                                   and     r4, #1
-
-#endif
-
-
 unsigned char me75x_needle[] = 
 { 
  0xF6, XXXX, XXXX, XXXX,                            // mov     EntryTable_lkup_var1, r4
@@ -720,9 +445,6 @@ const unsigned char meinfo_mask[] = {
 // MASK, MASK, XXXX, XXXX,                            // mov     word_E234, r5
 // MASK, MASK,  		                                // rets
 };
-
- 
- 
  
 unsigned char needle_NWS[] =
 { 
@@ -1296,76 +1018,10 @@ unsigned char mask_DFFTCNV[] = {
 
 unsigned int needle_DFFTCNV_len = sizeof(needle_DFFTCNV);
 
- 
-//
-// this is the needle (masked) for the GGHFM_Lookup() function
-//
-
-#if 0
-const unsigned char full_needle_1[] = { 
- 0xF2, 0xF4, XXXX, XXXX,       //GGHFM_DHFM_Lookup: mov     r4, segram_BASE_ADDRESS_810000
- 0x48, 0x40,                   //                   cmp     r4, #0
- 0xFD, 0x0E,                   //                   jmpr    cc_ULE, hardcoded_start
- 
- 0xF2, 0xFC, XXXX, XXXX,       //                   mov     r12, segram_BASE_ADDRESS_810000
- 0x7C, 0x1C,                   // *                 shr     r12, #1
- 0x46, 0xFC, 0x00, 0x02,       // *                 cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
- 0x9D, 0x05,                   // *                 jmpr    cc_NC, end_of_table
- 
- 0xF0, 0x4C,                   // *                 mov     r4, r12
- 0x5C, 0x14,                   // *                 shl     r4, #1
- 0xD4, 0x54, XXXX, XXXX,       // *                 mov     r5, [r4+MLHFM]
- 0x0D, 0x02,                   //                   jmpr    cc_UC, relative_address
- 
- 0xF2, 0xF5, XXXX, XXXX,       // end_of_table:     mov     r5, MLHFM_END
- 0x0D, 0x02,                   // relative_address: jmpr    cc_UC, continue_dhfm
- 0xF2, 0xF5, XXXX, XXXX,       // hardcoded_start:  mov     r5, MLHFM      ; <---* MLHFM Table
- 0xF2, 0xFA, XXXX, XXXX,       // continue_dhfm:    mov     r10, MLHFM_var1
- 0xF2, 0xFB, XXXX, XXXX,       //                   mov     r11, MLHFM_var2
- 0x00, 0xA5,                   //                   add     r10, r5
- 0x12, 0xFB, 0x1C, 0xFF,       //                   addc    r11, ZEROS
- 0x9D, 0x03,                   //                   jmpr    cc_NC, init_mlhfm
- 0xE6, 0xFA, 0xFF, 0xFF,       //                   mov     r10, #0FFFFh
- 0xF0, 0xBA,                   //                   mov     r11, r10
- 0xF6, 0xFA, XXXX, XXXX,       // init_mlhfm:       mov     MLHFM_var1, r10
- 0xF6, 0xFB, XXXX, XXXX,       //                   mov     MLHFM_var2, r11
- 0x24, 0x8F, XXXX, XXXX,       //                   sub     MLHFM_var3, ONES
- 0xDB, 0x00                    //                   rets
-};
-
-const unsigned char full_mask_1[] = { 
- MASK, MASK, XXXX, XXXX,       //GGHFM_DHFM_Lookup: mov     r4, segram_BASE_ADDRESS_810000
- MASK, MASK,                   //                   cmp     r4, #0
- MASK, MASK,                   //                   jmpr    cc_ULE, hardcoded_start
- MASK, MASK, XXXX, XXXX,       //                   mov     r12, segram_BASE_ADDRESS_810000
- MASK, MASK,                   // *                 shr     r12, #1
- MASK, MASK, MASK, MASK,       // *                 cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
- MASK, MASK,                   // *                 jmpr    cc_NC, end_of_table
- MASK, MASK,                   // *                 mov     r4, r12
- MASK, MASK,                   // *                 shl     r4, #1
- MASK, MASK, XXXX, XXXX,       // *                 mov     r5, [r4+MLHFM]
- MASK, MASK,                   //                   jmpr    cc_UC, relative_address
- MASK, MASK, XXXX, XXXX,       // end_of_table:     mov     r5, MLHFM_END
- MASK, MASK,                   // relative_address: jmpr    cc_UC, continue_dhfm
- MASK, MASK, XXXX, XXXX,       // hardcoded_start:  mov     r5, MLHFM      ; <---* MLHFM Table
- MASK, MASK, XXXX, XXXX,       // continue_dhfm:    mov     r10, MLHFM_var1
- MASK, MASK, XXXX, XXXX,       //                   mov     r11, MLHFM_var2
- MASK, MASK,                   //                   add     r10, r5
- MASK, MASK, MASK, MASK,       //                   addc    r11, ZEROS
- MASK, MASK,                   //                   jmpr    cc_NC, init_mlhfm
- MASK, MASK, MASK, MASK,       //                   mov     r10, #0FFFFh
- MASK, MASK,                   //                   mov     r11, r10
- MASK, MASK, XXXX, XXXX,       // init_mlhfm:       mov     MLHFM_var1, r10
- MASK, MASK, XXXX, XXXX,       //                   mov     MLHFM_var2, r11
- MASK, MASK, XXXX, XXXX,       //                   sub     MLHFM_var3, ONES
- MASK, MASK                    //                   rets
-};
-#endif
 
 const unsigned char needle_1[] = { 
  0x7c, 0x1c,                 // shr   r12, #1
  0x46, 0xFC, 0x00, 0x02,       // *                 cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
-// 0x46, 0xfc, XXXX, XXXX,     // cmp   r12, #XXXXh
  0x9d, 0x05,                 // jmpr  cc_NC, end_of_table
  0xf0, 0x4c,                 // mov   r4, r12
  0x5c, 0x14,                 // shl   r4, #1,
@@ -1376,7 +1032,6 @@ unsigned int needle_1_len = sizeof(needle_1);
 const unsigned char mask_1[] = { 
  MASK, MASK,                 // shr   r12, #1
  MASK, MASK, MASK, MASK,     // cmp   r12, #200h
-// MASK, MASK, XXXX, XXXX,     // cmp   r12, #200h
  MASK, MASK,                 // jmpr  cc_NC, end_of_table
  MASK, MASK,                 // mov   r4, r12
  MASK, MASK,                 // shl   r4, #1
@@ -1393,14 +1048,6 @@ const unsigned char needle_mlhfm[] = {
  0x00, 0xA5,                                 //  add     r10, r5
  0x12, 0xFB, XXXX, XXXX,                     //  addc    r11, hfm_offset
 };
-// 0x9D, 0x03,                                 //  jmpr    cc_NC, not_end_of_table
-// 0xE6, 0xFA, 0xFF, 0xFF,                      //  mov     r10, #0FFFFh
-// 0xF0, 0xBA,                                 //  mov     r11, r10
-// 0xF6, 0xFA, XXXX, XXXX,                     //  mov     hfm_var1, r10
-// 0xF6, 0xFB, XXXX, XXXX,                     //  mov     hfm_var2, r11
-// 0x24, 0x8F, XXXX, XXXX,                     // sub     hfm_var3, ONES
-// 0xDB, 0x00                                  // rets
-//};
 
 unsigned int needle_mlhfm_len = sizeof(needle_mlhfm);
 
@@ -1422,27 +1069,6 @@ const unsigned char mask_mlhfm[] = {
  MASK, MASK                                  // rets
 };
 
-
-#if 0
-const unsigned char needle_KFKHFM[] = 
-{
- 0xE6, 0xFC, XXXX, XXXX,                           //  mov     r12, #KFKHFM					<--- * KFKHFM Table [+2]
- 0xC2, 0xFD, XXXX, XXXX,                           //  movbz   r13, XXXX
- 0xC2, 0xFE, XXXX, XXXX,                           //  movbz   r14, XXXX
- 0xDA, XXXX, XXXX, XXXX,                           //  calls   XXXX, word_XXXX
- 0xF7, 0xF8, XXXX, XXXX,                           //  movb    byte_XXXX, rl4
- 0xC2, 0xF4, XXXX, XXXX,                           //  movbz   r4, byte_XXXX
- 0xC2, 0xF5, XXXX, XXXX,                           //  movbz   r5, byte_XXXX
- 0x0B, 0x45,                                       //  mul     r4, r5
- 0xF6, 0x07, XXXX, XXXX,                           //  mov     XXXX, MDL
- 0xF2, 0xF4, 0x0E, 0xFE,                           //  mov     r4, MDL
- 0x98, 0x90,                                       //  mov     r9, [r0+]
- 0xDB, 0x00,                                       //  rets
- 0xE6, 0xFC, XXXX, XXXX,                           //  mov     r12, #PUKANS                 <--- * PUKANS Table [+44]
- 0xE6, 0xFD, XXXX, XXXX          				   //  mov     r13, #XXXXh                  <--- * Segment
-};
-#endif
-
 const unsigned char needle_KFKHFM[] = 
 {
  0xE6, 0xFC, XXXX, XXXX,                           //  mov     r12, #KFKHFM					<--- * KFKHFM Table [+2]
@@ -1453,12 +1079,6 @@ const unsigned char needle_KFKHFM[] =
  0xC2, 0xF4, XXXX, XXXX,                           //  movbz   r4, byte_XXXX
  0xC2, 0xF5, XXXX, XXXX,                           //  movbz   r5, byte_XXXX
  0x0B, 0x45,                                     //  mul     r4, r5
-// 0xF6, 0x07, XXXX, XXXX,                         //  mov     XXXX, MDL
-// 0xF2, 0xF4, 0x0E, 0xFE,                         //  mov     r4, MDL
-// 0x98, 0x90,                                     //  mov     r9, [r0+]
-// 0xDB, 0x00,                                     //  rets
-// 0xE6, 0xFC, XXXX, XXXX,                         //  mov     r12, #PUKANS                 <--- * PUKANS Table [+44]
-// 0xE6, 0xFD, XXXX, XXXX          				   //  mov     r13, #XXXXh                  <--- * Segment
 };
 
 const unsigned char mask_KFKHFM[] = 
@@ -1471,12 +1091,6 @@ const unsigned char mask_KFKHFM[] =
  MASK, MASK, XXXX, XXXX,                           //  movbz   r4, byte_XXXX
  MASK, MASK, XXXX, XXXX,                           //  movbz   r5, byte_XXXX
  MASK, MASK,                                       //  mul     r4, r5
-// MASK, MASK, XXXX, XXXX,                           //  mov     XXXX, MDL
-// MASK, MASK, MASK, MASK,                           //  mov     r4, MDL
-// MASK, MASK,                                       //  mov     r9, [r0+]
-// MASK, MASK,                                       //  rets
-// MASK, MASK, XXXX, XXXX,                           //  mov     r12, #PUKANS                 <--- * PUKANS Table
-// MASK, MASK, XXXX, XXXX                            //  mov     r13, #XXXXh                  <--- * Segment
 };
 
 unsigned int needle_KFKHFM_len = sizeof(needle_KFKHFM);
@@ -1590,56 +1204,30 @@ unsigned int needle_LAMFA_len = sizeof(needle_LAMFA);
 
 const unsigned char kwp2000_ecu_needle[] = 
 {
-0xC2, 0xF4, XXXX, XXXX,                       //movbz   r4, word_380DC8
-0xC2, 0xF5, XXXX, XXXX,                       // movbz   r5, byte_380DCC
+0xC2, 0xF4, XXXX, XXXX,                       // movbz   r4, XXXX
+0xC2, 0xF5, XXXX, XXXX,                       // movbz   r5, XXXX
 0x00, 0x45,                                   // add     r4, r5
-0x46, 0xF4, XXXX, XXXX,                       //  cmp     r4, #32h ; '2'
-0xDD, 0x0C,                                   //  jmpr    cc_SGE, loc_82792A
+0x46, 0xF4, XXXX, XXXX,                       // cmp     r4, #32h 
+0xDD, 0x0C,                                   // jmpr    cc_SGE, XXXX
 
-0xC2, 0xF4, XXXX, XXXX,                     //  movbz   r4, word_380DC8
-0xC2, 0xF5, XXXX, XXXX,                     //  movbz   r5, byte_380DCC
-0x00, 0x45,                                  // add     r4, r5
-0xF4, 0xA4, XXXX, XXXX                       // movb    rl5, [r4+29h]
-
-#if 0
- 0xE6, 0xF5, 0x00, 0x08,                             // mov     r5, #800h			; 22
- 0x74, 0xF5, XXXX, XXXX,                             // or      word_E074, r5		; 26
- 0xE1, 0x1C,     		                             // movb    rl6, #1				; 2a
- 0xE7, 0xF8, XXXX, XXXX,                             // movb    rl4, #(a431Me7_369117F131_us15l50sm2080501+28h)	; 2c
- 0xB9, 0x89,            		                     // movb    [r9], rl4			; 30
- 0xE1, 0x48,                    		             // movb    rl4, #4;				; 32
- 0xF7, 0xF8, XXXX, XXXX,                             // movb    byte_E1E6, rl4		; 34
- 0xE7, 0xFA, XXXX, XXXX,                             // movb    rl5, #a431Me7_369117F131_us15l50sm2080501 ; "43/1/ME7.3/69/117/F131_US//15l50sm2/080"...	; 38
- 0xF7, 0xFA, XXXX, XXXX, 
- 0x0D, 0x00
-#endif
+0xC2, 0xF4, XXXX, XXXX,                       // movbz   r4, XXXX
+0xC2, 0xF5, XXXX, XXXX,                       // movbz   r5, XXXX
+0x00, 0x45,                                   // add     r4, r5
+0xF4, 0xA4, XXXX, XXXX                        // movb    rl5, [r4+29h]
 };
 
 unsigned int kwp2000_ecu_needle_len = sizeof(kwp2000_ecu_needle);
 
 const unsigned char kwp2000_ecu_mask[] = { 
- MASK, MASK, XXXX, XXXX,                      //movbz   r4, word_380DC8
- MASK, MASK, XXXX, XXXX,                      // movbz   r5, byte_380DCC
+ MASK, MASK, XXXX, XXXX,                      // movbz   r4, XXXX
+ MASK, MASK, XXXX, XXXX,                      // movbz   r5, XXXX
  MASK, MASK,                                  // add     r4, r5
- MASK, MASK, XXXX, XXXX,                      //  cmp     r4, #32h ; '2'
- MASK, MASK,                                  //  jmpr    cc_SGE, loc_82792A
- MASK, MASK, XXXX, XXXX,                    //  movbz   r4, word_380DC8
- MASK, MASK, XXXX, XXXX,                    //  movbz   r5, byte_380DCC
+ MASK, MASK, XXXX, XXXX,                      // cmp     r4, #32h
+ MASK, MASK,                                  // jmpr    cc_SGE, XXXX
+ MASK, MASK, XXXX, XXXX,                      // movbz   r4, XXXX
+ MASK, MASK, XXXX, XXXX,                      // movbz   r5, XXXX
  MASK, MASK,                                  // add     r4, r5
- MASK, MASK, XXXX, XXXX                     // movb    rl5, [r4+29h]
-
-#if 0
- MASK, MASK, MASK, MASK,                             // mov     r5, #800h			; 22
- MASK, MASK, XXXX, XXXX,                             // or      word_E074, r5		; 26
- MASK, MASK,     		                             // movb    rl6, #1				; 2a
- MASK, MASK, XXXX, XXXX,                             // movb    rl4, #(a431Me7_369117F131_us15l50sm2080501+28h)	; 2c
- MASK, MASK,           		   		                 // movb    [r9], rl4			; 30
- MASK, MASK,                    		             // movb    rl4, #4				; 32
- MASK, MASK, XXXX, XXXX,                             // movb    byte_E1E6, rl4		; 34
- MASK, MASK, XXXX, XXXX,        // movb    rl5, #a431Me7_369117F131_us15l50sm2080501 ; "43/1/ME7.3/69/117/F131_US//15l50sm2/080"...	; 38
- MASK, MASK, XXXX, XXXX,        // movb    byte_E1F5, rl5		; 3c
- MASK, XXXX						// jmpr    cc_UC, loc_82F0C2	; 40
-#endif
+ MASK, MASK, XXXX, XXXX                       // movb    rl5, [r4+XXXXh]
 };
 
 //
@@ -1692,47 +1280,6 @@ const unsigned char mask_2[] = {
  
  MASK, MASK                  // rets
 };
-
-#if 0
-const unsigned char needle_2v2[] = {
- 0xE1, 0x28,                 // movb    rl4, #2
- 0x05, 0xF8, XXXX, XXXX,     // addb    byte_380103, rl4
- 0xC2, 0xF6, XXXX, XXXX,     // movbz   r6, byte_380103
- 0x5C, 0x26,                 // shl     r6, #2
- 0xD7, 0x60, XXXX, XXXX,     // extp    #206h, #3          +14
- 0xD4, 0x46, XXXX, XXXX,     // mov     r4, [r6+start_hi]  +18
- 0xD4, 0x56, XXXX, XXXX,     // mov     r5, [r6+start_lo]  +22
- 0xCC, 0x00,                 // nop                        
- 0xF6, 0xF4, XXXX, XXXX,     // mov     word_3800FE, r4    
- 0xF6, 0xF5, XXXX, XXXX,     // mov     word_380100, r5    
- 0xD7, 0x60, XXXX, XXXX,     // extp    #206h, #3          +36
- 0xD4, 0x46, XXXX, XXXX,     // mov     r4, [r6+end_hi]    +40
- 0xD4, 0x56, XXXX, XXXX,     // mov     r5, [r6+end_lo]    +44
- 0xCC, 0x00,                 // nop
- 0xF6, 0xF4, XXXX, XXXX,     // mov     word_380104, r4
- 0xF6, 0xF5, XXXX, XXXX      // mov     word_380106, r5
-};
-unsigned int needle_2v2_len = sizeof(needle_2v2);
- 
-const unsigned char mask_2v2[] = {
- MASK, MASK,                 // movb    rl4, #2
- MASK, MASK, XXXX, XXXX,     // addb    byte_380103, rl4
- MASK, MASK, XXXX, XXXX,     // movbz   r6, byte_380103
- MASK, MASK,                 // shl     r6, #2
- MASK, MASK, XXXX, XXXX,     // extp    #206h, #3
- MASK, MASK, XXXX, XXXX,     // mov     r4, [r6+start_hi]
- MASK, MASK, XXXX, XXXX,     // mov     r5, [r6+start_lo]
- MASK, MASK,                 // nop
- MASK, MASK, XXXX, XXXX,     // mov     word_3800FE, r4
- MASK, MASK, XXXX, XXXX,     // mov     word_380100, r5
- MASK, MASK, XXXX, XXXX,     // extp    #206h, #3
- MASK, MASK, XXXX, XXXX,     // mov     r4, [r6+end_hi]
- MASK, MASK, XXXX, XXXX,     // mov     r5, [r6+end_lo]
- MASK, MASK,                 // nop
- MASK, MASK, XXXX, XXXX,     // mov     word_380104, r4
- MASK, MASK, XXXX, XXXX      // mov     word_380106, r5
-};
-#endif
 
 //
 // this is the needle for the Main Checksum function to extract the "Number of entries in the table"
@@ -1850,9 +1397,6 @@ const unsigned char needle_3b[] = {
  0x22, 0xF4, XXXX, XXXX,     // sub     r4, checksum_stored_hi   <--- * this is offset to the word (stored checksum) [+40]
  0x32, 0xF5, XXXX, XXXX,     // subc    r5, checksum_stored_lo   <--- * this is offset to the word (stored checksum) [+44]
  0x3D, XXXX,                 // jmpr    cc_NZ, loc_YYYY
-// 0xE1, 0x88,                 // movb    rl4, #8
-// 0x75, 0xF8, XXXX, XXXX,     // orb     var_X, rl4
-// 0x0D, 0x04                  // jmpr    cc_UC, loc_YYYY
 };
 unsigned int needle_3b_len = sizeof(needle_3b);
 
@@ -1872,9 +1416,6 @@ const unsigned char mask_3b[] = {
  MASK, MASK, XXXX, XXXX,     // sub     r4, checksum_stored_hi   <--- * this is offset to the word (stored checksum)
  MASK, MASK, XXXX, XXXX,     // subc    r5, checksum_stored_lo   <--- * this is offset to the word (stored checksum)
  MASK, XXXX,                 // jmpr    cc_NZ, loc_YYYY
-// MASK, MASK,                 // movb    rl4, #8
-// MASK, MASK, XXXX, XXXX,     // orb     var_X, rl4
-// MASK, MASK                  // jmpr    cc_UC, loc_YYYY
 };
 
 //
@@ -2070,8 +1611,6 @@ const unsigned char mask_4c[] = {
 
  MASK, MASK,                  // mov     r4, r6
 };
-
-
 
 //
 // this is the needle (masked) for the Ferrari/Alfa Seed Key routine
@@ -2506,9 +2045,6 @@ const unsigned char mapfinder_xy_mask[] = {
  MASK, MASK, XXXX, XXXX,  // mov     word_XXXX, r4
 };
 
-
-
-
 const unsigned char crc32_needle[] = {
  0x88, 0x90,              // mov     [-r0], r9
  0x88, 0x80,              // mov     [-r0], r8
@@ -2615,3 +2151,585 @@ const unsigned char crc32_mask[] = {
 };
 
 
+unsigned char needle_DEKON2[] = {
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX      ; CDSWE
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0xE0, XXXX,                            // mov     r4, #XX
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX      ; CDTANKL
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0xE0, XXXX,                            // mov     r4, #XX
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX      ; CDLSV
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0xE0, XXXX,                            // mov     r4, #XX
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDLSH
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0xE0, XXXX,                            // mov     r4, #XX
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+};
+#if 0
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDHSV
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDHSHE
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDKAT
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDMD
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDATS
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDATR
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDKVS
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDDST
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +4
+	0x74, 0xF4, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, 0x04,                            // jmpr    cc_UC, +4
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     cd_bits1_w, r4
+	0x9A, XXXX, XXXX, XXXX,                // jnb     XXXX.XX, XXXX
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDTES
+	0x68, 0x41,                            // and     r4, #1
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh  
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh  
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDLDP
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh  
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDAGR
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDAGRL
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX     ; CDSLS
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE0, XXXX,                            // mov     r4, #XXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDSLSE
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE0, XXXX,                            // mov     r4, #XXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDNWS
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE0, XXXX,                            // mov     r4, #XXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLLR
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE0, XXXX,                            // mov     r4, #XXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLATP
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLATV
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLASH
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSHE
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSVE
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX,                // and     XXXX_w, r4
+	0xD7, XXXX, XXXX, XXXX,                // extp    #206h, #1
+
+	0xC2, 0xF4, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSVSA
+	0x68, 0x41,                            // and     r4, #1
+	0x2D, XXXX,                            // jmpr    cc_Z, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x74, 0xF4, XXXX, XXXX,                // or      XXXX_w, r4
+	0x0D, XXXX,                            // jmpr    cc_UC, +XX
+	0xE6, 0xF4, XXXX, XXXX,                // mov     r4, #XXXXh
+	0x64, 0xF4, XXXX, XXXX                 // and     XXXX_w, r4
+};
+#endif
+
+
+
+unsigned char mask_DEKON2[] = {
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX      ; CDSWE
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, XXXX,                            // mov     r4, #XX
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX      ; CDTANKL
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, XXXX,                            // mov     r4, #XX
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX      ; CDLSV
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, XXXX,                            // mov     r4, #XX
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDLSH
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, XXXX,                            // mov     r4, #XX
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDHSV
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDHSHE
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDKAT
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDMD
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDATS
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDATR
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDKVS
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDDST
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +4
+	MASK, MASK, XXXX, XXXX,                // or      cd_bits1_w, r4
+	0x0D, 0x04,                            // jmpr    cc_UC, +4
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     cd_bits1_w, r4
+	0x9A, XXXX, XXXX, XXXX,                // jnb     XXXX.XX, XXXX
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDTES
+	MASK, MASK,                            // and     r4, #1
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh  
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh  
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDLDP
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh  
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDAGR
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDAGRL
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX     ; CDSLS
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, XXXX,                            // mov     r4, #XXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDSLSE
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, XXXX,                            // mov     r4, #XXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDNWS
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, XXXX,                            // mov     r4, #XXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLLR
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, XXXX,                            // mov     r4, #XXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLATP
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLATV
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDLASH
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSHE
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSVE
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // and     XXXX_w, r4
+	MASK, XXXX, XXXX, XXXX,                // extp    #206h, #1
+
+	MASK, MASK, XXXX, XXXX,                // movbz   r4, XXXX    ; CDHSVSA
+	MASK, MASK,                            // and     r4, #1
+	MASK, XXXX,                            // jmpr    cc_Z, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX,                // or      XXXX_w, r4
+	MASK, XXXX,                            // jmpr    cc_UC, +XX
+	MASK, MASK, XXXX, XXXX,                // mov     r4, #XXXXh
+	MASK, MASK, XXXX, XXXX                // and     XXXX_w, r4
+};
+
+unsigned int needle_DEKON2_len = sizeof(needle_DEKON2);
+
+unsigned char needle_BGMSZS[] = 
+{
+	0xE0, 0x04,                                // mov     r4, #0
+	0xF0, 0x58,                                // mov     r5, r8
+	0x7C, 0x15,                                // shr     r5, #1
+	0xF6, 0xF5, 0x0C, 0xFE,                    // mov     MDH, r5
+	0xF6, 0xF4, 0x0E, 0xFE,                    // mov     MDL, r4
+	0x7B, 0x99,                                // divlu   r9
+	0x4D, 0x03,                                // jmpr    cc_V, +3
+	0xF2, 0xF4, 0x0E, 0xFE,                    // mov     r4, MDL
+	0x0D, 0x02,                                // jmpr    cc_UC, +2
+
+	0xE6, 0xF4, 0xFF, 0xFF,                    // mov     r4, #0FFFFh
+	0xF0, 0x84,                                // mov     r8, r4
+	0xE6, 0xF4, 0x00, 0x80,                    // mov     r4, #8000h
+	0x00, 0x48,                                // add     r4, r8
+	0x9D, 0x02,                                // jmpr    cc_NC, +2
+	0xE6, 0xF4, 0xFF, 0xFF,                    // mov     r4, #0FFFFh
+	0xF0, 0x84,                                // mov     r8, r4
+	0xE6, 0xFC, XXXX, XXXX,                    // mov     r12, #KFMSNWDK  ; KFMSNWDK : Kennfeld normierter Massenstrom nber DK [BGMSZS, BGRLP]
+	0xF2, 0xFD, XXXX, XXXX,                    // mov     r13, wdkbab_w   ; wdkbab_w : wdkba_w begrenzt (Minimalauswahl zwischen wdkba_w und wdkugd_w) [BGMSZS]
+	0xF2, 0xFE, XXXX, XXXX,                    // mov     r14, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+	0xDA, 0x00, XXXX, XXXX                     // calls   0, WLookup2D    ; 2D Lookup Word Arguments usually Boost and Fuel related
+};
+
+unsigned char mask_BGMSZS[] = 
+{
+	MASK, MASK,                                // mov     r4, #0
+	MASK, MASK,                                // mov     r5, r8
+	MASK, MASK,                                // shr     r5, #1
+	MASK, MASK, MASK, MASK,                    // mov     MDH, r5
+	MASK, MASK, MASK, MASK,                    // mov     MDL, r4
+	MASK, MASK,                                // divlu   r9
+	MASK, MASK,                                // jmpr    cc_V, +3
+	MASK, MASK, MASK, MASK,                    // mov     r4, MDL
+	MASK, MASK,                                // jmpr    cc_UC, +2
+
+	MASK, MASK, MASK, MASK,                    // mov     r4, #0FFFFh
+	MASK, MASK,                                // mov     r8, r4
+	MASK, MASK, MASK, MASK,                    // mov     r4, #8000h
+	MASK, MASK,                                // add     r4, r8
+	MASK, MASK,                                // jmpr    cc_NC, +2
+	MASK, MASK, MASK, MASK,                    // mov     r4, #0FFFFh
+	MASK, MASK,                                // mov     r8, r4
+	MASK, MASK, XXXX, XXXX,                    // mov     r12, #KFMSNWDK  ; KFMSNWDK : Kennfeld normierter Massenstrom nber DK [BGMSZS, BGRLP]
+	MASK, MASK, XXXX, XXXX,                    // mov     r13, wdkbab_w   ; wdkbab_w : wdkba_w begrenzt (Minimalauswahl zwischen wdkba_w und wdkugd_w) [BGMSZS]
+	MASK, MASK, XXXX, XXXX,                    // mov     r14, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+	MASK, MASK, XXXX, XXXX                     // calls   0, WLookup2D    ; 2D Lookup Word Arguments usually Boost and Fuel related
+};
+
+unsigned int needle_BGMSZS_len = sizeof(needle_BGMSZS);
+
+unsigned char needle_FUEDK[] = {
+#if 0
+	0x7C, 0x15,                                  // shr     r5, #1
+	0xF6, 0xF5, 0x0C, 0xFE,                      // mov     MDH, r5
+	0xF6, 0xF4, 0x0E, 0xFE,                      // mov     MDL, r4
+	0x7B, 0x66,                                  // divlu   r6
+	0x4D, 0x03,                                  // jmpr    cc_V, +3
+	0xF2, 0xF4, 0x0E, 0xFE,                      // mov     r4, MDL
+	0x0D, 0x02,                                  // jmpr    cc_UC, +2
+	0xE6, 0xF4, 0xFF, 0xFF,	                     // mov     r4, #0FFFFh
+#endif
+	
+//	0xF6, 0xF4, XXXX, XXXX,                      // mov     mldkns_w, r4    ; mldkns_w : Normierter Soll-Luftmassenstrom durch Drosselvorrichtung [FUEDK]
+//	0x22, 0xF4, XXXX, XXXX,                      // sub     r4, msndko_w    ; msndko_w : normierter Leckluftmassenstrom nber Drosselklappe (word) [BGMSZS BGRLP FUEDK KWPDATR]
+//	0x9D, 0x01,                                  // jmpr    cc_NC, +1
+//	0xE0, 0x04,                                  // mov     r4, #0
+	0xF6, 0xF4, XXXX, XXXX,                      // mov     mlwdkns_w, r4   ; mlwdkns_w : Normierter Luftmassenstrom fnr Sollwinkelbestimmung Drosselklappe [FUEDK]
+	0xE6, 0xFC, XXXX, XXXX,                      // mov     r12, #KFWDKMSN_X_NUM ; KFWDKMSN : Kennfeld fnr Drosselklappen-Sollwinkel [FUEDK]
+	0xF0, 0xD4,                                  // mov     r13, r4
+	0xF2, 0xFE, XXXX, XXXX,                      // mov     r14, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+	0xDA, XXXX, XXXX, XXXX,                      // calls   0, WLookup2D    ; 2D Lookup Word Arguments usually Boost and Fuel related
+	0xF0, 0x94,                                  // mov     r9, r4
+	0x42, 0xF9, XXXX, XXXX,                      // cmp     r9, wdkugd_w    ; wdkugd_w : Drosselklappenwinkel, bei dem 95% Fnllung erreicht wird [BGMSZS BGRLP FUEDK]
+//	0xED, 0x04,                                  // jmpr    cc_UGT, +4
+//	0xF6, 0xF9, XXXX, XXXX,                      // mov     w_XXXX, r9
+//	0x9E, XXXX,                                  // bclr    w_XXXX.X
+//	0x0D, 0x05                                   // jmpr    cc_UC, +5
+};
+
+unsigned char mask_FUEDK[] = {
+#if 0
+	MASK, MASK,                                  // shr     r5, #1
+	MASK, MASK, MASK, MASK,                      // mov     MDH, r5
+	MASK, MASK, MASK, MASK,                      // mov     MDL, r4
+	MASK, MASK,                                  // divlu   r6
+	MASK, MASK,                                  // jmpr    cc_V, +3
+	MASK, MASK, MASK, MASK,                      // mov     r4, MDL
+	MASK, MASK,                                  // jmpr    cc_UC, +2
+	MASK, MASK, MASK, MASK,                      // mov     r4, #0FFFFh
+#endif
+
+//	MASK, MASK, XXXX, XXXX,                      // mov     mldkns_w, r4    ; mldkns_w : Normierter Soll-Luftmassenstrom durch Drosselvorrichtung [FUEDK]
+//	MASK, MASK, XXXX, XXXX,                      // sub     r4, msndko_w    ; msndko_w : normierter Leckluftmassenstrom nber Drosselklappe (word) [BGMSZS BGRLP FUEDK KWPDATR]
+//	MASK, MASK,                                  // jmpr    cc_NC, +1
+//	MASK, MASK,                                  // mov     r4, #0
+	MASK, MASK, XXXX, XXXX,                      // mov     mlwdkns_w, r4   ; mlwdkns_w : Normierter Luftmassenstrom fnr Sollwinkelbestimmung Drosselklappe [FUEDK]
+	MASK, MASK, XXXX, XXXX,                      // mov     r12, #KFWDKMSN_X_NUM ; KFWDKMSN : Kennfeld fnr Drosselklappen-Sollwinkel [FUEDK]
+	MASK, MASK,                                  // mov     r13, r4
+	MASK, MASK, XXXX, XXXX,                      // mov     r14, nmot_w     ; nmot_w : Motordrehzahl [BGNMOT ACIFI ARMD BBGANG BGMSZS BGNG BGRLP BGSRM CAN DFFTCNV DHFM ESUK FUEDK GGDPG KHMD KWPDATR LLRRM LRS MDBAS MDFAW MDFUE MDKOL MDMIN MDNSTAB MDRED MDVER MDZW NMAXMD SSTB TC1MOD TEB]
+	MASK, XXXX, XXXX, XXXX,                      // calls   0, WLookup2D    ; 2D Lookup Word Arguments usually Boost and Fuel related
+	MASK, MASK,                                  // mov     r9, r4
+	MASK, MASK, XXXX, XXXX,                      // cmp     r9, wdkugd_w    ; wdkugd_w : Drosselklappenwinkel, bei dem 95% Fnllung erreicht wird [BGMSZS BGRLP FUEDK]
+//	MASK, MASK,                                  // jmpr    cc_UGT, +4
+//	MASK, MASK, XXXX, XXXX,                      // mov     w_XXXX, r9
+//	MASK, XXXX,                                  // bclr    w_XXXX.X
+//	MASK, MASK                                   // jmpr    cc_UC, +5
+};
+
+unsigned int needle_FUEDK_len = sizeof(needle_FUEDK);

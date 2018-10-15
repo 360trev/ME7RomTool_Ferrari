@@ -115,20 +115,18 @@ ESKCONF_TABLE eskconf_right_bank[] = {
 };
 
 
-void dump_bits(char *dst, int val, int numbits)
+void dump_bits(char *dst, int val, int numbits, int skips)
 {
-    int i, mask = (1 << numbits);
+    int i,j, mask = (1 << numbits);
 	for(i=0;i<4;i++)
 	{
 		mask >>= 1;
 		*dst++ = (val & mask) ? '1':'0';
 		mask >>= 1;
 		*dst++ = (val & mask) ? '1':'0';
-		*dst++ = ' ';
-		*dst++ = ' ';
-		*dst++ = ' ';
-		*dst++ = ' ';
-		*dst++ = ' ';
+		for(j=0;j<skips;j++) {
+			*dst++ = ' ';
+		}
 	}
 	*dst = 0;
 }
@@ -136,7 +134,7 @@ void dump_bits(char *dst, int val, int numbits)
 void print_eskonf_byte( ESKCONF_TABLE *p, int idx, unsigned char ch)
 {
 	char s_bin[64] = { "0 0 0 0 0 0 0 0" };
-	dump_bits(s_bin, ch, 8);
+	dump_bits(s_bin, ch, 8, 5);
 	
 	
 	printf("          | %-6.6s %-6.6s %-6.6s %-6.6s\n", p->s1, p->s2, p->s3, p->s4);
@@ -234,6 +232,26 @@ int check_eskonf(ImageHandle *fh, int skip)
 		for(i=0;i<7;i++) { 
 			print_eskonf_byte( &right[i], i, *(unsigned char *)(rom_load_addr + val_r_adr + i));
 		}
+
+		// If Air Injection is enabled its going to be a non European car (e.g. Federal spec US car)
+		{
+			char s_bin[8*8];
+			int i, air=0x00;
+			// convert ESKONF_R into byte array of 0's and 1's to make it easier to check for bits.. :)
+			for(i=0;i<7;i++) { dump_bits(s_bin+i*8, *(unsigned char *)(rom_load_addr + val_r_adr + i), 8, 0); }
+
+			if(s_bin[44] == '1') { air |=0x01; } // check if bit 44 is set - ESKONF_R array [5x8=40 + 4)
+			if(s_bin[45] == '1') { air |=0x10; } // check if bit 45 is set - ESKONF_R array [5x8=40 + 5)
+
+			if(air == 0x11) { 
+				printf("Air Injection Diagnostics are off: This is probably a European spec car\n"); 			
+			} else { 
+				printf("Air Injection Diagnostics are on:  This is probably a US spec (Federal) car.\n"); 
+			}
+		}
+
+
+
 		
 		printf("\n");
 

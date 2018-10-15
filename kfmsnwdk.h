@@ -19,27 +19,11 @@
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
    IN THE SOFTWARE.
 */
-#ifndef _TABLE_SPEC_SUPPORT_H
-#define _TABLE_SPEC_SUPPORT_H
-#include "show_tables.h"
+#ifndef _KFMSNWDK_SUPPORT_H
+#define _KFMSNWDK_SUPPORT_H
+#include "utils.h"
+#include "needles.h"
 
-extern TABLE_DEF KPED_table;
-extern TABLE_DEF KPEDR_table;
-extern TABLE_DEF KFAGK_table;
-extern TABLE_DEF KFKHFM_table;
-extern TABLE_DEF PUKANS_table;
-extern TABLE_DEF LAMFA_table;
-extern TABLE_DEF KFNW_table;
-extern TABLE_DEF KFNWWL_table;
-extern TABLE_DEF KFZW_table;
-extern TABLE_DEF KFZW2_table;
-extern TABLE_DEF KFTVSA_table;
-extern TABLE_DEF KFTVSA0_table;
-extern TABLE_DEF KFMSNWDK_table;
-extern TABLE_DEF KFWDKMSN_table;
-extern TABLE_DEF FKKVS_table;
-
-extern TABLE_DEF XXXX_table;
-extern TABLE_DEF XXXXB_table;
+int check_kfmsnwdk(ImageHandle *fh, int skip);
 
 #endif
