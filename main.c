@@ -91,6 +91,7 @@ int show_kfmsnwdk=0;
 int show_kfwdkmsn=0;
 int show_kfsu=0;
 int show_kfsu2=0;
+int show_mlhfm=0;
 
 unsigned long dpp0_value, dpp1_value, dpp2_value, dpp3_value;
 
@@ -115,6 +116,7 @@ OPTS_ENTRY opts_table[] = {
 	{ "-FKKVS",   &show_fkkvs,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show FKKVS Correction factor fueling system.\n"						            },
 	{ "-KFNW",    &show_kfnw,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNW Characteristic map for variable camshaft control table.\n"            },
 	{ "-NMAX",    &show_nmax,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show NMAX rev limiter.\n"                                                       },
+	{ "-MLHFM",   &show_mlhfm,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show MLHFM Linerization of airflow voltages from air flow meter.\n"             },
 	{ "-KFNWWL",  &show_kfnwwl,       OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFNWWL Characteristic map for variable camshaft control during warm-up.\n" },
 	{ "-KFZW",    &show_kfzw,         OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFZW Ignition timing table.\n"         								    },
 	{ "-KFZW2",   &show_kfzw2,        OPTION_SET,   0,          OPTIONAL,  "Try to identify and show KFZW Ignition timing variant 2 table.\n"            						},
@@ -308,8 +310,11 @@ int search_rom(int find_mlhfm, char *filename_rom, char *filename_hfm)
 			
 			// check for multimaps
 			check_multimap(fh, show_multimap);
+	
+			check_mlhfm(fh, show_mlhfm);
+			
 			// mlhfm support
-			check_mlhfm(fh, addr, filename_rom, filename_hfm, dynamic_ROM_FILESIZE, rom_load_addr);
+			check_mlhfm2(fh, addr, filename_rom, filename_hfm, dynamic_ROM_FILESIZE, rom_load_addr);
 			// do correction
 			fix_checksums(fh, addr, filename_rom, dynamic_ROM_FILESIZE, rom_load_addr);
 			

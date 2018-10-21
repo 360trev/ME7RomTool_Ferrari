@@ -37,8 +37,11 @@ int check_dppx(ImageHandle *fh, int skip)
 
 	printf("-[ DPPx Setup Analysis ]-----------------------------------------------------------------\n\n");
 
-	printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] ");
+	printf(">>> Scanning for Main ROM DPPx setup #1 [to extract dpp0, dpp1, dpp2, dpp3 from rom] \n");
 	addr = search( fh, (unsigned char *)&needle_dpp, (unsigned char *)&mask_dpp, needle_dpp_len, 0 );
+
+	if(show_diss) { c167x_diss(addr-rom_load_addr, addr, 18); }
+
 	if(addr == NULL) {
 		printf("\nmain rom dppX byte sequence #1 not found\nProbably not an ME7.x firmware file!\n");
 		exit(0);	// force quit program

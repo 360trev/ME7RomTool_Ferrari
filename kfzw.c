@@ -69,7 +69,7 @@ int check_kfzw(ImageHandle *fh, int skip, int mode)
 		{
 			printf("found at offset=0x%x. \n",(int)(addr_gru-rom_load_addr) );
 			// disassemble needle found in rom
-			if(show_diss) { c167x_diss(addr-rom_load_addr, addr_gru, needle_SSTB_len); }
+			if(show_diss) { c167x_diss(addr_gru-rom_load_addr, addr_gru, needle_SSTB_len); }
 
 			if( mode == 1) {
 				// get offset to 'KFZW' cell data...

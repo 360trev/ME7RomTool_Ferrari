@@ -32,6 +32,7 @@ extern char *hfm_name;
 extern int correct_checksums;
 extern int find_mlhfm;
 
-int check_mlhfm(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *filename_hfm, unsigned long dynamic_ROM_FILESIZE, unsigned char *offset_addr);
+int check_mlhfm(ImageHandle *fh, int skip);
+int check_mlhfm2(ImageHandle *fh, unsigned char *addr, char *filename_rom, char *filename_hfm, unsigned long dynamic_ROM_FILESIZE, unsigned char *offset_addr);
 
 #endif

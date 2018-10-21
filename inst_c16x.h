@@ -27,25 +27,38 @@
 /*
  * Addressing Modes
  */
-#define _cRw			0 // _n R0, R1, R2, ... R15
-#define _cRb			1 // _n RL0, RH0, RL1, ... RH7
-#define _cRb_plus		2 // _n RL0, RH0, RL1, ... RH7 ]+
-#define _cregb			3 // cregb_RR SFR/GPR (byte)
-#define _cregw			4 // cregw_RR SFR/GPR (word)
-#define _cmem			5 // MMMM 1234H
-#define _cbitaddr		6 // _QQ_q	-
-#define _cbitoff		7 // _QQ
-#define _cirang2		8 // (:..##)
-#define _cdata3			9 // (:.###)
-#define _cdata4			10 // (#)
-#define _cdata8			11 // (##)
-#define _cdata16		12 // (####)
-#define _cmask8			13 // (@@)
-#define _ccaddr			14 // (MMMM)
-#define _cseg			15 // (SS)
-#define _crel			16 // crel(rr)
-#define _ctrap7			17 // ctrap7(
-#define _ccc			18 // ccc(cc)		CC_UC, CC_NZ, ...
+#define UNDEFINED           0 
+#define RW 					1       //  Rn
+#define RW_IND 				2 	//  [Rn]
+#define RW_IND_POST_INC		3 	//  [Rn]+
+#define RW_IND_POST_DEC		4 	//  [Rn]-
+#define RW_IND_PRE_INC		5 	// +[Rn]
+#define RW_IND_PRE_DEC		6 	// -[Rn]
+#define RW_IND_1_DATA16_2	7 	//  [Rn+Data16]
+#define RB					8 
+#define REGB				9 
+#define REGW				10
+#define MEM					11
+#define BITADR				12
+#define BITOFF				13
+#define IRANG2				14
+#define DATA3				15
+#define DATA4				16
+#define DATA8				17
+#define DATA16 				18
+#define MASK8 				19
+#define ADR					20
+#define SEG					21
+#define REG 				22
+#define TRAP7 				23
+#define CC 					24
+#define REL 				25
+#define OPDATA				26
+#define RW_L				27       //  Rn
+#define REGB2				28
+#define REGB3				29
+#define BITADR_W			30
+#define BITADR_W2			31
 
 /*
  * Conditional's
@@ -74,27 +87,83 @@
 
 #define get_bits(in, from, to) ((in & (( (1<<(to-from+1))-1) << from)) >> from)
 
+#define get_hi_nibble(rval)	   ((rval & 0xf0) >> 4)
+#define get_lo_nibble(rval)	   ((rval & 0x0f))
+
+#define MAX_ARGS		4
+
+typedef struct REGB_ENTRY {
+	char *name;
+	unsigned char hex;
+} REGB_ENTRY;
+
+typedef struct REG_ENTRY {
+	char *name;
+	unsigned short hex;
+} REG_ENTRY;
+
 typedef struct REGS {
- char *name;
+	char *name;
 } REGS;
 
+typedef struct SFR_ENTRY {
+	char          *name;
+	unsigned short hex_w;
+	unsigned char  hex_b;
+	char          *desc;
+} SFR_ENTRY;
+
+typedef struct ARG_ENTRY {
+	unsigned char type;
+	unsigned char pos;
+} ARG_ENTRY;
+ 
+typedef struct ARG_DEF {
+	ARG_ENTRY list[MAX_ARGS];
+} ARG_DEF;
+
 typedef struct BITS {
- unsigned char op1;
- unsigned char op2;
- unsigned char op3;
- unsigned char op4;
- unsigned char op5;
+ unsigned char ops[5];
 } BITS;
 
 typedef struct INST {
- unsigned char opcode;
- unsigned char len;
- struct BITS bits;
- unsigned char *name;
- struct INST *link; 
+ unsigned char  opcode;
+ unsigned char  len;
+ char          *name;
+ struct BITS    bits;
+ char          *fmt;
+ char           argcount;
+ ARG_DEF        args;
+ void          *tmp;
+ struct INST   **link;
+ unsigned char  addLF;
 } INST;
 
-extern INST inst_set[0xff];
+extern REG_ENTRY CCNames[];
+extern REG_ENTRY RHNames[];
+extern SFR_ENTRY SFR_Entries[];
+extern SFR_ENTRY SFR8_Entries[];
+extern INST inst_table_0x08[];                                                      
+extern INST inst_table_0x09[];                                                         
+extern INST inst_table_0x18[];                                                         
+extern INST inst_table_0x19[];                                                         
+extern INST inst_table_0x28[];                                                         
+extern INST inst_table_0x29[];                                                         
+extern INST inst_table_0x38[];                                                         
+extern INST inst_table_0x39[];                                                         
+extern INST inst_table_0x48[];                                                         
+extern INST inst_table_0x49[];                                                         
+extern INST inst_table_0x58[];                                                         
+extern INST inst_table_0x59[];                                                         
+extern INST inst_table_0x68[];                                                         
+extern INST inst_table_0x69[];                                                         
+extern INST inst_table_0x78[];                                                         
+extern INST inst_table_0x79[];                                                         
+extern INST inst_table_0xb7[];                                                         
+extern INST inst_table_0xd1[];                                                         
+extern INST inst_table_0xd7[];                                                         
+extern INST inst_table_0xdc[];                                                         
+extern INST inst_set[256];
 
 void c167x_diss(unsigned char *rom_start, uint8_t *buf, int len);
 

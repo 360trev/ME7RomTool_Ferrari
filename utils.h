@@ -44,8 +44,25 @@
 #define ROM_FILESIZE		 512*1024
 #define MAX_ROM_REGIONS      32
 #define SEGMENT_SIZE         0x4000
-#define ROM_BASE_ADDRESS     0x800000
+
+//#define ROM_BASE_ADDRESS     0x800000		note this is derived from project configuration and setting of the dppx registers
 #define ROM_1MB_MASK         0xFFF00000
+
+// On ME7.x the convention Bosch used was that the boot loader occupied the first 32kbytes of rom
+// with 32kbytes typically unused (64kbytes in total) followed by 64kbytes of map data area. 
+//
+// Straight after the first 128kbytes the rom code proper starts. Therefore there is no point in
+// searching for rom code in either the map or boot loader area's so we add a skip offset to the
+// search starting point to reflect this.
+
+#define ROM_START			0
+#define BOOT_LOADER_START	(ROM_START)
+#define BOOT_LOADER_SIZE	64*1024
+#define MAP_AREA_START		(ROM_START+BOOT_LOADER_SIZE)
+#define MAP_AREA_SIZE		64*1024
+#define ROM_MAIN_START		(ROM_START+BOOT_LOADER_SIZE+MAP_AREA_SIZE)
+
+#define ROM_START_OFFSET	ROM_MAIN_START	// we start searching for our needle after boot loader and maps
 
 typedef struct MPTR {
 	unsigned char *name;		// name of field

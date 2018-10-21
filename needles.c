@@ -1018,24 +1018,81 @@ unsigned char mask_DFFTCNV[] = {
 
 unsigned int needle_DFFTCNV_len = sizeof(needle_DFFTCNV);
 
+const unsigned char needle_1q[] = { 
+// 0x7c, 0x1c,                 // shr   r12, #1
+// 0x46, 0xFC, 0x00, 0x02,     // * cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
+// 0x9d, XXXX,  //0x05,        // jmpr  cc_NC, end_of_table
+   0xf0, 0x4c,                 // mov   r4, r12
+   0x5C, 0x14,                 // shl   r4, #1,
+   0xD4, 0x54, XXXX, XXXX,     // mov   r5, [r4 + XXXX]    <--- * this offset + 0x10000 [map base in rom] gives offset (instruction is in little endian format so conversion neccesary) in file to MLHFM Linearization 1kbyte (512 entries of 16-bits) table
+   0x0D, XXXX,                 // jmpr  cc_UC, +x
+   0xF2, XXXX, XXXX, XXXX,     // mov     r5, [XXXX]     ; MLHFM : Linearisierung der Hei¯filmspannung [GGHFM]
+//   0xF2, XXXX, XXXX, XXXX,     // mov     r10, m_hfm_var1
+// 0xF2, 0xFB, XXXX, XXXX,     // mov     r11, m_hfm_var2
+// 0x00, 0xA5,                 // add     r10, r5
+// 0x12, 0xFB, 0x1C, 0xFF,     // addc    r11, ZEROS
+// 0x9D, 0x03,                 // jmpr    cc_NC, exit_gghfm
+// 0xE6, 0xFA, 0xFF, 0xFF,     // mov     r10, #0FFFFh
+// 0xF0, 0xBA                  // mov     r11, r10
+};
+
+unsigned int needle_1q_len = sizeof(needle_1q);
+
+const unsigned char mask_1q[] = { 
+// MASK, MASK,                 // shr   r12, #1
+// MASK, MASK, MASK, MASK,     // cmp   r12, #200h
+// MASK, XXXX,                 // jmpr  cc_NC, end_of_table
+   MASK, MASK,                   // mov   r4, r12
+   MASK, MASK,                   // shl   r4, #1
+   MASK, MASK, XXXX, XXXX,       // mov   r5, [XXXX]  
+   MASK, XXXX,                   // jmpr  cc_UC, +x 
+   MASK, XXXX, XXXX, XXXX,       // mov     r5, MLHFM       ; MLHFM : Linearisierung der Hei¯filmspannung [GGHFM]
+//   MASK, XXXX, XXXX, XXXX,       // mov     r10, m_hfm_var1
+// MASK, MASK, XXXX, XXXX,       // mov     r11, m_hfm_var2
+// MASK, MASK,                   // add     r10, r5
+// MASK, MASK, MASK, MASK,       // addc    r11, ZEROS
+// MASK, MASK,                   // jmpr    cc_NC, exit_gghfm
+// MASK, MASK, MASK, MASK,       // mov     r10, #0FFFFh
+// MASK, MASK,                   // mov     r11, r10
+};
+
 
 const unsigned char needle_1[] = { 
- 0x7c, 0x1c,                 // shr   r12, #1
- 0x46, 0xFC, 0x00, 0x02,       // *                 cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
- 0x9d, 0x05,                 // jmpr  cc_NC, end_of_table
- 0xf0, 0x4c,                 // mov   r4, r12
- 0x5c, 0x14,                 // shl   r4, #1,
- 0xd4, 0x54, XXXX, XXXX      // mov   r5, [r4 + XXXX]    <--- * this offset + 0x10000 [map base in rom] gives offset (instruction is in little endian format so conversion neccesary) in file to MLHFM Linearization 1kbyte (512 entries of 16-bits) table
+// 0x7c, 0x1c,                 // shr   r12, #1
+// 0x46, 0xFC, 0x00, 0x02,     // * cmp     r12, #200h      ; Index cannot go out of the bounds of the linearization table
+// 0x9d, XXXX,  //0x05,        // jmpr  cc_NC, end_of_table
+//   0xf0, 0x4c,                 // mov   r4, r12
+   0x5C, 0x14,                 // shl   r4, #1,
+   0xD4, 0x54, XXXX, XXXX,     // mov   r5, [r4 + XXXX]    <--- * this offset + 0x10000 [map base in rom] gives offset (instruction is in little endian format so conversion neccesary) in file to MLHFM Linearization 1kbyte (512 entries of 16-bits) table
+//   0x0D, XXXX,                 // jmpr  cc_UC, +x
+//   0xF2, XXXX, XXXX, XXXX,     // mov     r5, [XXXX]     ; MLHFM : Linearisierung der Hei¯filmspannung [GGHFM]
+//   0xF2, XXXX, XXXX, XXXX,     // mov     r10, m_hfm_var1
+// 0xF2, 0xFB, XXXX, XXXX,     // mov     r11, m_hfm_var2
+// 0x00, 0xA5,                 // add     r10, r5
+// 0x12, 0xFB, 0x1C, 0xFF,     // addc    r11, ZEROS
+// 0x9D, 0x03,                 // jmpr    cc_NC, exit_gghfm
+// 0xE6, 0xFA, 0xFF, 0xFF,     // mov     r10, #0FFFFh
+// 0xF0, 0xBA                  // mov     r11, r10
 };
+
 unsigned int needle_1_len = sizeof(needle_1);
 
 const unsigned char mask_1[] = { 
- MASK, MASK,                 // shr   r12, #1
- MASK, MASK, MASK, MASK,     // cmp   r12, #200h
- MASK, MASK,                 // jmpr  cc_NC, end_of_table
- MASK, MASK,                 // mov   r4, r12
- MASK, MASK,                 // shl   r4, #1
- MASK, MASK, XXXX, XXXX      // mov   r5, [r4 + 4300]
+// MASK, MASK,                 // shr   r12, #1
+// MASK, MASK, MASK, MASK,     // cmp   r12, #200h
+// MASK, XXXX,                 // jmpr  cc_NC, end_of_table
+//   MASK, MASK,                   // mov   r4, r12
+   MASK, MASK,                   // shl   r4, #1
+   MASK, MASK, XXXX, XXXX,       // mov   r5, [XXXX]  
+//   MASK, XXXX,                   // jmpr  cc_UC, +x 
+//   MASK, XXXX, XXXX, XXXX,       // mov     r5, MLHFM       ; MLHFM : Linearisierung der Hei¯filmspannung [GGHFM]
+//   MASK, XXXX, XXXX, XXXX,       // mov     r10, m_hfm_var1
+// MASK, MASK, XXXX, XXXX,       // mov     r11, m_hfm_var2
+// MASK, MASK,                   // add     r10, r5
+// MASK, MASK, MASK, MASK,       // addc    r11, ZEROS
+// MASK, MASK,                   // jmpr    cc_NC, exit_gghfm
+// MASK, MASK, MASK, MASK,       // mov     r10, #0FFFFh
+// MASK, MASK,                   // mov     r11, r10
 };
 
 const unsigned char needle_mlhfm[] = {
@@ -1047,6 +1104,7 @@ const unsigned char needle_mlhfm[] = {
  0xF2, 0xFB, XXXX, XXXX,                     //  mov     r11, hfm_var2
  0x00, 0xA5,                                 //  add     r10, r5
  0x12, 0xFB, XXXX, XXXX,                     //  addc    r11, hfm_offset
+
 };
 
 unsigned int needle_mlhfm_len = sizeof(needle_mlhfm);

@@ -104,6 +104,7 @@ int get_rominfo(ImageHandle *fh, unsigned char *addr, unsigned int offset, unsig
 											skip = 0;
 											unsigned long str_adr = (unsigned long)(segm*SEGMENT_SIZE)+(long int)valu;	// derive phyiscal address from offset and segment
 											str_adr              &= ~(ROM_1MB_MASK);					// convert physical address to a rom file offset we can easily work with.
+											//printf ("str_adr=%#x\n",str_adr);
 											if(str_adr < fh->len)
 											{
 											str_adr             += offset_addr;
